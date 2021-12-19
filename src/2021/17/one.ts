@@ -2,7 +2,7 @@ import { X25519KeyPairKeyObjectOptions } from 'crypto';
 import { promises as fs } from 'fs';
 
 async function solve() {
-  const input = await fs.readFile("src/2021/17/input2");
+  const input = await fs.readFile("src/2021/17/input");
   let splits = input.toString().split("\n");
   splits.pop();
 
@@ -10,12 +10,10 @@ async function solve() {
   const [x1, x2] = splits[1].substring(0, splits[1].indexOf(",")).split("..").map(s => parseInt(s));
   const [y1, y2] = splits[2].split("..").map(s => parseInt(s));
   let maxY = 0;
-
-  let [vx, vy] = [1, 0];
+  let count = 0;
   let range = -3;
-  while (true) { // vx loop
-    let hasHit = false;
-    while (true) { // vx loop
+  for (let vx = 0; vx < 1000; vx++) {
+    for (let vy = -500; vy < 500; vy++) {
       let [lvx, lvy] = [vx, vy];
       let [x, y] = [0, 0];
       let lMaxY = 0;
@@ -26,24 +24,15 @@ async function solve() {
         range = isInRange([x, y], [x1, y1], [x2, y2])
         if (range === 0) {
           maxY = Math.max(lMaxY, maxY);
-          hasHit = true;
-          console.log(vx, vy, lMaxY);
+          count++;
           break;
         } else if (range < 0) {
           break;
         }
       }
-      if (range === 0 || range === -1) {
-        break;
-      }
-      vx++;  
     }
-    if (!hasHit) {
-      break;
-    }
-    vy++;
-    vx = 1;
   }
+  console.log(count);
   console.log(maxY);
 }
 

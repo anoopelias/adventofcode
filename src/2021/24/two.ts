@@ -22,7 +22,7 @@ function findZZero(processors: string[][], pindex: number, zstart = 0, memo: Set
   const key = pindex + ":" + zstart;
   if (memo.has(key)) return null;
 
-  for (let i = 9; i >= 1; i--) {
+  for (let i = 1; i <= 9; i++) {
     const zout = processAlu(processors[pindex], [i], zstart);
     if (zout === 0 && pindex === processors.length - 1) return [i];
     const result = findZZero(processors, pindex + 1, zout, memo);
@@ -223,3 +223,15 @@ class ALU {
   }
 }
 solve();
+
+/*
+[
+  7, 1, 1, 1, 1, 5,
+  9, 1, 1, 7, 6, 1,
+  5, 1
+]
+
+71111591176151
+
+
+*/

@@ -25,7 +25,7 @@ func linesOf(fn string) []string {
 	if err != nil {
 		panic(err)
 	}
-	lines := make([]string, 3)
+	lines := make([]string, 0)
 	for _, line := range strings.Split(string(fbyts), "\n") {
 		lines = append(lines, line)
 

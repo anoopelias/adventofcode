@@ -7,14 +7,15 @@ async function solve() {
 
     let p = 0;
 
-    for (let k = 0; k < splits.length; k++) {
-        const line = splits[k];
-        const left = line.substring(0, line.length / 2)
-        const right = line.substring(line.length / 2)
+    for (let k = 0; k < splits.length / 3; k++) {
+        const start = k * 3
+        const first = splits[start];
+        const sec = splits[start + 1]
+        const third = splits[start + 2]
 
-        for (let i = 0; i < left.length; i++) {
-            if (right.includes(left.charAt(i))) {
-                const ch = left.charAt(i);
+        for (let i = 0; i < first.length; i++) {
+            const ch = first.charAt(i);
+            if (sec.includes(ch) && third.includes(ch)) {
                 p += valueOf(ch)
                 break;
             }

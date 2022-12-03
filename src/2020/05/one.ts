@@ -3,11 +3,10 @@ import { promises as fs } from 'fs';
 async function solve() {
     const input = await fs.readFile("src/2020/05/input");
     const splits = input.toString().split("\n");
-    console.log(splits.length)
     let max = 0;
-    let seats = new Map<number, number>();
-    let minRow = Number.MAX_SAFE_INTEGER;
-    let maxRow = 0;
+    let seats: number[] = [];
+    let minSeat = Number.MAX_SAFE_INTEGER;
+    let maxSeat = 0;
 
     for (let split of splits) {
         let rowMin = 0;
@@ -26,30 +25,29 @@ async function solve() {
             //console.log("After", colMin, colMax);
         }
 
-        if (rowMax !== rowMin || colMax !== colMin)
-            console.log(rowMin, rowMax, colMin, colMax);
         const seat = (rowMin * 8) + colMin;
         max = Math.max(max, seat);
-        minRow = Math.min(minRow, rowMin);
-        maxRow = Math.max(maxRow, rowMin);
+        minSeat = Math.min(minSeat, seat);
+        maxSeat = Math.max(maxSeat, seat);
 
-        seats.set(seat, rowMin)
+        seats.push(seat)
     }
+    seats.sort((a, b) => a - b);
+    console.log(seats)
 
-    console.log(minRow, maxRow)
-    for (let seat of seats.keys()) {
-        if (seats.get(seat) !== minRow && seats.get(seat) !== maxRow) {
-            if (seats.has(seat + 2)) {
-                console.log(seat + 1)
-            }
-            if (seats.has(seat - 2)) {
-                console.log(seat - 1)
-            }
-
+    console.log(minSeat, maxSeat)
+    for (let i = 1; i < seats.length; i++) {
+        if (seats[i] != seats[i - 1] + 1) {
+            console.log(seats[i - 1], seats[i], seats[i + 1])
         }
-        
     }
-    //console.log(max);
+
+    for (let i = minSeat; i <= maxSeat; i++) {
+        if (!seats.includes(i)) {
+            console.log(i)
+        }
+    }
+
 }
 
 function partition(letter: string, min: number, max: number) {

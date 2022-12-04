@@ -27,39 +27,26 @@ func main() {
 			cts := strings.Split(splits[1], ",")
 			for _, ct := range cts {
 				cbag := rx.FindStringSubmatch(ct)[2]
+				cn, _ := strconv.Atoi(rx.FindStringSubmatch(ct)[1])
 				if _, f := g[cbag]; !f {
 					g[cbag] = make(map[string]int)
 				}
-				g[cbag][bag] = 0
+				g[bag][cbag] = cn
 			}
 		}
 	}
 
-	bags := keysOf(g)
-	marked := make([]bool, len(bags))
-	queue := []string{"shiny gold"}
-	var head string
+	fmt.Println(numberOfBagsIn(g, "shiny gold"))
+}
 
-	for len(queue) != 0 {
-		head, queue = queue[0], queue[1:]
-		if !marked[findBag(head, bags)] {
-			cts := g[head]
-			marked[findBag(head, bags)] = true
-			for _, ct := range keysOfCts(cts) {
-				if !marked[findBag(ct, bags)] {
-					queue = append(queue, ct)
-				}
-			}
-		}
+func numberOfBagsIn(g map[string]map[string]int, bag string) int {
+	c, _ := g[bag]
+	r := 0
+	for b, n := range c {
+		ni := numberOfBagsIn(g, b)
+		r += n + n*ni
 	}
-	cnt := 0
-	for _, b := range marked {
-		if b {
-			cnt++
-		}
-	}
-
-	fmt.Println(cnt - 1)
+	return r
 }
 
 func findBag(b string, bags []string) int {
@@ -69,28 +56,6 @@ func findBag(b string, bags []string) int {
 		}
 	}
 	return -1
-}
-
-func keysOf(m map[string]interface{}) []string {
-	keys := make([]string, len(m))
-
-	i := 0
-	for k := range m {
-		keys[i] = k
-		i++
-	}
-	return keys
-}
-
-func keysOfCts(m map[string]int) []string {
-	keys := make([]string, len(m))
-
-	i := 0
-	for k := range m {
-		keys[i] = k
-		i++
-	}
-	return keys
 }
 
 func linesOf(fn string) []string {

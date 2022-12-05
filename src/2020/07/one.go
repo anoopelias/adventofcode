@@ -71,7 +71,7 @@ func findBag(b string, bags []string) int {
 	return -1
 }
 
-func keysOf(m map[string]interface{}) []string {
+func keysOf(m map[string]map[string]int) []string {
 	keys := make([]string, len(m))
 
 	i := 0

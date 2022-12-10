@@ -7,16 +7,9 @@ import (
 	"strings"
 )
 
-type Dir struct {
-	name string
-	dirs []*Dir
-	file []int
-	p    *Dir
-}
-
 type cord struct {
-	x *int
-	y *int
+	x int
+	y int
 }
 
 func main() {
@@ -34,47 +27,37 @@ func main() {
 	tails := make(map[string]bool)
 	tsx := make([]int, 0)
 	tsy := make([]int, 0)
-	x := int(0)
-	y := int(0)
-	h := cord{&x, &y}
+	h := cord{0, 0}
 	t := make([]*cord, 0)
 
 	for i := 0; i < 9; i++ {
-		x := int(0)
-		y := int(0)
-		co := cord{&x, &y}
+		co := cord{0, 0}
 		t = append(t, &co)
 	}
 
 	for i, a := range ac {
 		for j := 0; j < tss[i]; j++ {
 			if a == "R" {
-				*h.x += 1
+				h.x += 1
 			} else if a == "L" {
-				*h.x -= 1
+				h.x -= 1
 			} else if a == "U" {
-				*h.y += 1
+				h.y += 1
 			} else if a == "D" {
-				*h.y -= 1
+				h.y -= 1
 			}
 			move(&h, t[0])
 			for i := 1; i < 9; i++ {
 				move(t[i-1], t[i])
 			}
-			// tip := len(tsx) - 1
-			// if tip > 0 {
-			// 	if tsx[tip] != *t[8].x || tsy[tip] != *t[8].y {
-			// 		fmt.Printf("Changing %v", *t[8])
-			// 	}
-			// }
-			tsx = append(tsx, *t[8].x)
-			tsy = append(tsy, *t[8].y)
-			tails[strconv.Itoa(*t[8].x)+":"+strconv.Itoa(*t[8].y)] = true
+			tsx = append(tsx, t[8].x)
+			tsy = append(tsy, t[8].y)
+			tails[strconv.Itoa(t[8].x)+":"+strconv.Itoa(t[8].y)] = true
 		}
 	}
 
 	fmt.Println(len(tails))
-	print(tsx, tsy)
+	//print(tsx, tsy)
 }
 
 func print(xs []int, ys []int) {
@@ -122,20 +105,20 @@ func print(xs []int, ys []int) {
 }
 
 func move(h *cord, t *cord) {
-	dx := *h.x - *t.x
-	dy := *h.y - *t.y
+	dx := h.x - t.x
+	dy := h.y - t.y
 	adx := abs(dx)
 	ady := abs(dy)
 
 	if adx == 2 && ady == 2 {
-		*t.x += dx / 2
-		*t.y += dy / 2
+		t.x += dx / 2
+		t.y += dy / 2
 	} else if adx == 2 {
-		*t.x += dx / 2
-		*t.y = *h.y
+		t.x += dx / 2
+		t.y = h.y
 	} else if ady == 2 {
-		*t.x = *h.x
-		*t.y += dy / 2
+		t.x = h.x
+		t.y += dy / 2
 	}
 }
 

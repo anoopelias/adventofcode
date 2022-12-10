@@ -30,7 +30,7 @@ func main() {
 	max := 0
 
 	for i, row := range grid {
-		for j, _ := range row {
+		for j := range row {
 			ss := up(grid, i, j) * down(grid, i, j) *
 				left(grid, i, j) * right(grid, i, j)
 			if ss > max {

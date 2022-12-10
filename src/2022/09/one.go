@@ -7,13 +7,6 @@ import (
 	"strings"
 )
 
-type Dir struct {
-	name string
-	dirs []*Dir
-	file []int
-	p    *Dir
-}
-
 type cord struct {
 	x int
 	y int

@@ -61,6 +61,12 @@ func main() {
 			for i := 1; i < 9; i++ {
 				move(t[i-1], t[i])
 			}
+			// tip := len(tsx) - 1
+			// if tip > 0 {
+			// 	if tsx[tip] != *t[8].x || tsy[tip] != *t[8].y {
+			// 		fmt.Printf("Changing %v", *t[8])
+			// 	}
+			// }
 			tsx = append(tsx, *t[8].x)
 			tsy = append(tsy, *t[8].y)
 			tails[strconv.Itoa(*t[8].x)+":"+strconv.Itoa(*t[8].y)] = true
@@ -116,33 +122,28 @@ func print(xs []int, ys []int) {
 }
 
 func move(h *cord, t *cord) {
-	if *h.y == *t.y {
-		if *h.x-*t.x == 2 {
-			*t.x += 1
-		} else if *h.x-*t.x == -2 {
-			*t.x -= 1
-		}
-	} else if *h.x == *t.x {
-		if *h.y-*t.y == 2 {
-			*t.y += 1
-		} else if *h.y-*t.y == -2 {
-			*t.y -= 1
-		}
-	} else {
-		if *h.x-*t.x == 2 {
-			*t.x += 1
-			*t.y = *h.y
-		} else if *h.x-*t.x == -2 {
-			*t.x -= 1
-			*t.y = *h.y
-		} else if *h.y-*t.y == 2 {
-			*t.x = *h.x
-			*t.y += 1
-		} else if *h.y-*t.y == -2 {
-			*t.x = *h.x
-			*t.y -= 1
-		}
+	dx := *h.x - *t.x
+	dy := *h.y - *t.y
+	adx := abs(dx)
+	ady := abs(dy)
+
+	if adx == 2 && ady == 2 {
+		*t.x += dx / 2
+		*t.y += dy / 2
+	} else if adx == 2 {
+		*t.x += dx / 2
+		*t.y = *h.y
+	} else if ady == 2 {
+		*t.x = *h.x
+		*t.y += dy / 2
 	}
+}
+
+func abs(n int) int {
+	if n < 0 {
+		return -1 * n
+	}
+	return n
 }
 
 func linesOf(fn string) []string {

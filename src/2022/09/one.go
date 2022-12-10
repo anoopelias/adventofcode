@@ -8,8 +8,8 @@ import (
 )
 
 type cord struct {
-	x int
-	y int
+	x *int
+	y *int
 }
 
 func main() {
@@ -25,25 +25,29 @@ func main() {
 	}
 
 	tails := make(map[string]bool)
-	t := cord{0, 0}
-	h := cord{0, 0}
+	x := 0
+	y := 0
+	t := cord{&x, &y}
+	p := 0
+	q := 0
+	h := cord{&p, &q}
 
 	for i, a := range ac {
 		for j := 0; j < tss[i]; j++ {
 			if a == "R" {
-				h.x += 1
+				*h.x += 1
 				move(&h, &t)
 			} else if a == "L" {
-				h.x -= 1
+				*h.x -= 1
 				move(&h, &t)
 			} else if a == "U" {
-				h.y += 1
+				*h.y += 1
 				move(&h, &t)
 			} else if a == "D" {
-				h.y -= 1
+				*h.y -= 1
 				move(&h, &t)
 			}
-			tails[strconv.Itoa(t.x)+":"+strconv.Itoa(t.y)] = true
+			tails[strconv.Itoa(*t.x)+":"+strconv.Itoa(*t.y)] = true
 		}
 	}
 
@@ -51,33 +55,28 @@ func main() {
 }
 
 func move(h *cord, t *cord) {
-	if h.y == t.y {
-		if h.x-t.x == 2 {
-			t.x += 1
-		} else if h.x-t.x == -2 {
-			t.x -= 1
-		}
-	} else if h.x == t.x {
-		if h.y-t.y == 2 {
-			t.y += 1
-		} else if h.y-t.y == -2 {
-			t.y -= 1
-		}
-	} else {
-		if h.x-t.x == 2 {
-			t.x += 1
-			t.y = h.y
-		} else if h.x-t.x == -2 {
-			t.x -= 1
-			t.y = h.y
-		} else if h.y-t.y == 2 {
-			t.x = h.x
-			t.y += 1
-		} else if h.y-t.y == -2 {
-			t.x = h.x
-			t.y -= 1
-		}
+	dx := *h.x - *t.x
+	dy := *h.y - *t.y
+	adx := abs(dx)
+	ady := abs(dy)
+
+	if adx == 2 && ady == 2 {
+		*t.x += dx / 2
+		*t.y += dy / 2
+	} else if adx == 2 {
+		*t.x += dx / 2
+		*t.y = *h.y
+	} else if ady == 2 {
+		*t.x = *h.x
+		*t.y += dy / 2
 	}
+}
+
+func abs(n int) int {
+	if n < 0 {
+		return -1 * n
+	}
+	return n
 }
 
 func linesOf(fn string) []string {

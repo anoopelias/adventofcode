@@ -21,8 +21,8 @@ type senbeac struct {
 
 type transgrid struct {
 	minx int
-	miny int
-	grid *[]*[]string
+	n    int
+	row  *[]string
 }
 
 func main() {
@@ -62,7 +62,7 @@ func main() {
 		sbs = append(sbs, sb)
 	}
 
-	tg := newGrid(minx, miny, maxx, maxy)
+	tg := newGrid(minx, miny, maxx, maxy, 10)
 
 	for _, sb := range sbs {
 		tg.set(sb.s, "S")
@@ -71,27 +71,23 @@ func main() {
 		tg.setScanner(sb.s, md)
 	}
 
-	fmt.Println(tg.counthash(10))
+	fmt.Println(tg.counthash())
 }
 
-func newGrid(minx, miny, maxx, maxy int) transgrid {
-	grid := make([]*[]string, 0)
-	for i := 0; i < (maxy-miny)+1; i++ {
-		row := make([]string, 0)
-		for j := 0; j < (maxx-minx)+1; j++ {
-			row = append(row, ".")
-		}
-		grid = append(grid, &row)
+func newGrid(minx, miny, maxx, maxy, n int) transgrid {
+	row := make([]string, 0)
+	for j := 0; j < (maxx-minx)+1; j++ {
+		row = append(row, ".")
 	}
 	return transgrid{
 		minx: minx,
-		miny: miny,
-		grid: &grid,
+		row:  &row,
+		n:    n,
 	}
 }
 
-func (tg *transgrid) counthash(n int) int {
-	row := (*(*tg.grid)[n])
+func (tg *transgrid) counthash() int {
+	row := *tg.row
 
 	cnt := 0
 	for _, s := range row {
@@ -121,17 +117,20 @@ func (tg *transgrid) setRow(r int, c int, xdist int) {
 
 func (tg *transgrid) set(c coord, s string) {
 	x := c.x - tg.minx
-	y := c.y - tg.miny
 
-	if x < 0 || x >= len(*(*tg.grid)[0]) || y < 0 || y >= len(*tg.grid) {
+	if c.y != tg.n {
 		return
 	}
 
-	if (*(*tg.grid)[y])[x] == "B" || (*(*tg.grid)[y])[x] == "S" {
+	if x < 0 || x >= len(*tg.row) {
 		return
 	}
 
-	(*(*tg.grid)[y])[x] = s
+	if (*tg.row)[x] == "B" || (*tg.row)[x] == "S" {
+		return
+	}
+
+	(*tg.row)[x] = s
 }
 
 func mandist(c1, c2 coord) int {

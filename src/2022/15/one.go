@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -20,20 +19,17 @@ type senbeac struct {
 }
 
 type transgrid struct {
-	minx int
 	n    int
-	row  *[]string
+	rows *map[int]bool
 }
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input")
+	ls := linesOf("input2")
 
 	fmt.Println("No of lines: " + strconv.Itoa(len(ls)))
 
 	sbs := make([]senbeac, 0)
-	minx, miny := math.MaxInt, math.MaxInt
-	maxx, maxy := 0, 0
 	for i := 0; i < len(ls); i++ {
 		rx, _ := regexp.Compile("Sensor at x=([-]?[0-9]+), y=([-]?[0-9]+): closest beacon is at x=([-]?[0-9]+), y=([-]?[0-9]+)")
 		cs := rx.FindStringSubmatch(ls[i])
@@ -47,26 +43,14 @@ func main() {
 			b: coord{bx, by},
 		}
 
-		minx = minOf(minx, sx)
-		minx = minOf(minx, bx)
-
-		miny = minOf(miny, sy)
-		miny = minOf(miny, by)
-
-		maxx = maxOf(maxx, sx)
-		maxx = maxOf(maxx, bx)
-
-		maxy = maxOf(maxy, sy)
-		maxy = maxOf(maxy, by)
-
 		sbs = append(sbs, sb)
 	}
 
-	tg := newGrid(minx, miny, maxx, maxy, 10)
+	tg := newGrid(2000000)
 
 	for _, sb := range sbs {
-		tg.set(sb.s, "S")
-		tg.set(sb.b, "B")
+		tg.unset(sb.s)
+		tg.unset(sb.b)
 		md := mandist(sb.s, sb.b)
 		tg.setScanner(sb.s, md)
 	}
@@ -74,24 +58,20 @@ func main() {
 	fmt.Println(tg.counthash())
 }
 
-func newGrid(minx, miny, maxx, maxy, n int) transgrid {
-	row := make([]string, 0)
-	for j := 0; j < (maxx-minx)+1; j++ {
-		row = append(row, ".")
-	}
+func newGrid(n int) transgrid {
+	rows := make(map[int]bool)
 	return transgrid{
-		minx: minx,
-		row:  &row,
+		rows: &rows,
 		n:    n,
 	}
 }
 
 func (tg *transgrid) counthash() int {
-	row := *tg.row
+	rows := *tg.rows
 
 	cnt := 0
-	for _, s := range row {
-		if s == "#" {
+	for _, f := range rows {
+		if f {
 			cnt++
 		}
 	}
@@ -99,10 +79,9 @@ func (tg *transgrid) counthash() int {
 }
 
 func (tg *transgrid) setScanner(s coord, md int) {
-	for i := s.y - md; i <= s.y+md; i++ {
-		tg.setRow(i, s.x, md-abs(s.y-i))
+	if abs(tg.n-s.y) <= md {
+		tg.setRow(tg.n, s.x, md-abs(s.y-tg.n))
 	}
-
 }
 
 func (tg *transgrid) setRow(r int, c int, xdist int) {
@@ -111,26 +90,35 @@ func (tg *transgrid) setRow(r int, c int, xdist int) {
 			x: i,
 			y: r,
 		}
-		tg.set(co, "#")
+		tg.set(co)
 	}
 }
 
-func (tg *transgrid) set(c coord, s string) {
-	x := c.x - tg.minx
+func (tg *transgrid) unset(c coord) {
 
 	if c.y != tg.n {
 		return
 	}
 
-	if x < 0 || x >= len(*tg.row) {
+	(*tg.rows)[c.x] = false
+}
+
+func (tg *transgrid) set(c coord) {
+
+	if c.y != tg.n {
 		return
 	}
 
-	if (*tg.row)[x] == "B" || (*tg.row)[x] == "S" {
+	_, has := (*tg.rows)[c.x]
+	if has {
 		return
 	}
 
-	(*tg.row)[x] = s
+	if has && !(*tg.rows)[c.x] {
+		return
+	}
+
+	(*tg.rows)[c.x] = true
 }
 
 func mandist(c1, c2 coord) int {

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"math"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -12,6 +13,11 @@ import (
 type coord struct {
 	x int
 	y int
+}
+
+type xline struct {
+	minx int
+	maxx int
 }
 
 type senbeac struct {
@@ -22,7 +28,8 @@ type senbeac struct {
 type transgrid struct {
 	minx int
 	miny int
-	grid *[]*[]string
+	n    int
+	rows *[]*[]*xline
 }
 
 func main() {
@@ -62,58 +69,68 @@ func main() {
 		sbs = append(sbs, sb)
 	}
 
-	tg := newGrid(minx, miny, maxx, maxy)
+	tg := newGrid(minx, miny, maxx, maxy, 4000000)
+	//tg := newGrid(minx, miny, maxx, maxy, 20)
 
 	for _, sb := range sbs {
-		tg.set(sb.s, "S")
-		tg.set(sb.b, "B")
+		tg.setRow(sb.s.y, sb.s.x, 0)
+		tg.setRow(sb.b.y, sb.b.x, 0)
 		md := mandist(sb.s, sb.b)
 		tg.setScanner(sb.s, md)
 	}
 
-	tg.print(0, 4000000)
-	fmt.Println(tg.counthash(10))
+	for i := 0; i < tg.n; i++ {
+		f, x, y := tg.checkRow(i)
+		if !f {
+			fmt.Printf("%d, %d\n", x, y)
+			fmt.Print(x*4000000 + y)
+			break
+		}
+	}
+
 }
 
-func newGrid(minx, miny, maxx, maxy int) transgrid {
-	grid := make([]*[]string, 0)
-	for i := 0; i < (maxy-miny)+1; i++ {
-		row := make([]string, 0)
-		for j := 0; j < (maxx-minx)+1; j++ {
-			row = append(row, ".")
-		}
-		grid = append(grid, &row)
-	}
+func newGrid(minx, miny, maxx, maxy int, n int) transgrid {
+	rows := make([]*[]*xline, n+1)
+	fmt.Println(len(rows))
 	return transgrid{
 		minx: minx,
 		miny: miny,
-		grid: &grid,
+		n:    n,
+		rows: &rows,
 	}
 }
 
-func (tg *transgrid) print(min, max int) {
-	zx := min - tg.minx
-	zy := min - tg.miny
-
-	for i := zy; i < zy+(max-min); i++ {
-		fmt.Printf("%2d ", i-zy)
-		for j := zx; j < zx+(max-min); j++ {
-			fmt.Print((*(*tg.grid)[i])[j], " ")
+func (tg *transgrid) checkRow(r int) (bool, int, int) {
+	row := *(*tg.rows)[r]
+	sort.SliceStable(row, func(i, j int) bool {
+		if (row)[i].minx < (row)[j].minx {
+			return true
+		} else if (row)[i].minx > (row)[j].minx {
+			return false
+		} else if (row)[i].maxx < (row)[j].maxx {
+			return true
+		} else if (row)[i].maxx > (row)[j].maxx {
+			return false
 		}
-		fmt.Println()
-	}
-}
+		return false
+	})
 
-func (tg *transgrid) counthash(n int) int {
-	row := (*(*tg.grid)[n])
-
-	cnt := 0
-	for _, s := range row {
-		if s == "#" {
-			cnt++
+	n := 0
+	for i := 0; i < len(row); i++ {
+		if row[i].minx > n {
+			return false, n, r
+		}
+		if (row[i].maxx + 1) > n {
+			n = row[i].maxx + 1
 		}
 	}
-	return cnt
+
+	if n <= tg.n {
+		return false, n, r
+	}
+
+	return true, -1, -1
 }
 
 func (tg *transgrid) setScanner(s coord, md int) {
@@ -124,28 +141,15 @@ func (tg *transgrid) setScanner(s coord, md int) {
 }
 
 func (tg *transgrid) setRow(r int, c int, xdist int) {
-	for i := c - xdist; i <= c+xdist; i++ {
-		co := coord{
-			x: i,
-			y: r,
-		}
-		tg.set(co, "#")
-	}
-}
-
-func (tg *transgrid) set(c coord, s string) {
-	x := c.x - tg.minx
-	y := c.y - tg.miny
-
-	if x < 0 || x >= len(*(*tg.grid)[0]) || y < 0 || y >= len(*tg.grid) {
+	if r < 0 || r > tg.n {
 		return
 	}
-
-	if (*(*tg.grid)[y])[x] == "B" || (*(*tg.grid)[y])[x] == "S" {
-		return
+	if (*tg.rows)[r] == nil {
+		nr := make([]*xline, 0)
+		(*tg.rows)[r] = &nr
 	}
 
-	(*(*tg.grid)[y])[x] = s
+	(*(*tg.rows)[r]) = append((*(*tg.rows)[r]), &xline{c - xdist, c + xdist})
 }
 
 func mandist(c1, c2 coord) int {

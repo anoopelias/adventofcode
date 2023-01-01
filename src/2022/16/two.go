@@ -28,9 +28,16 @@ type solver struct {
 
 type runner struct {
 	pos   int
-	path  *[]string
+	path  []string
+	pathn []pathnode
 	ttt   int
 	state int
+}
+
+type pathnode struct {
+	pos  int
+	mins int
+	pr   int
 }
 
 const (
@@ -41,13 +48,12 @@ const (
 
 func main() {
 
-	inp := "input"
+	inp := "input2"
 	mins := 26
 	nrs := 2
 
 	fmt.Println("Starting...")
 	ls := linesOf(inp)
-	fmt.Println("No of lines: " + strconv.Itoa(len(ls)))
 
 	m := make(map[string][]string)
 	vs := make([]*valve, 0)
@@ -90,18 +96,31 @@ func main() {
 	rs := make([]*runner, 0)
 	for i := 0; i < nrs; i++ {
 		rp := make([]string, 0)
-		rn := runner{vsm["AA"], &rp, 0, FREE}
+		rpns := make([]pathnode, 0)
+		rn := runner{vsm["AA"], rp, rpns, 0, FREE}
 		rs = append(rs, &rn)
 	}
 
 	mp := s.maxPressure(mins, rs)
 	fmt.Println(mp)
-	fmt.Println(*rs[0].path)
-	fmt.Println(*rs[1].path)
+	fmt.Println(rs[0].path)
+	printPathNodes(vs, rs[0].pathn)
+	if nrs == 2 {
+		fmt.Println(rs[1].path)
+		printPathNodes(vs, rs[1].pathn)
+	}
+	// [CC EE HH JJ BB DD AA]
+}
+
+func printPathNodes(vs []*valve, pns []pathnode) {
+	for _, pn := range pns {
+		fmt.Printf("%s \t%d \t%d \t%d\n", vs[pn.pos].name, pn.mins, pn.pr, pn.mins*pn.pr)
+	}
 }
 
 func (s *solver) maxPressure(mins int, rs []*runner) int {
-	var path []string
+	path := make([][]string, len(rs))
+	pathn := make([][]pathnode, len(rs))
 
 	if mins <= 0 {
 		return 0
@@ -111,6 +130,12 @@ func (s *solver) maxPressure(mins int, rs []*runner) int {
 		if rn.state == OPENING && rn.ttt == 0 {
 			rn.state = FREE
 			ps := mins * s.vs[rn.pos].pr
+			rn.path = append(rn.path, s.vs[rn.pos].name)
+			rn.pathn = append(rn.pathn, pathnode{
+				pos:  rn.pos,
+				mins: mins,
+				pr:   s.vs[rn.pos].pr,
+			})
 			return s.maxPressure(mins, rs) + ps
 		}
 	}
@@ -121,27 +146,32 @@ func (s *solver) maxPressure(mins int, rs []*runner) int {
 			rn.ttt = 1
 		}
 	}
-	for _, rn := range rs {
+	for ri, rn := range rs {
 		if rn.state == FREE {
-			pos := rn.pos
 			max := 0
 			sp := s.sps[rn.pos]
 			for ni, nv := range s.vs {
 				if !nv.open && nv.pr > 0 {
 					rn.pos = ni
-					s.vs[ni].open = true
-					rn.state = WALKING
-					rn.ttt = sp[ni]
-					mx := s.maxPressure(mins, rs)
-					s.vs[ni].open = false
-					rn.state = FREE
+					nv.open = true
+					crs := cloneRs(rs)
+					crs[ri].state = WALKING
+					crs[ri].ttt = sp[ni]
+					mx := s.maxPressure(mins, crs)
+					nv.open = false
 					if max < mx {
 						max = mx
-						path = *rn.path
+						for pri, prn := range crs {
+							path[pri] = prn.path
+							pathn[pri] = prn.pathn
+						}
 					}
 				}
 			}
-			*rn.path = append([]string{s.vs[pos].name}, path...)
+			for pri, prn := range rs {
+				prn.path = append(prn.path, path[pri]...)
+				prn.pathn = append(prn.pathn, pathn[pri]...)
+			}
 			return max
 		}
 	}
@@ -158,6 +188,18 @@ func (s *solver) maxPressure(mins int, rs []*runner) int {
 	}
 
 	return s.maxPressure(mins-ntick, rs)
+}
+
+func cloneRs(rs []*runner) (cl []*runner) {
+	for _, rn := range rs {
+		cl = append(cl, &runner{
+			pos:   rn.pos,
+			path:  make([]string, 0),
+			ttt:   rn.ttt,
+			state: rn.state,
+		})
+	}
+	return
 }
 
 func shortestPath(vs []*valve, from int, to int) int {

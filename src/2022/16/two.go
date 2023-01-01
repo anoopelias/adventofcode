@@ -9,10 +9,11 @@ import (
 )
 
 type valve struct {
-	name string
-	pr   int
-	adj  []string
-	open bool
+	name   string
+	pr     int
+	adj    []string
+	open   bool
+	marked bool
 }
 
 type node struct {
@@ -26,13 +27,21 @@ type solver struct {
 }
 
 type runner struct {
-	pos  string
-	path *[]string
+	pos   string
+	path  *[]string
+	ttt   int
+	state int
 }
+
+const (
+	FREE int = iota
+	WALKING
+	OPENING
+)
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input2")
+	ls := linesOf("input")
 	fmt.Println("No of lines: " + strconv.Itoa(len(ls)))
 
 	m := make(map[string]*valve)
@@ -61,46 +70,47 @@ func main() {
 
 	s := solver{m, sps}
 	p1p := make([]string, 0)
-	p1 := runner{"AA", &p1p}
+	p2p := make([]string, 0)
+	p1 := runner{"AA", &p1p, 0, FREE}
+	p2 := runner{"AA", &p2p, 0, FREE}
 
-	mp := s.maxPressure(&p1, 30)
+	mp := s.maxPressure(&p1, &p2, 30)
 	fmt.Println(mp)
 	fmt.Println(*p1.path)
 }
 
-func (s *solver) maxPressure(p1 *runner, mins int) int {
-	if mins == 0 {
+func (s *solver) maxPressure(p1 *runner, p2 *runner, mins int) int {
+	if mins <= 0 {
 		return 0
-	}
-
-	v := s.m[p1.pos]
-	if !v.open {
+	} else if p1.state == WALKING {
+		p1.state = OPENING
+		return s.maxPressure(p1, p2, mins-1)
+	} else if p1.state == OPENING {
+		p1.state = FREE
+		ps := mins * s.m[p1.pos].pr
+		return s.maxPressure(p1, p2, mins) + ps
+	} else if p1.state == FREE {
 		pos := p1.pos
 		max := 0
 		path := make([]string, 0)
 		sp := s.sps[p1.pos]
-		ot := 0
-		v.open = true
-		if v.pr > 0 {
-			ot = 1
-		}
 		for nvs := range s.m {
 			nv := s.m[nvs]
-			tn := sp[nvs] + ot
-			if !nv.open && nv.pr > 0 && mins > tn {
+			if !nv.open && nv.pr > 0 {
 				p1.pos = nvs
-				mx := s.maxPressure(p1, mins-tn)
+				s.m[nvs].open = true
+				p1.state = WALKING
+				mx := s.maxPressure(p1, p2, mins-sp[nvs])
+				s.m[nvs].open = false
 				if max < mx {
 					max = mx
 					path = *p1.path
 				}
 			}
 		}
-		v.open = false
 		*p1.path = append([]string{pos}, path...)
-		return max + ((mins - 1) * v.pr)
+		return max
 	}
-
 	return 0
 }
 

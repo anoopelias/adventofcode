@@ -11,7 +11,7 @@ import (
 type valve struct {
 	name string
 	pr   int
-	adj  *[]string
+	adj  []string
 	open bool
 }
 
@@ -20,9 +20,19 @@ type node struct {
 	dist int
 }
 
+type solver struct {
+	m   map[string]*valve
+	sps map[string]map[string]int
+}
+
+type runner struct {
+	pos  string
+	path *[]string
+}
+
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input")
+	ls := linesOf("input2")
 	fmt.Println("No of lines: " + strconv.Itoa(len(ls)))
 
 	m := make(map[string]*valve)
@@ -37,7 +47,7 @@ func main() {
 		m[name] = &valve{
 			name: name,
 			pr:   pr,
-			adj:  &tg,
+			adj:  tg,
 		}
 	}
 	sps := make(map[string]map[string]int)
@@ -49,43 +59,49 @@ func main() {
 		}
 	}
 
-	mp, path := maxPressure(m, sps, "AA", 26)
+	s := solver{m, sps}
+	p1p := make([]string, 0)
+	p1 := runner{"AA", &p1p}
+
+	mp := s.maxPressure(&p1, 30)
 	fmt.Println(mp)
-	fmt.Println(path)
+	fmt.Println(*p1.path)
 }
 
-func maxPressure(m map[string]*valve, sps map[string]map[string]int, start string, mins int) (int, []string) {
+func (s *solver) maxPressure(p1 *runner, mins int) int {
 	if mins == 0 {
-		return 0, []string{}
+		return 0
 	}
 
-	v := m[start]
+	v := s.m[p1.pos]
 	if !v.open {
+		pos := p1.pos
 		max := 0
 		path := make([]string, 0)
-		sp := sps[start]
+		sp := s.sps[p1.pos]
 		ot := 0
+		v.open = true
 		if v.pr > 0 {
-			v.open = true
 			ot = 1
 		}
-		for nvs := range m {
-			nv := m[nvs]
+		for nvs := range s.m {
+			nv := s.m[nvs]
 			tn := sp[nvs] + ot
 			if !nv.open && nv.pr > 0 && mins > tn {
-				mx, p := maxPressure(m, sps, nvs, mins-tn)
+				p1.pos = nvs
+				mx := s.maxPressure(p1, mins-tn)
 				if max < mx {
 					max = mx
-					path = p
+					path = *p1.path
 				}
 			}
 		}
 		v.open = false
-		path = append([]string{start}, path...)
-		return max + ((mins - 1) * v.pr), path
+		*p1.path = append([]string{pos}, path...)
+		return max + ((mins - 1) * v.pr)
 	}
 
-	return 0, []string{}
+	return 0
 }
 
 func shortestPath(m map[string]*valve, from string, to string) int {
@@ -103,7 +119,7 @@ func shortestPath(m map[string]*valve, from string, to string) int {
 			}
 
 			v, _ := m[h.nd]
-			for _, nd := range *v.adj {
+			for _, nd := range v.adj {
 				qu = append(qu, &node{nd, h.dist + 1})
 			}
 		}

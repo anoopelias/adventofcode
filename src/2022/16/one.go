@@ -22,7 +22,7 @@ type node struct {
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input")
+	ls := linesOf("input2")
 	fmt.Println("No of lines: " + strconv.Itoa(len(ls)))
 
 	m := make(map[string]*valve)
@@ -49,7 +49,7 @@ func main() {
 		}
 	}
 
-	mp, path := maxPressure(m, sps, "AA", 26)
+	mp, path := maxPressure(m, sps, "AA", 30)
 	fmt.Println(mp)
 	fmt.Println(path)
 }

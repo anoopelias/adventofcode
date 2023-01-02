@@ -27,29 +27,9 @@ type solver struct {
 	sps map[int]map[int]int
 }
 
-type runner struct {
-	pos   int
-	path  []string
-	pathn []pathnode
-	ttt   int
-	state int
-}
-
-type pathnode struct {
-	pos  int
-	mins int
-	pr   int
-}
-
-const (
-	FREE int = iota
-	WALKING
-	OPENING
-)
-
 func main() {
 
-	inp := "input2"
+	inp := "input"
 	mins := 26
 
 	fmt.Println("Starting...")
@@ -97,15 +77,8 @@ func main() {
 	nis := nodes(vs)
 	max := 0
 	partitions(nis, func(p1, p2 []int) {
-		rp := make([]string, 0)
-		rpns := make([]pathnode, 0)
-		rn := runner{vsm["AA"], rp, rpns, 0, FREE}
-		ps1 := s.maxPressure(mins, &rn, p1)
-
-		rp = make([]string, 0)
-		rpns = make([]pathnode, 0)
-		rn = runner{vsm["AA"], rp, rpns, 0, FREE}
-		ps2 := s.maxPressure(mins, &rn, p2)
+		ps1 := s.maxPressure(mins, vsm["AA"], p1)
+		ps2 := s.maxPressure(mins, vsm["AA"], p2)
 
 		mx := ps1 + ps2
 		if max < mx {
@@ -145,40 +118,27 @@ func partitions(nis []int, f func([]int, []int)) {
 
 }
 
-func printPathNodes(vs []*valve, pns []pathnode, mins int) {
-	for _, pn := range pns {
-		fmt.Printf("%s \t%d \t%d \t%d\n", vs[pn.pos].name,
-			mins-pn.mins, pn.pr, pn.mins*pn.pr)
-	}
-}
-
-func (s *solver) maxPressure(mins int, rn *runner, vis []int) int {
-	pos := rn.pos
+func (s *solver) maxPressure(mins int, pos int, vis []int) int {
 	v := s.vs[pos]
 	max := 0
-	path := make([]string, 0)
 	sp := s.sps[pos]
 	ot := 0
 	if v.pr > 0 {
 		v.open = true
 		ot = 1
-
 	}
 
 	for _, ni := range vis {
 		nv := s.vs[ni]
 		tn := sp[ni] + ot
 		if !nv.open && nv.pr > 0 && mins > tn {
-			rn.pos = ni
-			mx := s.maxPressure(mins-tn, rn, vis)
+			mx := s.maxPressure(mins-tn, ni, vis)
 			if max < mx {
 				max = mx
-				path = rn.path
 			}
 		}
 	}
 	v.open = false
-	rn.path = append([]string{s.vs[pos].name}, path...)
 	return max + ((mins - 1) * v.pr)
 }
 

@@ -48,9 +48,9 @@ const (
 
 func main() {
 
-	inp := "input2"
+	inp := "input1"
 	mins := 26
-	nrs := 2
+	nrs := 1
 
 	fmt.Println("Starting...")
 	ls := linesOf(inp)
@@ -104,17 +104,17 @@ func main() {
 	mp := s.maxPressure(mins, rs)
 	fmt.Println(mp)
 	fmt.Println(rs[0].path)
-	printPathNodes(vs, rs[0].pathn)
+	printPathNodes(vs, rs[0].pathn, mins)
 	if nrs == 2 {
 		fmt.Println(rs[1].path)
-		printPathNodes(vs, rs[1].pathn)
+		printPathNodes(vs, rs[1].pathn, mins)
 	}
 	// [CC EE HH JJ BB DD AA]
 }
 
-func printPathNodes(vs []*valve, pns []pathnode) {
+func printPathNodes(vs []*valve, pns []pathnode, mins int) {
 	for _, pn := range pns {
-		fmt.Printf("%s \t%d \t%d \t%d\n", vs[pn.pos].name, pn.mins, pn.pr, pn.mins*pn.pr)
+		fmt.Printf("%s \t%d \t%d \t%d\n", vs[pn.pos].name, mins-pn.mins, pn.pr, pn.mins*pn.pr)
 	}
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -48,7 +49,7 @@ const (
 
 func main() {
 
-	inp := "input"
+	inp := "input2"
 	mins := 26
 
 	fmt.Println("Starting...")
@@ -93,16 +94,55 @@ func main() {
 
 	s := solver{vs, sps}
 
-	rp := make([]string, 0)
-	rpns := make([]pathnode, 0)
-	rn := runner{vsm["AA"], rp, rpns, 0, FREE}
+	nis := nodes(vs)
+	max := 0
+	partitions(nis, func(p1, p2 []int) {
+		rp := make([]string, 0)
+		rpns := make([]pathnode, 0)
+		rn := runner{vsm["AA"], rp, rpns, 0, FREE}
+		ps1 := s.maxPressure(mins, &rn, p1)
 
-	//vis := []int{vsm["BB"], vsm["CC"], vsm["DD"], vsm["EE"], vsm["HH"], vsm["JJ"]}
-	vis := []int{vsm["BB"], vsm["CC"], vsm["JJ"]}
-	mp := s.maxPressure(mins, &rn, vis)
-	fmt.Println(mp)
-	fmt.Println(rn.path)
-	printPathNodes(vs, rn.pathn, mins)
+		rp = make([]string, 0)
+		rpns = make([]pathnode, 0)
+		rn = runner{vsm["AA"], rp, rpns, 0, FREE}
+		ps2 := s.maxPressure(mins, &rn, p2)
+
+		mx := ps1 + ps2
+		if max < mx {
+			max = mx
+			fmt.Printf("Updating max %d\n", max)
+		}
+	})
+	fmt.Println(max)
+}
+
+func nodes(vs []*valve) (nis []int) {
+	for ni, nv := range vs {
+		if nv.pr > 0 {
+			nis = append(nis, ni)
+		}
+	}
+	return
+}
+
+func partitions(nis []int, f func([]int, []int)) {
+	max := int(math.Pow(2, float64(len(nis)))) - 1
+
+	for i := 0; i <= max; i++ {
+
+		p1 := make([]int, 0)
+		p2 := make([]int, 0)
+		for j := 0; j < len(nis); j++ {
+			pos := int(math.Pow(2, float64(j)))
+			if i&pos == 0 {
+				p1 = append(p1, nis[j])
+			} else {
+				p2 = append(p2, nis[j])
+			}
+		}
+		f(p1, p2)
+	}
+
 }
 
 func printPathNodes(vs []*valve, pns []pathnode, mins int) {

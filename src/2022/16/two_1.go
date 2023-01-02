@@ -48,8 +48,8 @@ const (
 
 func main() {
 
-	inp := "input2"
-	mins := 30
+	inp := "input"
+	mins := 26
 
 	fmt.Println("Starting...")
 	ls := linesOf(inp)
@@ -97,7 +97,9 @@ func main() {
 	rpns := make([]pathnode, 0)
 	rn := runner{vsm["AA"], rp, rpns, 0, FREE}
 
-	mp := s.maxPressure(mins, &rn)
+	//vis := []int{vsm["BB"], vsm["CC"], vsm["DD"], vsm["EE"], vsm["HH"], vsm["JJ"]}
+	vis := []int{vsm["BB"], vsm["CC"], vsm["JJ"]}
+	mp := s.maxPressure(mins, &rn, vis)
 	fmt.Println(mp)
 	fmt.Println(rn.path)
 	printPathNodes(vs, rn.pathn, mins)
@@ -110,7 +112,7 @@ func printPathNodes(vs []*valve, pns []pathnode, mins int) {
 	}
 }
 
-func (s *solver) maxPressure(mins int, rn *runner) int {
+func (s *solver) maxPressure(mins int, rn *runner, vis []int) int {
 	pos := rn.pos
 	v := s.vs[pos]
 	max := 0
@@ -120,12 +122,15 @@ func (s *solver) maxPressure(mins int, rn *runner) int {
 	if v.pr > 0 {
 		v.open = true
 		ot = 1
+
 	}
-	for ni, nv := range s.vs {
+
+	for _, ni := range vis {
+		nv := s.vs[ni]
 		tn := sp[ni] + ot
 		if !nv.open && nv.pr > 0 && mins > tn {
 			rn.pos = ni
-			mx := s.maxPressure(mins-tn, rn)
+			mx := s.maxPressure(mins-tn, rn, vis)
 			if max < mx {
 				max = mx
 				path = rn.path

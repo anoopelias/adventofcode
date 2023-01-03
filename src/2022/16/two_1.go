@@ -29,7 +29,7 @@ type solver struct {
 
 func main() {
 
-	inp := "input"
+	inp := "input2"
 	mins := 26
 
 	fmt.Println("Starting...")

@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+const FLAG = 0
+const LOOPS = 2022
+const PRINT = 0
+
 func main() {
 	fmt.Println("Starting...")
 	ls := linesOf("input2")
@@ -17,12 +21,15 @@ func main() {
 		cont: make([][]int, 0),
 	}
 
-	for i := 0; i < 2022; i++ {
+	for i := 0; i < LOOPS; i++ {
 		sh := w.newShape(si)
+		w.print()
 		pti = settle(sh, pt, pti)
-		//w.print()
 		si = incrShape(si)
+
 	}
+
+	w.print()
 
 	fmt.Println(w.tip() + 1)
 }
@@ -36,7 +43,7 @@ func incrShape(i int) int {
 	return i
 }
 
-func (w *well) newShape(i int) shape {
+func (w *well) newShape(i int) ishape {
 	switch i {
 	case HORIZ:
 		return w.newHoriz()
@@ -65,465 +72,263 @@ type well struct {
 	cont [][]int
 }
 
-type shape interface {
+type ishape interface {
 	left() bool
 	right() bool
 	down() bool
+	print()
 }
 
-func settle(s shape, p string, i int) int {
+func settle(s ishape, p string, i int) int {
 	for {
+		//fmt.Printf("i %d, %c\n", i, p[i])
 		if p[i] == '>' {
 			s.right()
 		} else {
 			s.left()
 		}
+		s.print()
 		i = incr(p, i)
 		if !s.down() {
+			s.print()
 			break
 		}
 	}
 	return i
 }
 
-type sq struct {
-	w *well
-	l int
-	t int
+func (w *well) newSq() ishape {
+	return newShape(w, props{
+		h: 2,
+		w: 2,
+		fill: []pos{
+			{0, 0},
+			{0, 1},
+			{-1, 0},
+			{-1, 1},
+		},
+
+		lft: []pos{
+			{0, -1},
+			{-1, -1},
+		},
+		lfth: []pos{
+			{0, 1},
+			{-1, 1},
+		},
+
+		rt: []pos{
+			{0, 2},
+			{-1, 2},
+		},
+		rth: []pos{
+			{0, 0},
+			{-1, 0},
+		},
+
+		dwn: []pos{
+			{-2, 0},
+			{-2, 1},
+		},
+		dwnh: []pos{
+			{0, 0},
+			{0, 1},
+		},
+	})
 }
 
-func (w *well) newSq() *sq {
-	w.addSpace(2)
-	top := w.tip() + 5
-	w.cont[top][2] = 2
-	w.cont[top][3] = 2
-	w.cont[top-1][2] = 2
-	w.cont[top-1][3] = 2
+func (w *well) newVert() ishape {
+	return newShape(w, props{
+		h: 4,
+		w: 1,
+		fill: []pos{
+			{0, 0},
+			{-1, 0},
+			{-2, 0},
+			{-3, 0},
+		},
 
-	return &sq{
-		w: w,
-		t: top,
-		l: 2,
-	}
+		lft: []pos{
+			{0, -1},
+			{-1, -1},
+			{-2, -1},
+			{-3, -1},
+		},
+		lfth: []pos{
+			{0, 0},
+			{-1, 0},
+			{-2, 0},
+			{-3, 0},
+		},
+
+		rt: []pos{
+			{0, 1},
+			{-1, 1},
+			{-2, 1},
+			{-3, 1},
+		},
+		rth: []pos{
+			{0, 0},
+			{-1, 0},
+			{-2, 0},
+			{-3, 0},
+		},
+
+		dwn: []pos{
+			{-4, 0},
+		},
+		dwnh: []pos{
+			{0, 0},
+		},
+	})
 }
 
-func (s *sq) left() bool {
-	if s.l > 0 &&
-		s.w.cont[s.t][s.l-1] == 0 &&
-		s.w.cont[s.t-1][s.l-1] == 0 {
+func (w *well) newEll() ishape {
+	return newShape(w, props{
+		h: 3,
+		w: 3,
+		fill: []pos{
+			{0, 2},
+			{-1, 2},
+			{-2, 0},
+			{-2, 1},
+			{-2, 2},
+		},
 
-		s.w.cont[s.t][s.l+1] = 0
-		s.w.cont[s.t-1][s.l+1] = 0
+		lft: []pos{
+			{0, 1},
+			{-1, 1},
+			{-2, -1},
+		},
+		lfth: []pos{
+			{0, 2},
+			{-1, 2},
+			{-2, 2},
+		},
 
-		s.w.cont[s.t][s.l-1] = 2
-		s.w.cont[s.t-1][s.l-1] = 2
+		rt: []pos{
+			{0, 3},
+			{-1, 3},
+			{-2, 3},
+		},
+		rth: []pos{
+			{0, 2},
+			{-1, 2},
+			{-2, 0},
+		},
 
-		s.l--
-		return true
-	}
-
-	return false
+		dwn: []pos{
+			{-3, 0},
+			{-3, 1},
+			{-3, 2},
+		},
+		dwnh: []pos{
+			{0, 2},
+			{-2, 0},
+			{-2, 1},
+		},
+	})
 }
 
-func (s *sq) right() bool {
-	if s.l < 5 &&
-		s.w.cont[s.t][s.l+2] == 0 &&
-		s.w.cont[s.t-1][s.l+2] == 0 {
+func (w *well) newPlus() ishape {
+	return newShape(w, props{
+		h: 3,
+		w: 3,
+		fill: []pos{
+			{0, 1},
+			{-1, 0},
+			{-1, 1},
+			{-1, 2},
+			{-2, 1},
+		},
 
-		s.w.cont[s.t][s.l] = 0
-		s.w.cont[s.t-1][s.l] = 0
+		lft: []pos{
+			{0, 0},
+			{-1, -1},
+			{-2, 0},
+		},
+		lfth: []pos{
+			{0, 1},
+			{-1, 2},
+			{-2, 1},
+		},
 
-		s.w.cont[s.t][s.l+2] = 2
-		s.w.cont[s.t-1][s.l+2] = 2
+		rt: []pos{
+			{0, 2},
+			{-1, 3},
+			{-2, 2},
+		},
+		rth: []pos{
+			{0, 1},
+			{-1, 0},
+			{-2, 1},
+		},
 
-		s.l++
-		return true
-	}
-
-	return false
+		dwn: []pos{
+			{-2, 0},
+			{-2, 2},
+			{-3, 1},
+		},
+		dwnh: []pos{
+			{0, 1},
+			{-1, 0},
+			{-1, 2},
+		},
+	})
 }
 
-func (s *sq) down() bool {
-	if s.t == 1 ||
-		s.w.cont[s.t-2][s.l] == 1 ||
-		s.w.cont[s.t-2][s.l+1] == 1 {
-
-		s.w.cont[s.t][s.l] = 1
-		s.w.cont[s.t][s.l+1] = 1
-		s.w.cont[s.t-1][s.l] = 1
-		s.w.cont[s.t-1][s.l+1] = 1
-		return false
-	}
-	s.w.cont[s.t][s.l] = 0
-	s.w.cont[s.t][s.l+1] = 0
-	s.w.cont[s.t-2][s.l] = 2
-	s.w.cont[s.t-2][s.l+1] = 2
-	s.t--
-
-	return true
-
-}
-
-type vert struct {
-	w *well
-	l int
-	t int
-}
-
-func (w *well) newVert() *vert {
-	w.addSpace(4)
-	top := w.tip() + 7
-	w.cont[top][2] = 2
-	w.cont[top-1][2] = 2
-	w.cont[top-2][2] = 2
-	w.cont[top-3][2] = 2
-	return &vert{
-		w: w,
-		t: top,
-		l: 2,
-	}
-}
-
-func (v *vert) left() bool {
-	if v.l > 0 &&
-		v.w.cont[v.t][v.l-1] == 0 &&
-		v.w.cont[v.t-1][v.l-1] == 0 &&
-		v.w.cont[v.t-2][v.l-1] == 0 &&
-		v.w.cont[v.t-3][v.l-1] == 0 {
-
-		v.w.cont[v.t][v.l] = 0
-		v.w.cont[v.t-1][v.l] = 0
-		v.w.cont[v.t-2][v.l] = 0
-		v.w.cont[v.t-3][v.l] = 0
-
-		v.w.cont[v.t][v.l-1] = 2
-		v.w.cont[v.t-1][v.l-1] = 2
-		v.w.cont[v.t-2][v.l-1] = 2
-		v.w.cont[v.t-3][v.l-1] = 2
-
-		v.l--
-
-		return true
-	}
-
-	return false
-}
-
-func (v *vert) right() bool {
-
-	if v.l < 6 &&
-		v.w.cont[v.t][v.l+1] == 0 &&
-		v.w.cont[v.t-1][v.l+1] == 0 &&
-		v.w.cont[v.t-2][v.l+1] == 0 &&
-		v.w.cont[v.t-3][v.l+1] == 0 {
-
-		v.w.cont[v.t][v.l] = 0
-		v.w.cont[v.t-1][v.l] = 0
-		v.w.cont[v.t-2][v.l] = 0
-		v.w.cont[v.t-3][v.l] = 0
-
-		v.w.cont[v.t][v.l+1] = 2
-		v.w.cont[v.t-1][v.l+1] = 2
-		v.w.cont[v.t-2][v.l+1] = 2
-		v.w.cont[v.t-3][v.l+1] = 2
-
-		v.l++
-		return true
-
-	}
-
-	return false
-}
-
-func (v *vert) down() bool {
-	if v.t == 3 ||
-		v.w.cont[v.t-4][v.l] == 1 {
-
-		v.w.cont[v.t][v.l] = 1
-		v.w.cont[v.t-1][v.l] = 1
-		v.w.cont[v.t-2][v.l] = 1
-		v.w.cont[v.t-3][v.l] = 1
-
-		return false
-	}
-
-	v.w.cont[v.t][v.l] = 0
-	v.w.cont[v.t-4][v.l] = 2
-
-	v.t--
-	return true
-}
-
-type ell struct {
-	w *well
-	l int
-	t int
-}
-
-func (w *well) newEll() *ell {
-	w.addSpace(3)
-	top := w.tip() + 6
-	w.cont[top][4] = 2
-	w.cont[top-1][4] = 2
-	w.cont[top-2][2] = 2
-	w.cont[top-2][3] = 2
-	w.cont[top-2][4] = 2
-
-	return &ell{
-		w: w,
-		t: top,
-		l: 2,
-	}
-}
-
-func (e *ell) left() bool {
-	if e.l > 0 &&
-		e.w.cont[e.t][e.l+1] == 0 &&
-		e.w.cont[e.t-1][e.l+1] == 0 &&
-		e.w.cont[e.t-1][e.l-1] == 0 {
-
-		e.w.cont[e.t][e.l+1] = 2
-		e.w.cont[e.t][e.l+2] = 0
-
-		e.w.cont[e.t-1][e.l+1] = 2
-		e.w.cont[e.t-1][e.l+2] = 0
-
-		e.w.cont[e.t-2][e.l-1] = 2
-		e.w.cont[e.t-2][e.l+2] = 0
-
-		e.l--
-		return true
-	}
-
-	return false
-}
-
-func (e *ell) right() bool {
-	if e.l < 4 &&
-		e.w.cont[e.t][e.l+3] == 0 &&
-		e.w.cont[e.t-1][e.l+3] == 0 &&
-		e.w.cont[e.t-2][e.l+3] == 0 {
-
-		e.w.cont[e.t][e.l+3] = 2
-		e.w.cont[e.t][e.l+2] = 0
-
-		e.w.cont[e.t-1][e.l+3] = 2
-		e.w.cont[e.t-1][e.l+2] = 0
-
-		e.w.cont[e.t-2][e.l+3] = 2
-		e.w.cont[e.t-2][e.l] = 0
-		e.l++
-
-		return true
-
-	}
-	return false
-}
-
-func (e *ell) down() bool {
-
-	if e.t == 2 ||
-		e.w.cont[e.t-3][e.l] == 1 ||
-		e.w.cont[e.t-3][e.l+1] == 1 ||
-		e.w.cont[e.t-3][e.l+2] == 1 {
-
-		e.w.cont[e.t][e.l+2] = 1
-		e.w.cont[e.t-1][e.l+2] = 1
-		e.w.cont[e.t-2][e.l] = 1
-		e.w.cont[e.t-2][e.l+1] = 1
-		e.w.cont[e.t-2][e.l+2] = 1
-
-		return false
-	}
-
-	e.w.cont[e.t][e.l+2] = 0
-	e.w.cont[e.t-2][e.l] = 0
-	e.w.cont[e.t-2][e.l+1] = 0
-
-	e.w.cont[e.t-3][e.l] = 2
-	e.w.cont[e.t-3][e.l+1] = 2
-	e.w.cont[e.t-3][e.l+2] = 2
-	e.t--
-
-	return true
-}
-
-type plus struct {
-	w *well
-	l int
-	t int
-}
-
-func (w *well) newPlus() *plus {
-	w.addSpace(3)
-	top := w.tip() + 6
-	w.cont[top][3] = 2
-	w.cont[top-1][2] = 2
-	w.cont[top-1][3] = 2
-	w.cont[top-1][4] = 2
-	w.cont[top-2][3] = 2
-
-	return &plus{
-		w: w,
-		t: top,
-		l: 2,
-	}
-}
-
-func (p *plus) left() bool {
-	if p.l > 0 &&
-		p.w.cont[p.t][p.l] == 0 &&
-		p.w.cont[p.t-1][p.l-1] == 0 &&
-		p.w.cont[p.t-2][p.l] == 0 {
-
-		p.w.cont[p.t][p.l] = 2
-		p.w.cont[p.t][p.l+1] = 0
-
-		p.w.cont[p.t-1][p.l-1] = 2
-		p.w.cont[p.t-1][p.l+2] = 0
-
-		p.w.cont[p.t-2][p.l] = 2
-		p.w.cont[p.t-2][p.l+1] = 0
-
-		p.l--
-
-		return true
-
-	}
-	return false
-}
-
-func (p *plus) right() bool {
-	if p.l < 4 &&
-		p.w.cont[p.t][p.l+2] == 0 &&
-		p.w.cont[p.t-1][p.l+3] == 0 &&
-		p.w.cont[p.t-2][p.l+2] == 0 {
-
-		p.w.cont[p.t][p.l+2] = 2
-		p.w.cont[p.t][p.l+1] = 0
-
-		p.w.cont[p.t-1][p.l+3] = 2
-		p.w.cont[p.t-1][p.l] = 0
-
-		p.w.cont[p.t-2][p.l+2] = 2
-		p.w.cont[p.t-2][p.l+1] = 0
-
-		p.l++
-
-		return true
-
-	}
-	return false
-}
-
-func (p *plus) down() bool {
-	if p.t == 2 ||
-		p.w.cont[p.t-2][p.l] == 1 ||
-		p.w.cont[p.t-2][p.l+2] == 1 ||
-		p.w.cont[p.t-3][p.l+1] == 1 {
-
-		p.w.cont[p.t][p.l+1] = 1
-		p.w.cont[p.t-1][p.l] = 1
-		p.w.cont[p.t-1][p.l+1] = 1
-		p.w.cont[p.t-1][p.l+2] = 1
-		p.w.cont[p.t-2][p.l+1] = 1
-		return false
-	}
-
-	p.w.cont[p.t][p.l+1] = 0
-	p.w.cont[p.t-1][p.l] = 0
-	p.w.cont[p.t-1][p.l+2] = 0
-	p.w.cont[p.t-2][p.l] = 2
-	p.w.cont[p.t-2][p.l+2] = 2
-	p.w.cont[p.t-3][p.l+1] = 2
-
-	p.t--
-	return true
-
-}
-
-type horiz struct {
-	w *well
-	l int
-	t int
-}
-
-func (h *horiz) well() *well {
-	return h.w
-}
-
-func (h *horiz) right() bool {
-	if h.l+4 < 7 && h.w.cont[h.t][h.l+4] == 0 {
-		h.w.cont[h.t][h.l] = 0
-		h.w.cont[h.t][h.l+4] = 2
-		h.l += 1
-		return true
-	}
-	return false
-}
-
-func (h *horiz) left() bool {
-	if h.l > 0 && h.w.cont[h.t][h.l-1] == 0 {
-		h.w.cont[h.t][h.l+3] = 0
-		h.w.cont[h.t][h.l-1] = 2
-		h.l -= 1
-		return true
-	}
-	return false
-}
-func (h *horiz) down() bool {
-	if h.t == 0 ||
-		h.w.cont[h.t-1][h.l] == 1 ||
-		h.w.cont[h.t-1][h.l+1] == 1 ||
-		h.w.cont[h.t-1][h.l+2] == 1 ||
-		h.w.cont[h.t-1][h.l+3] == 1 {
-
-		h.w.cont[h.t][h.l] = 1
-		h.w.cont[h.t][h.l+1] = 1
-		h.w.cont[h.t][h.l+2] = 1
-		h.w.cont[h.t][h.l+3] = 1
-
-		return false
-	}
-	h.w.cont[h.t][h.l] = 0
-	h.w.cont[h.t][h.l+1] = 0
-	h.w.cont[h.t][h.l+2] = 0
-	h.w.cont[h.t][h.l+3] = 0
-
-	h.w.cont[h.t-1][h.l] = 2
-	h.w.cont[h.t-1][h.l+1] = 2
-	h.w.cont[h.t-1][h.l+2] = 2
-	h.w.cont[h.t-1][h.l+3] = 2
-	h.t -= 1
-
-	return true
-}
-
-func (w *well) newHoriz() *horiz {
-	w.addSpace(1)
-	top := w.tip() + 4
-	w.cont[top][2] = 2
-	w.cont[top][3] = 2
-	w.cont[top][4] = 2
-	w.cont[top][5] = 2
-
-	return &horiz{
-		w: w,
-		t: top,
-		l: 2,
-	}
+func (w *well) newHoriz() ishape {
+	return newShape(w, props{
+		h: 1,
+		w: 4,
+		fill: []pos{
+			{0, 0},
+			{0, 1},
+			{0, 2},
+			{0, 3},
+		},
+
+		lft: []pos{
+			{0, -1},
+		},
+		lfth: []pos{
+			{0, 3},
+		},
+
+		rt: []pos{
+			{0, 4},
+		},
+		rth: []pos{
+			{0, 0},
+		},
+
+		dwn: []pos{
+			{-1, 0},
+			{-1, 1},
+			{-1, 2},
+			{-1, 3},
+		},
+		dwnh: []pos{
+			{0, 0},
+			{0, 1},
+			{0, 2},
+			{0, 3},
+		},
+	})
 }
 
 func (w *well) print() {
-	for i := len(w.cont) - 1; i >= 0; i-- {
-		fmt.Print("|")
-		for _, c := range w.cont[i] {
-			fmt.Print(toChar(c) + " ")
+	if PRINT == 1 {
+		for i := len(w.cont) - 1; i >= 0; i-- {
+			fmt.Print("|")
+			for _, c := range w.cont[i] {
+				fmt.Print(toChar(c) + " ")
+			}
+			fmt.Print("|")
+			fmt.Println()
 		}
-		fmt.Print("|")
-		fmt.Println()
+		fmt.Println("+-------+")
 	}
-	fmt.Println("+-------+")
 }
 
 func (w *well) addSpace(top int) {
@@ -577,4 +382,116 @@ func linesOf(fn string) []string {
 	}
 
 	return lines
+}
+
+type shape struct {
+	p props
+	w *well
+	t int
+	l int
+}
+
+type props struct {
+	h    int
+	w    int
+	fill []pos
+
+	lft  []pos
+	lfth []pos
+
+	rt  []pos
+	rth []pos
+
+	dwn  []pos
+	dwnh []pos
+}
+
+const (
+	FREE int = iota
+	FILLED
+	MOVING
+)
+
+type pos struct {
+	p int
+	q int
+}
+
+func newShape(w *well, p props) ishape {
+	w.addSpace(p.h)
+	t := w.tip() + 3 + p.h
+	l := 2
+
+	for _, pos := range p.fill {
+		w.cont[t+pos.p][l+pos.q] = 2
+	}
+
+	return &shape{
+		w: w,
+		t: t,
+		l: l,
+		p: p,
+	}
+}
+
+func (sh *shape) print() {
+	sh.w.print()
+}
+
+func (sh *shape) test(ps []pos) bool {
+	for _, pos := range ps {
+		if sh.w.cont[sh.t+pos.p][sh.l+pos.q] == 1 {
+			return false
+		}
+	}
+	return true
+}
+
+func (sh *shape) fill(ps []pos, ty int) {
+	for _, pos := range ps {
+		sh.w.cont[sh.t+pos.p][sh.l+pos.q] = ty
+	}
+}
+
+func (sh *shape) left() bool {
+	if sh.l == 0 {
+		return false
+	}
+	if !sh.test(sh.p.lft) {
+		return false
+	}
+
+	sh.fill(sh.p.lft, MOVING)
+	sh.fill(sh.p.lfth, FREE)
+
+	sh.l--
+	return true
+}
+
+func (sh *shape) right() bool {
+	if sh.l+sh.p.w == 7 {
+		return false
+	}
+	if !sh.test(sh.p.rt) {
+		return false
+	}
+
+	sh.fill(sh.p.rt, MOVING)
+	sh.fill(sh.p.rth, FREE)
+
+	sh.l++
+	return true
+}
+
+func (sh *shape) down() bool {
+	if sh.t == sh.p.h-1 || !sh.test(sh.p.dwn) {
+		sh.fill(sh.p.fill, FILLED)
+		return false
+	}
+
+	sh.fill(sh.p.dwn, MOVING)
+	sh.fill(sh.p.dwnh, FREE)
+
+	sh.t--
+	return true
 }

@@ -9,38 +9,27 @@ import (
 const FLAG = 0
 const LOOPS = 2022
 const PRINT = 0
+const NO_OF_SHAPES = 5
 
 func main() {
 	fmt.Println("Starting...")
 	ls := linesOf("input2")
 	pt := ls[0]
 	pti := 0
-	si := 0
 
 	w := well{
 		cont: make([][]int, 0),
 	}
 
 	for i := 0; i < LOOPS; i++ {
-		sh := w.newShape(si)
+		sh := w.newShape(i % NO_OF_SHAPES)
 		w.print()
 		pti = settle(sh, pt, pti)
-		si = incrShape(si)
-
 	}
 
 	w.print()
 
 	fmt.Println(w.tip() + 1)
-}
-
-func incrShape(i int) int {
-	if i == SQ {
-		i = HORIZ
-	} else {
-		i++
-	}
-	return i
 }
 
 func (w *well) newShape(i int) ishape {

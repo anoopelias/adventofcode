@@ -7,13 +7,13 @@ import (
 )
 
 const FLAG = 0
-const LOOPS = 2022
+const LOOPS = 1_000_000_000_000
 const PRINT = 0
 const NO_OF_SHAPES = 5
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input2")
+	ls := linesOf("input")
 	pt := ls[0]
 	pti := 0
 
@@ -21,19 +21,90 @@ func main() {
 		cont: make([][]int, 0),
 	}
 
-	ss := make([]int, 0)
-	var s int
+	ss := make([]node, 0)
+	var x, i, wd int
 
-	for i := 0; i < LOOPS; i++ {
+	for i = 0; i < LOOPS; i++ {
 		sh := w.newShape(i % NO_OF_SHAPES)
 		w.print()
-		pti, s = settle(sh, pt, pti)
-		ss = append(ss, s)
+		pti, x = settle(sh, pt, pti)
+		ss = append(ss, node{
+			stype: i % NO_OF_SHAPES,
+			x:     x,
+			tip:   w.tip(),
+		})
+
+		wd = findCycleAtTip(ss)
+		if wd != -1 {
+			break
+		}
 	}
 
-	w.print()
+	ht := ss[i].tip
+	wdHt := ht - ss[i-wd].tip
+	rem := LOOPS - i
+	fmt.Printf("Cycle i: %d, ht: %d, wd: %d, wdHt: %d\n", i, ht, wd, wdHt)
 
-	fmt.Println(w.tip() + 1)
+	nWds := rem / wd
+	ht += nWds * wdHt
+	fmt.Printf("nWds: %d, wdsHt: %d\n", nWds, nWds*wdHt)
+
+	rem = rem % wd
+	for j := i + 1; j < i+rem; j++ {
+		sh := w.newShape(j % NO_OF_SHAPES)
+		pti, _ = settle(sh, pt, pti)
+	}
+
+	remHt := w.tip() - ss[i].tip
+	fmt.Printf("rem: %d, remHt: %d\n", rem, remHt)
+	ht += remHt
+
+	// input2:
+	// 1530057803453
+
+	// input1:
+	// 1514285714288
+
+	fmt.Println(ht + 1)
+}
+
+func findCycleAtTip(ss []node) int {
+	wmin := NO_OF_SHAPES * 8
+	l := len(ss)
+
+	for w := wmin; w <= l/2; w += NO_OF_SHAPES {
+		s1 := ss[l-w:]
+		s2 := ss[l-(2*w) : l-w]
+
+		if equal(s1, s2) {
+			return w
+		}
+	}
+	return -1
+}
+
+func equal(s1 []node, s2 []node) bool {
+	if len(s1) != len(s2) {
+		fmt.Println("Unmatched length")
+		return false
+	}
+
+	for i := range s1 {
+		if s1[i].stype != s2[i].stype {
+			fmt.Println("Unmatched type")
+			return false
+		}
+		if s1[i].x != s2[i].x {
+			return false
+		}
+	}
+	return true
+}
+
+type node struct {
+	stype int
+	x     int
+	tip   int
 }
 
 func (w *well) newShape(i int) ishape {
@@ -88,7 +159,6 @@ func settle(s ishape, p string, i int) (int, int) {
 			return i, l
 		}
 	}
-	return -1, -1
 }
 
 func (w *well) newSq() ishape {

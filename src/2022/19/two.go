@@ -98,7 +98,7 @@ func main() {
 		})
 	}
 
-	sum := 0
+	out := 1
 	for _, bp := range bps {
 		bu := builder{
 			bp:   bp,
@@ -110,10 +110,10 @@ func main() {
 		max := res.max
 		fmt.Printf("bp: %d: max :%d\n", bp.n, max)
 		printMaxtys(res.maxtys, bp)
-		sum += (max * bp.n)
+		out *= max
 	}
 
-	fmt.Println(sum)
+	fmt.Println(out)
 }
 
 func newItems() items {
@@ -147,17 +147,12 @@ func (b *builder) maxGeode(min int, its items, memo *map[string]result, tysnow [
 		return max
 	}
 
-	is := []int{0, 1, 2, 4}
-	for _, i := range is {
+	is := []int{0, 1, 2}
+	for _, e := range is {
 		nits := its
-		tys := []int{}
+		tys := []int{e}
 
-		for e := 0; e < 3; e++ {
-			if int(math.Pow(2, float64(e)))&i > 0 {
-				nits = nits.make(b.bp, e)
-				tys = append(tys, e)
-			}
-		}
+		nits = nits.make(b.bp, e)
 
 		if nits.valid() {
 			nits = nits.next(b.rbs)
@@ -172,8 +167,34 @@ func (b *builder) maxGeode(min int, its items, memo *map[string]result, tysnow [
 		}
 	}
 
+	// no robots
+	nits = its.next(b.rbs)
+	maxres := b.maxGeode(min+1, nits, memo, append(tysnow, []int{}))
+	if maxres.max > max.max {
+		max = maxres
+		max.maxtys = append([][]int{{}}, max.maxtys...)
+	}
+
 	(*memo)[h] = max
 	return max
+}
+
+func (b *builder) timeToTy(its items, ty int) int {
+	its = its.make(b.bp, ty)
+	time := 0
+
+	for t, it := range its.cnt {
+		if it < 0 {
+			it *= -1
+		}
+		ti := int(math.Ceil(float64(it) / float64(b.rbs[t])))
+
+		if ti > time {
+			time = ti
+		}
+	}
+
+	return time
 }
 
 func isReqTys(tysnow [][]int) bool {

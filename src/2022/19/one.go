@@ -9,10 +9,6 @@ import (
 	"strings"
 )
 
-type pos struct {
-	x, y, z int
-}
-
 type blueprint struct {
 	n     int
 	orb   int
@@ -61,6 +57,13 @@ func (its items) make(b builder, ty int) items {
 	return its
 }
 
+func (its items) hash() string {
+	return strconv.Itoa(its.ore) + ":" +
+		strconv.Itoa(its.clay) + ":" +
+		strconv.Itoa(its.obs) + ":" +
+		strconv.Itoa(its.geo) + ":"
+}
+
 func (its items) valid() bool {
 	return its.ore >= 0 &&
 		its.clay >= 0 &&
@@ -74,12 +77,22 @@ type builder struct {
 	crbs  int
 	obrbs int
 	grbs  int
+	maxt  int
+}
+
+func (b *builder) hash(min int, its items) string {
+	return strconv.Itoa(min) + "::" +
+		strconv.Itoa(b.orbs) + ":" +
+		strconv.Itoa(b.crbs) + ":" +
+		strconv.Itoa(b.obrbs) + ":" +
+		strconv.Itoa(b.grbs) + "::" +
+		its.hash()
 }
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input1")
-	time := 10
+	ls := linesOf("input")
+	time := 24
 
 	bps := make([]blueprint, 0)
 	for _, l := range ls {
@@ -100,8 +113,10 @@ func main() {
 		bu := builder{
 			bp:   bp,
 			orbs: 1,
+			maxt: time,
 		}
-		max := bu.maxGeode(time, items{})
+		memo := map[string]int{}
+		max := bu.maxGeode(0, items{}, &memo, "")
 		fmt.Printf("bp: %d: max :%d\n", bp.n, max)
 		sum += (max * bp.n)
 	}
@@ -109,19 +124,29 @@ func main() {
 	fmt.Println(sum)
 }
 
-func (b *builder) maxGeode(min int, its items) int {
-	if min == 0 {
-		return its.ore
+func (b *builder) maxGeode(min int, its items, memo *map[string]int, depth string) int {
+	if min == b.maxt {
+		return its.geo
+	}
+
+	h := b.hash(min, its)
+
+	if v, fnd := (*memo)[h]; fnd {
+		//fmt.Printf("depth%s: min %d memoized\n", depth, min)
+		return v
 	}
 
 	max := 0
-	for i := 0; i < 16; i++ {
+	for i := 0; i < 8; i++ {
 		nits := its
 		tys := []int{}
 
+		// Optimization: Make geo if possible
 		nits = nits.make(*b, GEO)
 		if !nits.valid() {
 			nits = its
+		} else {
+			tys = append(tys, GEO)
 		}
 
 		for e := 0; e < 3; e++ {
@@ -133,18 +158,23 @@ func (b *builder) maxGeode(min int, its items) int {
 
 		if nits.valid() {
 			nits = nits.next(*b)
-			fmt.Printf("min %d, tys %v\n", min, tys)
 			b.add(tys)
-			ngeo := b.maxGeode(min-1, nits)
+			ngeo := b.maxGeode(min+1, nits, memo, depth+" "+strconv.Itoa(min))
+			if min == 4 {
+				fmt.Printf("depth%s: min %d, tys %v max %d\n", depth, min, tys, ngeo)
+			}
 			b.reset(tys)
 
 			if ngeo > max {
 				max = ngeo
+				if min == 4 {
+					fmt.Printf("depth%s: min %d, tys %v [max updated]:%d hash%s\n", depth, min, tys, max, h)
+				}
 			}
 		}
-
 	}
 
+	(*memo)[h] = max
 	return max
 }
 

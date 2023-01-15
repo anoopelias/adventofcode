@@ -10,27 +10,16 @@ import (
 )
 
 type blueprint struct {
-	n     int
-	orb   int
-	crb   int
-	obrbO int
-	obrbC int
-	grbO  int
-	grbOb int
+	n   int
+	rbs [][]int
 }
 
 type items struct {
-	ore  int
-	clay int
-	obs  int
-	geo  int
+	cnt []int
 }
 
-func (its items) next(b builder) items {
-	its.ore += b.orbs
-	its.clay += b.crbs
-	its.obs += b.obrbs
-	its.geo += b.grbs
+func (its items) next(rbs []int) items {
+	its.cnt = sliceAdd(its.cnt, rbs)
 	return its
 }
 
@@ -41,57 +30,50 @@ const (
 	GEO
 )
 
-func (its items) make(b builder, ty int) items {
-	switch ty {
-	case ORE:
-		its.ore -= b.bp.orb
-	case CLAY:
-		its.ore -= b.bp.crb
-	case OBS:
-		its.ore -= b.bp.obrbO
-		its.clay -= b.bp.obrbC
-	case GEO:
-		its.ore -= b.bp.grbO
-		its.obs -= b.bp.grbOb
-	}
+func (its items) make(bp blueprint, ty int) items {
+	its.cnt = sliceMinus(its.cnt, bp.rbs[ty])
 	return its
 }
 
 func (its items) hash() string {
-	return strconv.Itoa(its.ore) + ":" +
-		strconv.Itoa(its.clay) + ":" +
-		strconv.Itoa(its.obs) + ":" +
-		strconv.Itoa(its.geo) + ":"
+	return strconv.Itoa(its.cnt[0]) + ":" +
+		strconv.Itoa(its.cnt[1]) + ":" +
+		strconv.Itoa(its.cnt[2]) + ":" +
+		strconv.Itoa(its.cnt[3]) + ":"
 }
 
 func (its items) valid() bool {
-	return its.ore >= 0 &&
-		its.clay >= 0 &&
-		its.obs >= 0 &&
-		its.geo >= 0
+	for _, v := range its.cnt {
+		if v < 0 {
+			return false
+		}
+	}
+	return true
 }
 
 type builder struct {
-	bp    blueprint
-	orbs  int
-	crbs  int
-	obrbs int
-	grbs  int
-	maxt  int
+	bp   blueprint
+	rbs  []int
+	maxt int
 }
 
 func (b *builder) hash(min int, its items) string {
 	return strconv.Itoa(min) + "::" +
-		strconv.Itoa(b.orbs) + ":" +
-		strconv.Itoa(b.crbs) + ":" +
-		strconv.Itoa(b.obrbs) + ":" +
-		strconv.Itoa(b.grbs) + "::" +
+		strconv.Itoa(b.rbs[0]) + ":" +
+		strconv.Itoa(b.rbs[1]) + ":" +
+		strconv.Itoa(b.rbs[2]) + ":" +
+		strconv.Itoa(b.rbs[3]) + "::" +
 		its.hash()
+}
+
+type result struct {
+	max    int
+	maxtys [][]int
 }
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input")
+	ls := linesOf("input1")
 	time := 24
 
 	bps := make([]blueprint, 0)
@@ -105,30 +87,45 @@ func main() {
 		obrbC, _ := strconv.Atoi(cs[5])
 		grbO, _ := strconv.Atoi(cs[6])
 		grbOb, _ := strconv.Atoi(cs[7])
-		bps = append(bps, blueprint{n, orb, crb, obrbO, obrbC, grbO, grbOb})
+		bps = append(bps, blueprint{
+			n: n,
+			rbs: [][]int{
+				{orb, 0, 0, 0},
+				{crb, 0, 0, 0},
+				{obrbO, obrbC, 0, 0},
+				{grbO, 0, grbOb, 0},
+			},
+		})
 	}
 
 	sum := 0
 	for _, bp := range bps {
 		bu := builder{
 			bp:   bp,
-			orbs: 1,
+			rbs:  []int{1, 0, 0, 0},
 			maxt: time,
 		}
-		memo := map[string]int{}
-		max := bu.maxGeode(0, items{}, &memo, "")
+		memo := map[string]result{}
+		res := bu.maxGeode(0, newItems(), &memo, [][]int{})
+		max := res.max
 		fmt.Printf("bp: %d: max :%d\n", bp.n, max)
+		printMaxtys(res.maxtys, bp)
 		sum += (max * bp.n)
 	}
 
 	fmt.Println(sum)
 }
 
-func (b *builder) maxGeode(min int, its items, memo *map[string]int, depth string) int {
+func newItems() items {
+	return items{cnt: []int{0, 0, 0, 0}}
+}
+
+func (b *builder) maxGeode(min int, its items, memo *map[string]result, tysnow [][]int) result {
 	if min == b.maxt {
-		return its.geo
+		return result{its.cnt[3], [][]int{}}
 	}
 
+	max := result{}
 	h := b.hash(min, its)
 
 	if v, fnd := (*memo)[h]; fnd {
@@ -136,40 +133,40 @@ func (b *builder) maxGeode(min int, its items, memo *map[string]int, depth strin
 		return v
 	}
 
-	max := 0
+	// Optimization: Make geo if possible
+	nits := its.make(b.bp, GEO)
+	if nits.valid() {
+		tys := []int{GEO}
+		nits = nits.next(b.rbs)
+		b.add(tys)
+		max = b.maxGeode(min+1, nits, memo, append(tysnow, tys))
+		b.reset(tys)
+
+		max.maxtys = append([][]int{tys}, max.maxtys...)
+		(*memo)[h] = max
+		return max
+	}
+
 	for i := 0; i < 8; i++ {
 		nits := its
 		tys := []int{}
 
-		// Optimization: Make geo if possible
-		nits = nits.make(*b, GEO)
-		if !nits.valid() {
-			nits = its
-		} else {
-			tys = append(tys, GEO)
-		}
-
 		for e := 0; e < 3; e++ {
 			if int(math.Pow(2, float64(e)))&i > 0 {
-				nits = nits.make(*b, e)
+				nits = nits.make(b.bp, e)
 				tys = append(tys, e)
 			}
 		}
 
 		if nits.valid() {
-			nits = nits.next(*b)
+			nits = nits.next(b.rbs)
 			b.add(tys)
-			ngeo := b.maxGeode(min+1, nits, memo, depth+" "+strconv.Itoa(min))
-			if min == 4 {
-				fmt.Printf("depth%s: min %d, tys %v max %d\n", depth, min, tys, ngeo)
-			}
+			maxres := b.maxGeode(min+1, nits, memo, append(tysnow, tys))
 			b.reset(tys)
 
-			if ngeo > max {
-				max = ngeo
-				if min == 4 {
-					fmt.Printf("depth%s: min %d, tys %v [max updated]:%d hash%s\n", depth, min, tys, max, h)
-				}
+			if maxres.max > max.max {
+				max = maxres
+				max.maxtys = append([][]int{tys}, max.maxtys...)
 			}
 		}
 	}
@@ -178,33 +175,70 @@ func (b *builder) maxGeode(min int, its items, memo *map[string]int, depth strin
 	return max
 }
 
+func isReqTys(tysnow [][]int) bool {
+	return sliceEqual(tysnow, [][]int{
+		{}, {}, {}, {1}, {1},
+		{}, {1}, {}, {}, {},
+		{2}, {1}, {}, {}, {2},
+		{}, {}, {3}, {}, {}})
+}
+
 func (b *builder) add(tys []int) {
 	for _, ty := range tys {
-		switch ty {
-		case ORE:
-			b.orbs++
-		case CLAY:
-			b.crbs++
-		case OBS:
-			b.obrbs++
-		case GEO:
-			b.grbs++
-		}
+		b.rbs[ty]++
 	}
 }
 
 func (b *builder) reset(tys []int) {
 	for _, ty := range tys {
-		switch ty {
-		case ORE:
-			b.orbs--
-		case CLAY:
-			b.crbs--
-		case OBS:
-			b.obrbs--
-		case GEO:
-			b.grbs--
+		b.rbs[ty]--
+	}
+}
+
+func sliceAdd(a []int, b []int) (res []int) {
+	for i := range a {
+		res = append(res, a[i]+b[i])
+	}
+	return
+}
+
+func sliceMinus(a []int, b []int) (res []int) {
+	for i := range a {
+		res = append(res, a[i]-b[i])
+	}
+	return
+}
+
+func sliceEqual(a [][]int, b [][]int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if len(a[i]) != len(b[i]) {
+			return false
 		}
+		for j := range a[i] {
+			if a[i][j] != b[i][j] {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func printMaxtys(maxtys [][]int, bp blueprint) {
+	bots := []int{1, 0, 0, 0}
+	its := []int{0, 0, 0, 0}
+	for i, tys := range maxtys {
+		for _, ty := range tys {
+			its = sliceMinus(its, bp.rbs[ty])
+		}
+		its = sliceAdd(its, bots)
+		for _, ty := range tys {
+			bots[ty]++
+		}
+		fmt.Printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", i+1, bots[0], its[0], bots[1], its[1], bots[2], its[2], bots[3], its[3])
 	}
 }
 

@@ -60,7 +60,7 @@ func (b *builder) hash(min int, its items) string {
 
 type result struct {
 	max    int
-	maxtys [][]int
+	maxtys []int
 }
 
 func main() {
@@ -102,7 +102,7 @@ func main() {
 			maxt: time,
 		}
 		memo := map[string]result{}
-		res := bu.maxGeode(0, newItems(), &memo, [][]int{})
+		res := bu.maxGeode(0, newItems(), &memo, []int{})
 		max := res.max
 		fmt.Printf("bp: %d: max :%d\n", bp.n, max)
 		printMaxtys(res.maxtys, bp)
@@ -116,7 +116,7 @@ func newItems() items {
 	return items{cnt: []int{0, 0, 0, 0}}
 }
 
-func (b *builder) maxGeode(min int, its items, memo *map[string]result, tysnow [][]int) result {
+func (b *builder) maxGeode(min int, its items, memo *map[string]result, tysnow []int) result {
 	if min == b.maxt {
 		return result{its.cnt[3], tysnow}
 	}
@@ -205,20 +205,20 @@ func (b *builder) timeToTy(its items, ty int) int {
 	return time + 1
 }
 
-func getTys(ms int) [][]int {
-	tys := [][]int{}
+func getTys(ms int) []int {
+	tys := []int{}
 	for i := 0; i < ms; i++ {
-		tys = append(tys, []int{})
+		tys = append(tys, -1)
 	}
 	return tys
 }
 
-func getTysTy(ms int, ty int) [][]int {
-	tys := [][]int{}
+func getTysTy(ms int, ty int) []int {
+	tys := []int{}
 	for i := 0; i < ms-1; i++ {
-		tys = append(tys, []int{})
+		tys = append(tys, -1)
 	}
-	tys = append(tys, []int{ty})
+	tys = append(tys, ty)
 	return tys
 }
 
@@ -255,62 +255,57 @@ func sliceMinus(a []int, b []int) (res []int) {
 	return
 }
 
-func sliceEqual(a [][]int, b [][]int) bool {
+func sliceEqual(a []int, b []int) bool {
 	if len(a) != len(b) {
 		return false
 	}
 
 	for i := range a {
-		if len(a[i]) != len(b[i]) {
+		if a[i] != b[i] {
 			return false
-		}
-		for j := range a[i] {
-			if a[i][j] != b[i][j] {
-				return false
-			}
 		}
 	}
 	return true
 }
 
-func printMaxtys(maxtys [][]int, bp blueprint) {
+func printMaxtys(maxtys []int, bp blueprint) {
 	bots := []int{1, 0, 0, 0}
 	its := []int{0, 0, 0, 0}
-	for i, tys := range maxtys {
-		for _, ty := range tys {
+	for i, ty := range maxtys {
+		if ty != -1 {
 			its = sliceMinus(its, bp.rbs[ty])
 		}
 		its = sliceAdd(its, bots)
-		for _, ty := range tys {
+		if ty != -1 {
 			bots[ty]++
 		}
-		fmt.Printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%v\n", i+1, bots[0], its[0], bots[1], its[1], bots[2], its[2], bots[3], its[3], tys)
+		fmt.Printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", i+1, bots[0], its[0], bots[1], its[1], bots[2], its[2], bots[3], its[3], ty)
 	}
 }
 
-func isTysNow(tys [][]int) bool {
-	tgt := [][]int{
-		{},
-		{},
-		{1},
-		{},
-		{1},
-		{},
-		{1},
-		{},
-		{},
-		{},
-		{2},
-		{1},
-		{},
-		{},
-		{2},
-		{},
-		{},
-		{3},
-		{},
-		{},
-		{3},
+func isTysNow(tys []int) bool {
+	tgt := []int{
+		-1,
+		-1,
+		1,
+		-1,
+		1,
+		-1,
+		1,
+		-1,
+		-1,
+		-1,
+		2,
+		1,
+		-1,
+		-1,
+		2,
+		-1,
+		-1,
+		3,
+		-1,
+		-1,
+		3,
 	}
 	return sliceEqual(tys, tgt)
 }

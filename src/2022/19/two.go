@@ -18,8 +18,8 @@ type items struct {
 	cnt []int
 }
 
-func (its items) next(rbs []int) items {
-	its.cnt = sliceAdd(its.cnt, rbs)
+func (its items) next(rbs []int, min int) items {
+	its.cnt = sliceMultAdd(its.cnt, rbs, min)
 	return its
 }
 
@@ -33,13 +33,6 @@ const (
 func (its items) make(bp blueprint, ty int) items {
 	its.cnt = sliceMinus(its.cnt, bp.rbs[ty])
 	return its
-}
-
-func (its items) hash() string {
-	return strconv.Itoa(its.cnt[0]) + ":" +
-		strconv.Itoa(its.cnt[1]) + ":" +
-		strconv.Itoa(its.cnt[2]) + ":" +
-		strconv.Itoa(its.cnt[3]) + ":"
 }
 
 func (its items) valid() bool {
@@ -59,11 +52,10 @@ type builder struct {
 
 func (b *builder) hash(min int, its items) string {
 	return strconv.Itoa(min) + "::" +
-		strconv.Itoa(b.rbs[0]) + ":" +
-		strconv.Itoa(b.rbs[1]) + ":" +
-		strconv.Itoa(b.rbs[2]) + ":" +
-		strconv.Itoa(b.rbs[3]) + "::" +
-		its.hash()
+		strconv.Itoa(b.rbs[0]) + ":" + strconv.Itoa(its.cnt[0]) + "::" +
+		strconv.Itoa(b.rbs[1]) + ":" + strconv.Itoa(its.cnt[1]) + "::" +
+		strconv.Itoa(b.rbs[2]) + ":" + strconv.Itoa(its.cnt[2]) + "::" +
+		strconv.Itoa(b.rbs[3]) + ":" + strconv.Itoa(its.cnt[3])
 }
 
 type result struct {
@@ -78,7 +70,11 @@ func main() {
 
 	bps := make([]blueprint, 0)
 	for _, l := range ls {
-		rx, _ := regexp.Compile("Blueprint (\\d*): Each ore robot costs (\\d*) ore. Each clay robot costs (\\d*) ore. Each obsidian robot costs (\\d*) ore and (\\d*) clay. Each geode robot costs (\\d*) ore and (\\d*) obsidian.")
+		rx, _ := regexp.Compile("Blueprint (\\d*): " +
+			"Each ore robot costs (\\d*) ore. " +
+			"Each clay robot costs (\\d*) ore. " +
+			"Each obsidian robot costs (\\d*) ore and (\\d*) clay. " +
+			"Each geode robot costs (\\d*) ore and (\\d*) obsidian.")
 		cs := rx.FindStringSubmatch(l)
 		n, _ := strconv.Atoi(cs[1])
 		orb, _ := strconv.Atoi(cs[2])
@@ -122,7 +118,7 @@ func newItems() items {
 
 func (b *builder) maxGeode(min int, its items, memo *map[string]result, tysnow [][]int) result {
 	if min == b.maxt {
-		return result{its.cnt[3], [][]int{}}
+		return result{its.cnt[3], tysnow}
 	}
 
 	max := result{}
@@ -133,49 +129,58 @@ func (b *builder) maxGeode(min int, its items, memo *map[string]result, tysnow [
 		return v
 	}
 
-	// Optimization: Make geo if possible
-	nits := its.make(b.bp, GEO)
-	if nits.valid() {
-		tys := []int{GEO}
-		nits = nits.next(b.rbs)
-		b.add(tys)
-		max = b.maxGeode(min+1, nits, memo, append(tysnow, tys))
-		b.reset(tys)
-
-		max.maxtys = append([][]int{tys}, max.maxtys...)
-		(*memo)[h] = max
-		return max
+	if isTysNow(tysnow) {
+		fmt.Printf("min: %d h: %s\n", min, h)
 	}
 
-	is := []int{0, 1, 2}
-	for _, e := range is {
-		nits := its
-		tys := []int{e}
+	is := []int{0, 1, 2, 3}
 
-		nits = nits.make(b.bp, e)
-
-		if nits.valid() {
-			nits = nits.next(b.rbs)
-			b.add(tys)
-			maxres := b.maxGeode(min+1, nits, memo, append(tysnow, tys))
-			b.reset(tys)
-
-			if maxres.max > max.max {
-				max = maxres
-				max.maxtys = append([][]int{tys}, max.maxtys...)
+	if isTysNow(tysnow) {
+		fmt.Printf("max0: %d %v\n", max.max, max.maxtys)
+	}
+	// no robots
+	ms := b.maxt - min
+	nrmax := (b.rbs[GEO] * ms) + its.cnt[GEO]
+	if nrmax > max.max {
+		max = result{
+			max:    nrmax,
+			maxtys: append(tysnow, getTys(ms)...),
+		}
+	}
+	if isTysNow(tysnow) {
+		fmt.Printf("max1: %d %v\n", max.max, max.maxtys)
+	}
+	for _, ty := range is {
+		ms := b.timeToTy(its, ty)
+		if ms > 0 && ms < b.maxt-min {
+			nits := its.next(b.rbs, ms)
+			nits = nits.make(b.bp, ty)
+			b.rbs[ty]++
+			if isTysNow(tysnow) {
+				fmt.Printf("ty: %d ms: %d\n", ty, ms)
+				fmt.Printf("max2: %d %v\n", max.max, max.maxtys)
+			}
+			maxgeo := b.maxGeode(min+ms, nits, memo, append(tysnow, getTysTy(ms, ty)...))
+			if isTysNow(tysnow) {
+				fmt.Printf("ty: %d max: %d\n", ty, maxgeo.max)
+				fmt.Printf("max3: %d %v\n", max.max, max.maxtys)
+			}
+			b.rbs[ty]--
+			if maxgeo.max > max.max {
+				if isTysNow(tysnow) {
+					fmt.Printf("changing: %d %d\n", maxgeo.max, max.max)
+					fmt.Printf("max4: %d %v\n", max.max, max.maxtys)
+				}
+				max = maxgeo
 			}
 		}
 	}
 
-	// no robots
-	nits = its.next(b.rbs)
-	maxres := b.maxGeode(min+1, nits, memo, append(tysnow, []int{}))
-	if maxres.max > max.max {
-		max = maxres
-		max.maxtys = append([][]int{{}}, max.maxtys...)
+	if isTysNow(tysnow) {
+		fmt.Printf("max5: %d %v\n", max.max, max.maxtys)
 	}
 
-	(*memo)[h] = max
+	//(*memo)[h] = max
 	return max
 }
 
@@ -186,23 +191,35 @@ func (b *builder) timeToTy(its items, ty int) int {
 	for t, it := range its.cnt {
 		if it < 0 {
 			it *= -1
-		}
-		ti := int(math.Ceil(float64(it) / float64(b.rbs[t])))
+			if b.rbs[t] == 0 {
+				return -1
+			}
+			ti := int(math.Ceil(float64(it) / float64(b.rbs[t])))
 
-		if ti > time {
-			time = ti
+			if ti > time {
+				time = ti
+			}
 		}
 	}
 
-	return time
+	return time + 1
 }
 
-func isReqTys(tysnow [][]int) bool {
-	return sliceEqual(tysnow, [][]int{
-		{}, {}, {}, {1}, {1},
-		{}, {1}, {}, {}, {},
-		{2}, {1}, {}, {}, {2},
-		{}, {}, {3}, {}, {}})
+func getTys(ms int) [][]int {
+	tys := [][]int{}
+	for i := 0; i < ms; i++ {
+		tys = append(tys, []int{})
+	}
+	return tys
+}
+
+func getTysTy(ms int, ty int) [][]int {
+	tys := [][]int{}
+	for i := 0; i < ms-1; i++ {
+		tys = append(tys, []int{})
+	}
+	tys = append(tys, []int{ty})
+	return tys
 }
 
 func (b *builder) add(tys []int) {
@@ -220,6 +237,13 @@ func (b *builder) reset(tys []int) {
 func sliceAdd(a []int, b []int) (res []int) {
 	for i := range a {
 		res = append(res, a[i]+b[i])
+	}
+	return
+}
+
+func sliceMultAdd(a []int, b []int, mult int) (res []int) {
+	for i := range a {
+		res = append(res, a[i]+(b[i]*mult))
 	}
 	return
 }
@@ -260,8 +284,35 @@ func printMaxtys(maxtys [][]int, bp blueprint) {
 		for _, ty := range tys {
 			bots[ty]++
 		}
-		fmt.Printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", i+1, bots[0], its[0], bots[1], its[1], bots[2], its[2], bots[3], its[3])
+		fmt.Printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%v\n", i+1, bots[0], its[0], bots[1], its[1], bots[2], its[2], bots[3], its[3], tys)
 	}
+}
+
+func isTysNow(tys [][]int) bool {
+	tgt := [][]int{
+		{},
+		{},
+		{1},
+		{},
+		{1},
+		{},
+		{1},
+		{},
+		{},
+		{},
+		{2},
+		{1},
+		{},
+		{},
+		{2},
+		{},
+		{},
+		{3},
+		{},
+		{},
+		{3},
+	}
+	return sliceEqual(tys, tgt)
 }
 
 func linesOf(fn string) []string {

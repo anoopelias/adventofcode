@@ -239,7 +239,7 @@ func printMaxtys(maxtys [][]int, bp blueprint) {
 		for _, ty := range tys {
 			bots[ty]++
 		}
-		fmt.Printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", i+1, bots[0], its[0], bots[1], its[1], bots[2], its[2], bots[3], its[3])
+		fmt.Printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%v\n", i+1, bots[0], its[0], bots[1], its[1], bots[2], its[2], bots[3], its[3], tys)
 	}
 }
 

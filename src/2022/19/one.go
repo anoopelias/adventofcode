@@ -73,7 +73,7 @@ type result struct {
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input1")
+	ls := linesOf("input2")
 	time := 24
 
 	bps := make([]blueprint, 0)
@@ -109,7 +109,7 @@ func main() {
 		res := bu.maxGeode(0, newItems(), &memo, [][]int{})
 		max := res.max
 		fmt.Printf("bp: %d: max :%d\n", bp.n, max)
-		printMaxtys(res.maxtys, bp)
+		//printMaxtys(res.maxtys, bp)
 		sum += (max * bp.n)
 	}
 
@@ -255,3 +255,41 @@ func linesOf(fn string) []string {
 
 	return lines
 }
+
+/*
+Input 2:
+Starting...
+bp: 1: max :2
+bp: 2: max :3
+bp: 3: max :5
+bp: 4: max :7
+bp: 5: max :0
+bp: 6: max :0
+bp: 7: max :2
+bp: 8: max :9
+bp: 9: max :0
+bp: 10: max :4
+bp: 11: max :3
+bp: 12: max :3
+bp: 13: max :2
+bp: 14: max :6
+bp: 15: max :3
+bp: 16: max :0
+bp: 17: max :0
+bp: 18: max :14
+bp: 19: max :0
+bp: 20: max :1
+bp: 21: max :0
+bp: 22: max :13
+bp: 23: max :0
+bp: 24: max :0
+bp: 25: max :12
+bp: 26: max :0
+bp: 27: max :1
+bp: 28: max :0
+bp: 29: max :3
+bp: 30: max :8
+1613
+
+
+*/

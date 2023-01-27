@@ -45,9 +45,10 @@ func (its items) valid() bool {
 }
 
 type builder struct {
-	bp   blueprint
-	rbs  []int
-	maxt int
+	bp     blueprint
+	rbs    []int
+	maxt   int
+	limits []int
 }
 
 func (b *builder) hash(min int, its items) string {
@@ -65,11 +66,31 @@ type result struct {
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input1")
+	ls := linesOf("input2")
+
+	// https://github.com/bhosale-ajay/adventofcode/blob/62e20bb6addbd31d8993b41e2910a6c6736c1c56/2022/ts/D19.test.ts#L121
+	//time := 24
+	//limits := []int{16, 6, 3, 2}
 	time := 32
+	limits := []int{16, 6, 3, 1}
+
+	// 	bp: 1: max :27
+	// bp: 2: max :38
+	// bp: 3: max :43
+	// 44118
+
+	// 	bp: 1: max :27
+	// bp: 2: max :38
+	// bp: 3: max :44
+	// 45144
+
+	// 	bp: 1: max :28
+	// bp: 2: max :38
+	// bp: 3: max :44
+	// 46816
 
 	bps := make([]blueprint, 0)
-	for _, l := range ls {
+	for _, l := range ls[:3] {
 		rx, _ := regexp.Compile("Blueprint (\\d*): " +
 			"Each ore robot costs (\\d*) ore. " +
 			"Each clay robot costs (\\d*) ore. " +
@@ -102,9 +123,10 @@ func main() {
 
 	for _, bp := range bps {
 		bu := builder{
-			bp:   bp,
-			rbs:  []int{1, 0, 0, 0},
-			maxt: time,
+			bp:     bp,
+			rbs:    []int{1, 0, 0, 0},
+			maxt:   time,
+			limits: limits,
 		}
 		memo := map[string]int{}
 		//tysnow := make([]int, time)
@@ -136,14 +158,14 @@ func (b *builder) maxGeode(min int, its items, memo *map[string]int) int {
 	is := []int{0, 1, 2, 3}
 
 	// no robots
-	ms := b.maxt - min
-	nrmax := (b.rbs[GEO] * ms) + its.cnt[GEO]
+	rt := b.maxt - min
+	nrmax := (b.rbs[GEO] * rt) + its.cnt[GEO]
 	if nrmax > maxx {
 		maxx = nrmax
 	}
 	for _, ty := range is {
 		ms := b.timeToTy(its, ty)
-		if ms > 0 && ms < b.maxt-min {
+		if rt >= b.limits[ty] && ms > 0 && ms < b.maxt-min {
 			nits := its.next(b.rbs, ms)
 			nits = nits.make(b.bp, ty)
 			nmin := min + ms

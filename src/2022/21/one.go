@@ -92,7 +92,7 @@ func solve(ls []string) string {
 	return strconv.Itoa(ms["root"].calcVal())
 }
 
-func main() {
+func main1() {
 	fmt.Println("Starting...")
 	ls := goutils.LinesOf("input2")
 	fmt.Println(solve(ls))

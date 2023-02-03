@@ -163,9 +163,9 @@ func newBoard(ls []string) board {
 	return b
 }
 
-func solve(ls []string) string {
+func solve(ls []string, typ int) string {
 	b := newBoard(ls[:len(ls)-2])
-	b.bars = calcBars()
+	b.bars = calcBars(typ)
 	ps := paths(ls[len(ls)-1])
 
 	for _, p := range ps {
@@ -184,13 +184,19 @@ func solve(ls []string) string {
 	return strconv.Itoa((1000 * (b.pos.row + 1)) + (4 * (b.pos.col + 1)) + b.dir)
 }
 
-func calcBars() bars {
-	return bars{
-		calcRBar(),
-		calcDBar(),
-		calcLBar(),
-		calcUBar(),
+func calcBars(typ int) bars {
+
+	if typ == 2 {
+		// https: //imgur.com/a/VzxlUZa
+		return bars{
+			calcRBar(),
+			calcDBar(),
+			calcLBar(),
+			calcUBar(),
+		}
 	}
+
+	return bars{}
 }
 
 func calcLBar() []nxt {
@@ -322,6 +328,8 @@ func isB(r byte) bool {
 
 func main() {
 	fmt.Println("Starting...")
-	ls := goutils.LinesOf("input2")
-	fmt.Println(solve(ls))
+	name := "input2"
+	typ := 2
+	ls := goutils.LinesOf(name)
+	fmt.Println(solve(ls, typ))
 }

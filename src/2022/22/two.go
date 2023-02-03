@@ -187,7 +187,7 @@ func solve(ls []string, typ int) string {
 func calcBars(typ int) bars {
 
 	if typ == 2 {
-		// https: //imgur.com/a/VzxlUZa
+		// https://imgur.com/a/VzxlUZa
 		return bars{
 			calcRBar(),
 			calcDBar(),
@@ -196,11 +196,124 @@ func calcBars(typ int) bars {
 		}
 	}
 
-	return bars{}
+	return bars{
+		calcOtherRBar(),
+		calcOtherDBar(),
+		calcOtherLBar(),
+		calcOtherUBar(),
+	}
+}
+
+func calcOtherLBar() []nxt {
+	lbar := make([]nxt, 12)
+
+	// 0,8   4,4
+	// 1,8   4,5
+	for i := 0; i < 4; i++ {
+		lbar[i] = nxt{coord{4, i + 4}, down}
+	}
+
+	// 4,0    11,15
+	// 5,0    11,14
+	for i := 4; i < 8; i++ {
+		lbar[i] = nxt{coord{11, 19 - i}, up}
+	}
+
+	// 8,0    7,7
+	// 9,0    7,6
+	for i := 8; i < 12; i++ {
+		lbar[i] = nxt{coord{7, 15 - i}, up}
+	}
+
+	return lbar
+}
+
+func calcOtherRBar() []nxt {
+	rbar := make([]nxt, 12)
+
+	// 0,11   11,15
+	// 1,11   10,15
+	for i := 0; i < 4; i++ {
+		rbar[i] = nxt{coord{11 - i, 15}, left}
+	}
+
+	// 4,11    8,15
+	// 5,11    8,14
+	for i := 4; i < 8; i++ {
+		rbar[i] = nxt{coord{8, 19 - i}, down}
+	}
+
+	// 8,15    3,11
+	// 9,15    2,11
+	for i := 8; i < 12; i++ {
+		rbar[i] = nxt{coord{11 - i, 11}, left}
+	}
+
+	return rbar
+}
+
+func calcOtherUBar() []nxt {
+	ubar := make([]nxt, 16)
+
+	// 3,0   0,11
+	// 3,1   0,10
+	for i := 0; i < 4; i++ {
+		ubar[i] = nxt{coord{0, 11 - i}, down}
+	}
+
+	// 3,4    0,8
+	// 3,5    1,8
+	for i := 4; i < 8; i++ {
+		ubar[i] = nxt{coord{i - 4, 8}, right}
+	}
+
+	// 0,8    4,3
+	// 0,9    4,2
+	for i := 8; i < 12; i++ {
+		ubar[i] = nxt{coord{4, 11 - i}, down}
+	}
+
+	// 8,12    7,11
+	// 8,13    6,11
+	for i := 12; i < 16; i++ {
+		ubar[i] = nxt{coord{19 - i, 11}, left}
+	}
+
+	return ubar
+}
+
+func calcOtherDBar() []nxt {
+	dbar := make([]nxt, 16)
+
+	// dbar[i] = nxt{coord{}, 0}
+
+	// 7,0    11,11
+	// 7,1    11,10
+	for i := 0; i < 4; i++ {
+		dbar[i] = nxt{coord{11, 11 - i}, up}
+	}
+
+	// 7,4    11,8
+	// 7,5    10,8
+	for i := 4; i < 8; i++ {
+		dbar[i] = nxt{coord{15 - i, 8}, right}
+	}
+
+	// 11,8    7,3
+	// 11,9    7,2
+	for i := 8; i < 12; i++ {
+		dbar[i] = nxt{coord{7, 11 - i}, left}
+	}
+
+	// 11,12    7,0
+	// 11,13    6,0
+	for i := 12; i < 16; i++ {
+		dbar[i] = nxt{coord{19 - i, 0}, up}
+	}
+	return dbar
 }
 
 func calcLBar() []nxt {
-	// input2: https://imgur.com/a/PmuuIlP
 	lbar := make([]nxt, 200)
 
 	// 0,50    149,0
@@ -315,7 +428,7 @@ func paths(path string) []string {
 }
 
 func isO(r byte) bool {
-	return r == '.'
+	return r == '.' || r == '>' || r == '<' || r == 'v' || r == '^'
 }
 
 func isC(r byte) bool {
@@ -328,8 +441,13 @@ func isB(r byte) bool {
 
 func main() {
 	fmt.Println("Starting...")
-	name := "input2"
-	typ := 2
+	name := "input"
+	typ := 1
 	ls := goutils.LinesOf(name)
+	fmt.Println(solve(ls, typ))
+
+	name = "input2"
+	typ = 2
+	ls = goutils.LinesOf(name)
 	fmt.Println(solve(ls, typ))
 }

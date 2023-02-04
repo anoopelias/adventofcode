@@ -377,6 +377,7 @@ func (cb *cube) dnext(col int) nxt {
 }
 
 func createCube() cube {
+	// https://imgur.com/a/VzxlUZa
 	len := 50
 	btf := newFace(0, 1, len)
 	rtf := newFace(0, 2, len)
@@ -418,6 +419,7 @@ func createCube() cube {
 }
 
 func createOtherCube() cube {
+	// https://imgur.com/a/2UJXaJg
 	len := 4
 	btf := newFace(1, 2, len)
 	rtf := newFace(2, 3, len)

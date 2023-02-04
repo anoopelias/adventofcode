@@ -34,13 +34,6 @@ func (c coord) copy() coord {
 	return c
 }
 
-type bars struct {
-	rbar []nxt
-	dbar []nxt
-	lbar []nxt
-	ubar []nxt
-}
-
 type nxt struct {
 	pos coord
 	dir int
@@ -51,14 +44,10 @@ func (n *nxt) copy() nxt {
 }
 
 type board struct {
-	m    [][]string
-	pos  *coord
-	dir  int
-	bars bars
-	ubar []nxt
-	dbar []nxt
-	lbar []nxt
-	rbar []nxt
+	m   [][]string
+	pos *coord
+	dir int
+	cb  cube
 }
 
 func (b *board) move(num int) {
@@ -97,8 +86,7 @@ func (b *board) moveR() bool {
 	nxt := nxt{b.pos.copy(), b.dir}
 	nxt.pos.col = b.pos.col + 1
 	if nxt.pos.col == len(b.m[b.pos.row]) || isB(b.m[b.pos.row][nxt.pos.col]) {
-		nxt = b.bars.rbar[b.pos.row].copy()
-		// fmt.Printf("> %d,%d -> %d,%d %s\n", b.pos.row, b.pos.col, nxt.pos.row, nxt.pos.col, dirStr(nxt.dir))
+		nxt = b.cb.rnext(b.pos.row)
 	}
 	if isO(b.m[nxt.pos.row][nxt.pos.col]) {
 		b.pos = &nxt.pos
@@ -113,8 +101,7 @@ func (b *board) moveL() bool {
 	nxt := nxt{b.pos.copy(), b.dir}
 	nxt.pos.col = b.pos.col - 1
 	if nxt.pos.col < 0 || isB(b.m[b.pos.row][nxt.pos.col]) {
-		nxt = b.bars.lbar[b.pos.row].copy()
-		// fmt.Printf("< %d,%d -> %d,%d %s\n", b.pos.row, b.pos.col, nxt.pos.row, nxt.pos.col, dirStr(nxt.dir))
+		nxt = b.cb.lnext(b.pos.row)
 	}
 	if isO(b.m[nxt.pos.row][nxt.pos.col]) {
 		b.pos = &nxt.pos
@@ -132,8 +119,7 @@ func (b *board) moveD() bool {
 		nxt.pos.col >= len(b.m[nxt.pos.row]) ||
 		isB(b.m[nxt.pos.row][b.pos.col]) {
 
-		nxt = b.bars.dbar[b.pos.col].copy()
-		// fmt.Printf("v %d,%d -> %d,%d %s\n", b.pos.row, b.pos.col, nxt.pos.row, nxt.pos.col, dirStr(nxt.dir))
+		nxt = b.cb.dnext(b.pos.col)
 	}
 	if isO(b.m[nxt.pos.row][nxt.pos.col]) {
 		b.pos = &nxt.pos
@@ -151,8 +137,7 @@ func (b *board) moveU() bool {
 		nxt.pos.col >= len(b.m[nxt.pos.row]) ||
 		isB(b.m[nxt.pos.row][b.pos.col]) {
 
-		nxt = b.bars.ubar[b.pos.col].copy()
-		// fmt.Printf("^ %d,%d -> %d,%d %s\n", b.pos.row, b.pos.col, nxt.pos.row, nxt.pos.col, dirStr(nxt.dir))
+		nxt = b.cb.unext(b.pos.col)
 	}
 	if isO(b.m[nxt.pos.row][nxt.pos.col]) {
 		b.pos = &nxt.pos
@@ -206,7 +191,7 @@ func newBoard(ls []string) board {
 
 func solve(ls []string, typ int) string {
 	b := newBoard(ls[:len(ls)-2])
-	b.bars = calcBars(typ)
+	b.cb = getCube(typ)
 	ps := paths(ls[len(ls)-1])
 
 	for _, p := range ps {
@@ -231,34 +216,12 @@ func printMap(m [][]string) {
 	}
 }
 
-func calcBars(typ int) bars {
-
+func getCube(typ int) cube {
 	if typ == 2 {
-		// https://imgur.com/a/VzxlUZa
-		cube := createCube()
-		return bars{
-			calcBar(cube.rbs, cube.len, 4),
-			calcBar(cube.dbs, cube.len, 3),
-			calcBar(cube.lbs, cube.len, 4),
-			calcBar(cube.ubs, cube.len, 3),
-		}
+		return createCube()
 	}
 
-	cube := createOtherCube()
-	return bars{
-		calcBar(cube.rbs, cube.len, 3),
-		calcBar(cube.dbs, cube.len, 4),
-		calcBar(cube.lbs, cube.len, 3),
-		calcBar(cube.ubs, cube.len, 4),
-	}
-}
-
-func calcBar(ss []*side, len, wd int) []nxt {
-	bar := make([]nxt, len*wd)
-	for i := 0; i < len*wd; i++ {
-		bar[i] = ss[i/len].next(i)
-	}
-	return bar
+	return createOtherCube()
 }
 
 func paths(path string) []string {
@@ -396,6 +359,21 @@ type cube struct {
 	lbs []*side
 	rbs []*side
 	len int
+}
+
+func (cb *cube) rnext(row int) nxt {
+	return cb.rbs[row/cb.len].next(row)
+}
+func (cb *cube) lnext(row int) nxt {
+	return cb.lbs[row/cb.len].next(row)
+}
+
+func (cb *cube) unext(col int) nxt {
+	return cb.ubs[col/cb.len].next(col)
+}
+
+func (cb *cube) dnext(col int) nxt {
+	return cb.dbs[col/cb.len].next(col)
 }
 
 func createCube() cube {

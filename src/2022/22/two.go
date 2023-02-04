@@ -243,11 +243,12 @@ func calcBars(typ int) bars {
 
 	if typ == 2 {
 		// https://imgur.com/a/VzxlUZa
+		cube := createCube()
 		return bars{
-			calcRBar(),
-			calcDBar(),
-			calcLBar(),
-			calcUBar(),
+			calcRBar(cube),
+			calcDBar(cube),
+			calcLBar(cube),
+			calcUBar(cube),
 		}
 	}
 
@@ -368,114 +369,38 @@ func calcOtherDBar() []nxt {
 	return dbar
 }
 
-func calcLBar() []nxt {
+func calcLBar(cb cube) []nxt {
 	lbar := make([]nxt, 200)
 
-	// -1 149 0  0  right
-	//  0 100 1 -50 down
-
-	// 0,50    149,0
-	// 1,50    148,0
-
-	for i := 0; i < 50; i++ {
-		lbar[i] = nxt{coord{149 - i, 0}, right}
-	}
-
-	// 50,50    100,0
-	// 51,50    100,1
-	for i := 50; i < 100; i++ {
-		lbar[i] = nxt{coord{100, i - 50}, down}
-	}
-
-	// 100,0    49,50
-	// 101,0    48,50
-	for i := 100; i < 150; i++ {
-		lbar[i] = nxt{coord{149 - i, 50}, right}
-	}
-
-	// 150,0    0,50
-	// 151,0    0,51
-	for i := 150; i < 200; i++ {
-		lbar[i] = nxt{coord{0, i - 100}, down}
+	for i := 0; i < 200; i++ {
+		lbar[i] = cb.lbs[i/50].next(i)
 	}
 	return lbar
 }
 
-func calcRBar() []nxt {
+func calcRBar(cb cube) []nxt {
 	rbar := make([]nxt, 200)
 
-	// 0,149    149,99
-	// 1,149    148,99
-	for i := 0; i < 50; i++ {
-		rbar[i] = nxt{coord{149 - i, 99}, left}
-	}
-
-	// 50,99    49,100
-	// 51,99    49,101
-	for i := 50; i < 100; i++ {
-		rbar[i] = nxt{coord{49, i + 50}, up}
-	}
-
-	// 100,99   49,149
-	// 101,99   48,149
-	for i := 100; i < 150; i++ {
-		rbar[i] = nxt{coord{149 - i, 149}, left}
-	}
-
-	// 150,49    149,50
-	// 151,49    149,51
-	for i := 150; i < 200; i++ {
-		rbar[i] = nxt{coord{149, i - 100}, up}
+	for i := 0; i < 200; i++ {
+		rbar[i] = cb.rbs[i/50].next(i)
 	}
 	return rbar
 }
 
-func calcUBar() []nxt {
+func calcUBar(cb cube) []nxt {
 	ubar := make([]nxt, 150)
-
-	// 100,0    50,50
-	// 100,1    51,50
-	for i := 0; i < 50; i++ {
-		ubar[i] = nxt{coord{i + 50, 50}, right}
+	for i := 0; i < 150; i++ {
+		ubar[i] = cb.ubs[i/50].next(i)
 	}
-
-	// 0,50     150,0
-	// 0,51     151,0
-	for i := 50; i < 100; i++ {
-		ubar[i] = nxt{coord{i + 100, 0}, right}
-	}
-
-	// 0,100    199,0
-	// 0,101    199,1
-	for i := 100; i < 150; i++ {
-		ubar[i] = nxt{coord{199, i - 100}, up}
-	}
-
 	return ubar
 }
 
-func calcDBar() []nxt {
+func calcDBar(cb cube) []nxt {
 	dbar := make([]nxt, 150)
-
-	// 199,0    0,100
-	// 199,1    0,101
-	for i := 0; i < 50; i++ {
-		dbar[i] = nxt{coord{0, i + 100}, down}
+	for i := 0; i < 150; i++ {
+		dbar[i] = cb.dbs[i/50].next(i)
 
 	}
-
-	// 149,50    150,49
-	// 149,51    151,49
-	for i := 50; i < 100; i++ {
-		dbar[i] = nxt{coord{i + 100, 49}, left}
-	}
-
-	// 49,100    50,99
-	// 49,101    51,99
-	for i := 100; i < 150; i++ {
-		dbar[i] = nxt{coord{i - 50, 99}, left}
-	}
-
 	return dbar
 }
 
@@ -591,9 +516,9 @@ func (f *face) fillSides() {
 	}
 }
 
-func newFace(top, left int) face {
+func newFace(top, left, len int) face {
 	f := face{
-		len:  50,
+		len:  len,
 		top:  top,
 		left: left,
 	}
@@ -608,15 +533,21 @@ type cube struct {
 	ltf *face
 	tpf *face
 	bkf *face
+
+	ubs []*side
+	dbs []*side
+	lbs []*side
+	rbs []*side
 }
 
 func createCube() cube {
-	btf := newFace(0, 50)
-	rtf := newFace(0, 100)
-	ftf := newFace(50, 50)
-	tpf := newFace(100, 50)
-	ltf := newFace(100, 0)
-	bkf := newFace(150, 0)
+	len := 50
+	btf := newFace(0, 50, len)
+	rtf := newFace(0, 100, len)
+	ftf := newFace(50, 50, len)
+	tpf := newFace(100, 50, len)
+	ltf := newFace(100, 0, len)
+	bkf := newFace(150, 0, len)
 
 	btf.ls.pairWith(ltf.ls, true)
 	btf.ups.pairWith(bkf.ls, false)
@@ -642,50 +573,20 @@ func createCube() cube {
 		&ltf,
 		&tpf,
 		&bkf,
+		[]*side{ltf.ups, btf.ups, rtf.ups},
+		[]*side{bkf.bts, tpf.bts, rtf.bts},
+		[]*side{btf.ls, ftf.ls, ltf.ls, bkf.ls},
+		[]*side{rtf.rs, ftf.rs, tpf.rs, bkf.rs},
 	}
 }
 
 func main() {
 	fmt.Println("Starting...")
-	// bs := calcBars(2)
-	// cb := createCube()
-	// sd := cb.ltf.ups
-
-	// for i, nx := range bs.ubar {
-	// 	if i == 50 {
-	// 		sd = cb.btf.ups
-	// 	} else if i == 100 {
-	// 		sd = cb.rtf.ups
-	// 	}
-	// 	nnx := sd.next(i)
-
-	// 	if nx.dir != nnx.dir || nx.pos.col != nnx.pos.col || nx.pos.row != nnx.pos.row {
-	// 		fmt.Print(nx)
-	// 		fmt.Print(" :: ")
-	// 		fmt.Println(nnx)
-	// 	}
-	// }
-
-	// sd = cb.bkf.bts
-	// for i, nx := range bs.dbar {
-	// 	if i == 50 {
-	// 		sd = cb.tpf.bts
-	// 	} else if i == 100 {
-	// 		sd = cb.rtf.bts
-	// 	}
-	// 	nnx := sd.next(i)
-
-	// 	if nx.dir != nnx.dir || nx.pos.col != nnx.pos.col || nx.pos.row != nnx.pos.row {
-	// 		fmt.Print(nx)
-	// 		fmt.Print(" :: ")
-	// 		fmt.Println(nnx)
-	// 	}
-	// }
 
 	name := "input"
 	typ := 1
 	ls := goutils.LinesOf(name)
-	// fmt.Println(solve(ls, typ))
+	fmt.Println(solve(ls, typ))
 
 	name = "input2"
 	typ = 2

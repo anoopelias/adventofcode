@@ -209,7 +209,6 @@ func solve(ls []string, typ int) string {
 	b.bars = calcBars(typ)
 	ps := paths(ls[len(ls)-1])
 
-	// printMap(b.m)
 	for _, p := range ps {
 		switch p {
 		case "L":
@@ -220,14 +219,7 @@ func solve(ls []string, typ int) string {
 			num, _ := strconv.Atoi(p)
 			b.move(num)
 		}
-
-		// if i == 3 {
-		// 	fmt.Printf("%s\n", p)
-		// 	printMap(b.m)
-		// }
 	}
-	// fmt.Println()
-	// printMap(b.m)
 
 	fmt.Printf("%d %d %d\n", b.pos.row, b.pos.col, b.dir)
 	return strconv.Itoa((1000 * (b.pos.row + 1)) + (4 * (b.pos.col + 1)) + b.dir)
@@ -245,163 +237,28 @@ func calcBars(typ int) bars {
 		// https://imgur.com/a/VzxlUZa
 		cube := createCube()
 		return bars{
-			calcRBar(cube),
-			calcDBar(cube),
-			calcLBar(cube),
-			calcUBar(cube),
+			calcBar(cube.rbs, cube.len, 4),
+			calcBar(cube.dbs, cube.len, 3),
+			calcBar(cube.lbs, cube.len, 4),
+			calcBar(cube.ubs, cube.len, 3),
 		}
 	}
 
+	cube := createOtherCube()
 	return bars{
-		calcOtherRBar(),
-		calcOtherDBar(),
-		calcOtherLBar(),
-		calcOtherUBar(),
+		calcBar(cube.rbs, cube.len, 3),
+		calcBar(cube.dbs, cube.len, 4),
+		calcBar(cube.lbs, cube.len, 3),
+		calcBar(cube.ubs, cube.len, 4),
 	}
 }
 
-func calcOtherLBar() []nxt {
-	lbar := make([]nxt, 12)
-
-	// 0,8   4,4
-	// 1,8   4,5
-	for i := 0; i < 4; i++ {
-		lbar[i] = nxt{coord{4, i + 4}, down}
+func calcBar(ss []*side, len, wd int) []nxt {
+	bar := make([]nxt, len*wd)
+	for i := 0; i < len*wd; i++ {
+		bar[i] = ss[i/len].next(i)
 	}
-
-	// 4,0    11,15
-	// 5,0    11,14
-	for i := 4; i < 8; i++ {
-		lbar[i] = nxt{coord{11, 19 - i}, up}
-	}
-
-	// 8,0    7,7
-	// 9,0    7,6
-	for i := 8; i < 12; i++ {
-		lbar[i] = nxt{coord{7, 15 - i}, up}
-	}
-
-	return lbar
-}
-
-func calcOtherRBar() []nxt {
-	rbar := make([]nxt, 12)
-
-	// 0,11   11,15
-	// 1,11   10,15
-	for i := 0; i < 4; i++ {
-		rbar[i] = nxt{coord{11 - i, 15}, left}
-	}
-
-	// 4,11    8,15
-	// 5,11    8,14
-	for i := 4; i < 8; i++ {
-		rbar[i] = nxt{coord{8, 19 - i}, down}
-	}
-
-	// 8,15    3,11
-	// 9,15    2,11
-	for i := 8; i < 12; i++ {
-		rbar[i] = nxt{coord{11 - i, 11}, left}
-	}
-
-	return rbar
-}
-
-func calcOtherUBar() []nxt {
-	ubar := make([]nxt, 16)
-
-	// 3,0   0,11
-	// 3,1   0,10
-	for i := 0; i < 4; i++ {
-		ubar[i] = nxt{coord{0, 11 - i}, down}
-	}
-
-	// 3,4    0,8
-	// 3,5    1,8
-	for i := 4; i < 8; i++ {
-		ubar[i] = nxt{coord{i - 4, 8}, right}
-	}
-
-	// 0,8    4,3
-	// 0,9    4,2
-	for i := 8; i < 12; i++ {
-		ubar[i] = nxt{coord{4, 11 - i}, down}
-	}
-
-	// 8,12    7,11
-	// 8,13    6,11
-	for i := 12; i < 16; i++ {
-		ubar[i] = nxt{coord{19 - i, 11}, left}
-	}
-
-	return ubar
-}
-
-func calcOtherDBar() []nxt {
-	dbar := make([]nxt, 16)
-
-	// dbar[i] = nxt{coord{}, 0}
-
-	// 7,0    11,11
-	// 7,1    11,10
-	for i := 0; i < 4; i++ {
-		dbar[i] = nxt{coord{11, 11 - i}, up}
-	}
-
-	// 7,4    11,8
-	// 7,5    10,8
-	for i := 4; i < 8; i++ {
-		dbar[i] = nxt{coord{15 - i, 8}, right}
-	}
-
-	// 11,8    7,3
-	// 11,9    7,2
-	for i := 8; i < 12; i++ {
-		dbar[i] = nxt{coord{7, 11 - i}, up}
-	}
-
-	// 11,12    7,0
-	// 11,13    6,0
-	for i := 12; i < 16; i++ {
-		dbar[i] = nxt{coord{19 - i, 0}, up}
-	}
-	return dbar
-}
-
-func calcLBar(cb cube) []nxt {
-	lbar := make([]nxt, 200)
-
-	for i := 0; i < 200; i++ {
-		lbar[i] = cb.lbs[i/50].next(i)
-	}
-	return lbar
-}
-
-func calcRBar(cb cube) []nxt {
-	rbar := make([]nxt, 200)
-
-	for i := 0; i < 200; i++ {
-		rbar[i] = cb.rbs[i/50].next(i)
-	}
-	return rbar
-}
-
-func calcUBar(cb cube) []nxt {
-	ubar := make([]nxt, 150)
-	for i := 0; i < 150; i++ {
-		ubar[i] = cb.ubs[i/50].next(i)
-	}
-	return ubar
-}
-
-func calcDBar(cb cube) []nxt {
-	dbar := make([]nxt, 150)
-	for i := 0; i < 150; i++ {
-		dbar[i] = cb.dbs[i/50].next(i)
-
-	}
-	return dbar
+	return bar
 }
 
 func paths(path string) []string {
@@ -519,8 +376,8 @@ func (f *face) fillSides() {
 func newFace(top, left, len int) face {
 	f := face{
 		len:  len,
-		top:  top,
-		left: left,
+		top:  top * len,
+		left: left * len,
 	}
 	f.fillSides()
 	return f
@@ -538,16 +395,17 @@ type cube struct {
 	dbs []*side
 	lbs []*side
 	rbs []*side
+	len int
 }
 
 func createCube() cube {
 	len := 50
-	btf := newFace(0, 50, len)
-	rtf := newFace(0, 100, len)
-	ftf := newFace(50, 50, len)
-	tpf := newFace(100, 50, len)
-	ltf := newFace(100, 0, len)
-	bkf := newFace(150, 0, len)
+	btf := newFace(0, 1, len)
+	rtf := newFace(0, 2, len)
+	ftf := newFace(1, 1, len)
+	tpf := newFace(2, 1, len)
+	ltf := newFace(2, 0, len)
+	bkf := newFace(3, 0, len)
 
 	btf.ls.pairWith(ltf.ls, true)
 	btf.ups.pairWith(bkf.ls, false)
@@ -577,6 +435,40 @@ func createCube() cube {
 		[]*side{bkf.bts, tpf.bts, rtf.bts},
 		[]*side{btf.ls, ftf.ls, ltf.ls, bkf.ls},
 		[]*side{rtf.rs, ftf.rs, tpf.rs, bkf.rs},
+		len,
+	}
+}
+
+func createOtherCube() cube {
+	len := 4
+	btf := newFace(1, 2, len)
+	rtf := newFace(2, 3, len)
+	ftf := newFace(2, 2, len)
+	tpf := newFace(1, 0, len)
+	ltf := newFace(1, 1, len)
+	bkf := newFace(0, 2, len)
+
+	bkf.ups.pairWith(tpf.ups, true)
+	bkf.ls.pairWith(ltf.ups, false)
+	bkf.rs.pairWith(rtf.rs, true)
+
+	btf.rs.pairWith(rtf.ups, true)
+	tpf.bts.pairWith(ftf.bts, true)
+	tpf.ls.pairWith(rtf.bts, true)
+	ftf.ls.pairWith(ltf.bts, true)
+
+	return cube{
+		&btf,
+		&ftf,
+		&rtf,
+		&ltf,
+		&tpf,
+		&bkf,
+		[]*side{tpf.ups, ltf.ups, bkf.ups, rtf.ups},
+		[]*side{tpf.bts, ltf.bts, ftf.bts, rtf.bts},
+		[]*side{bkf.ls, tpf.ls, ftf.ls},
+		[]*side{bkf.rs, btf.rs, rtf.rs},
+		len,
 	}
 }
 

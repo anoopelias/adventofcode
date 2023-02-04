@@ -51,7 +51,7 @@ func (n *nxt) copy() nxt {
 }
 
 type board struct {
-	m    []string
+	m    [][]string
 	pos  *coord
 	dir  int
 	bars bars
@@ -62,46 +62,70 @@ type board struct {
 }
 
 func (b *board) move(num int) {
-	for j := 0; j < num; j++ {
+	bkd := false
+	for j := 0; j < num && !bkd; j++ {
 		switch b.dir {
 		case left:
-			b.moveL()
+			bkd = b.moveL()
 		case right:
-			b.moveR()
+			bkd = b.moveR()
 		case up:
-			b.moveU()
+			bkd = b.moveU()
 		case down:
-			b.moveD()
+			bkd = b.moveD()
 		}
+		b.m[b.pos.row][b.pos.col] = dirStr(b.dir)
 	}
 
 }
 
-func (b *board) moveR() {
+func dirStr(dir int) string {
+	switch dir {
+	case right:
+		return ">"
+	case down:
+		return "v"
+	case left:
+		return "<"
+	case up:
+		return "^"
+	}
+	return "."
+}
+
+func (b *board) moveR() bool {
 	nxt := nxt{b.pos.copy(), b.dir}
 	nxt.pos.col = b.pos.col + 1
 	if nxt.pos.col == len(b.m[b.pos.row]) || isB(b.m[b.pos.row][nxt.pos.col]) {
 		nxt = b.bars.rbar[b.pos.row].copy()
+		// fmt.Printf("> %d,%d -> %d,%d %s\n", b.pos.row, b.pos.col, nxt.pos.row, nxt.pos.col, dirStr(nxt.dir))
 	}
 	if isO(b.m[nxt.pos.row][nxt.pos.col]) {
 		b.pos = &nxt.pos
 		b.dir = nxt.dir
+	} else {
+		return true
 	}
+	return false
 }
 
-func (b *board) moveL() {
+func (b *board) moveL() bool {
 	nxt := nxt{b.pos.copy(), b.dir}
 	nxt.pos.col = b.pos.col - 1
 	if nxt.pos.col < 0 || isB(b.m[b.pos.row][nxt.pos.col]) {
 		nxt = b.bars.lbar[b.pos.row].copy()
+		// fmt.Printf("< %d,%d -> %d,%d %s\n", b.pos.row, b.pos.col, nxt.pos.row, nxt.pos.col, dirStr(nxt.dir))
 	}
 	if isO(b.m[nxt.pos.row][nxt.pos.col]) {
 		b.pos = &nxt.pos
 		b.dir = nxt.dir
+	} else {
+		return true
 	}
+	return false
 }
 
-func (b *board) moveD() {
+func (b *board) moveD() bool {
 	nxt := nxt{b.pos.copy(), b.dir}
 	nxt.pos.row = b.pos.row + 1
 	if nxt.pos.row == len(b.m) ||
@@ -109,14 +133,18 @@ func (b *board) moveD() {
 		isB(b.m[nxt.pos.row][b.pos.col]) {
 
 		nxt = b.bars.dbar[b.pos.col].copy()
+		// fmt.Printf("v %d,%d -> %d,%d %s\n", b.pos.row, b.pos.col, nxt.pos.row, nxt.pos.col, dirStr(nxt.dir))
 	}
 	if isO(b.m[nxt.pos.row][nxt.pos.col]) {
 		b.pos = &nxt.pos
 		b.dir = nxt.dir
+	} else {
+		return true
 	}
+	return false
 }
 
-func (b *board) moveU() {
+func (b *board) moveU() bool {
 	nxt := nxt{b.pos.copy(), b.dir}
 	nxt.pos.row = b.pos.row - 1
 	if nxt.pos.row < 0 ||
@@ -124,11 +152,15 @@ func (b *board) moveU() {
 		isB(b.m[nxt.pos.row][b.pos.col]) {
 
 		nxt = b.bars.ubar[b.pos.col].copy()
+		// fmt.Printf("^ %d,%d -> %d,%d %s\n", b.pos.row, b.pos.col, nxt.pos.row, nxt.pos.col, dirStr(nxt.dir))
 	}
 	if isO(b.m[nxt.pos.row][nxt.pos.col]) {
 		b.pos = &nxt.pos
 		b.dir = nxt.dir
+	} else {
+		return true
 	}
+	return false
 }
 
 func (b *board) turnR() {
@@ -137,6 +169,7 @@ func (b *board) turnR() {
 		return
 	}
 	b.dir++
+	b.m[b.pos.row][b.pos.col] = dirStr(b.dir)
 }
 
 func (b *board) turnL() {
@@ -145,11 +178,18 @@ func (b *board) turnL() {
 		return
 	}
 	b.dir--
+	b.m[b.pos.row][b.pos.col] = dirStr(b.dir)
 }
 
 func newBoard(ls []string) board {
+	m := make([][]string, 0)
+
+	for _, l := range ls {
+		m = append(m, strings.Split(l, ""))
+	}
+
 	b := board{
-		m:   ls,
+		m:   m,
 		pos: &coord{},
 		dir: right,
 	}
@@ -160,6 +200,7 @@ func newBoard(ls []string) board {
 			break
 		}
 	}
+	b.m[b.pos.row][b.pos.col] = ">"
 	return b
 }
 
@@ -168,6 +209,7 @@ func solve(ls []string, typ int) string {
 	b.bars = calcBars(typ)
 	ps := paths(ls[len(ls)-1])
 
+	// printMap(b.m)
 	for _, p := range ps {
 		switch p {
 		case "L":
@@ -178,10 +220,23 @@ func solve(ls []string, typ int) string {
 			num, _ := strconv.Atoi(p)
 			b.move(num)
 		}
+
+		// if i == 3 {
+		// 	fmt.Printf("%s\n", p)
+		// 	printMap(b.m)
+		// }
 	}
+	// fmt.Println()
+	// printMap(b.m)
 
 	fmt.Printf("%d %d %d\n", b.pos.row, b.pos.col, b.dir)
 	return strconv.Itoa((1000 * (b.pos.row + 1)) + (4 * (b.pos.col + 1)) + b.dir)
+}
+
+func printMap(m [][]string) {
+	for _, r := range m {
+		fmt.Println(strings.Join(r, ""))
+	}
 }
 
 func calcBars(typ int) bars {
@@ -302,7 +357,7 @@ func calcOtherDBar() []nxt {
 	// 11,8    7,3
 	// 11,9    7,2
 	for i := 8; i < 12; i++ {
-		dbar[i] = nxt{coord{7, 11 - i}, left}
+		dbar[i] = nxt{coord{7, 11 - i}, up}
 	}
 
 	// 11,12    7,0
@@ -316,8 +371,12 @@ func calcOtherDBar() []nxt {
 func calcLBar() []nxt {
 	lbar := make([]nxt, 200)
 
+	// -1 149 0  0  right
+	//  0 100 1 -50 down
+
 	// 0,50    149,0
 	// 1,50    148,0
+
 	for i := 0; i < 50; i++ {
 		lbar[i] = nxt{coord{149 - i, 0}, right}
 	}
@@ -345,10 +404,10 @@ func calcLBar() []nxt {
 func calcRBar() []nxt {
 	rbar := make([]nxt, 200)
 
-	// 0,149    100,99
-	// 1,149    101,99
+	// 0,149    149,99
+	// 1,149    148,99
 	for i := 0; i < 50; i++ {
-		rbar[i] = nxt{coord{i + 100, 99}, left}
+		rbar[i] = nxt{coord{149 - i, 99}, left}
 	}
 
 	// 50,99    49,100
@@ -357,10 +416,10 @@ func calcRBar() []nxt {
 		rbar[i] = nxt{coord{49, i + 50}, up}
 	}
 
-	// 100,99   0,149
-	// 101,99   1,149
+	// 100,99   49,149
+	// 101,99   48,149
 	for i := 100; i < 150; i++ {
-		rbar[i] = nxt{coord{i - 100, 149}, left}
+		rbar[i] = nxt{coord{149 - i, 149}, left}
 	}
 
 	// 150,49    149,50
@@ -411,10 +470,10 @@ func calcDBar() []nxt {
 		dbar[i] = nxt{coord{i + 100, 49}, left}
 	}
 
-	// 49,100    99,50
-	// 49,101    99,51
+	// 49,100    50,99
+	// 49,101    51,99
 	for i := 100; i < 150; i++ {
-		dbar[i] = nxt{coord{99, i - 50}, right}
+		dbar[i] = nxt{coord{i - 50, 99}, left}
 	}
 
 	return dbar
@@ -427,24 +486,206 @@ func paths(path string) []string {
 	return strings.Split(path, ",")
 }
 
-func isO(r byte) bool {
-	return r == '.' || r == '>' || r == '<' || r == 'v' || r == '^'
+func isO(r string) bool {
+	return r == "." || r == ">" || r == "<" || r == "v" || r == "^"
 }
 
 func isC(r byte) bool {
 	return r == '#'
 }
 
-func isB(r byte) bool {
-	return r == ' '
+func isB(r string) bool {
+	return r == " "
+}
+
+type side struct {
+	from    int
+	to      int
+	c       int
+	horiz   bool
+	first   bool
+	pair    *side
+	pairinv bool
+}
+
+func (s *side) pairWith(ps *side, inv bool) {
+	s.pair = ps
+	s.pairinv = inv
+	ps.pair = s
+	ps.pairinv = inv
+}
+
+func (s *side) goInDir() int {
+	if s.horiz {
+		if s.first {
+			return down
+		}
+		return up
+	}
+	if s.first {
+		return right
+	}
+	return left
+}
+
+func (s *side) toCoord(l int) nxt {
+	if s.horiz {
+		return nxt{coord{s.c, s.from + l}, s.goInDir()}
+	}
+	return nxt{coord{s.from + l, s.c}, s.goInDir()}
+}
+
+func (s *side) toInvCoord(l int) nxt {
+	if s.horiz {
+		return nxt{coord{s.c, s.to - l - 1}, s.goInDir()}
+	}
+	return nxt{coord{s.to - l - 1, s.c}, s.goInDir()}
+}
+
+func (s *side) next(l int) nxt {
+	if !s.pairinv {
+		return s.pair.toCoord(l - s.from)
+	}
+
+	return s.pair.toInvCoord(l - s.from)
+}
+
+type face struct {
+	len  int
+	top  int
+	left int
+	ups  *side
+	bts  *side
+	ls   *side
+	rs   *side
+}
+
+func (f *face) fillSides() {
+	f.ls = &side{
+		from:  f.top,
+		to:    f.top + f.len,
+		c:     f.left,
+		horiz: false,
+		first: true,
+	}
+	f.rs = &side{
+		from:  f.top,
+		to:    f.top + f.len,
+		c:     f.left + f.len - 1,
+		horiz: false,
+		first: false,
+	}
+	f.ups = &side{
+		from:  f.left,
+		to:    f.left + f.len,
+		c:     f.top,
+		horiz: true,
+		first: true,
+	}
+	f.bts = &side{
+		from:  f.left,
+		to:    f.left + f.len,
+		c:     f.top + f.len - 1,
+		horiz: true,
+		first: false,
+	}
+}
+
+func newFace(top, left int) face {
+	f := face{
+		len:  50,
+		top:  top,
+		left: left,
+	}
+	f.fillSides()
+	return f
+}
+
+type cube struct {
+	btf *face
+	ftf *face
+	rtf *face
+	ltf *face
+	tpf *face
+	bkf *face
+}
+
+func createCube() cube {
+	btf := newFace(0, 50)
+	rtf := newFace(0, 100)
+	ftf := newFace(50, 50)
+	tpf := newFace(100, 50)
+	ltf := newFace(100, 0)
+	bkf := newFace(150, 0)
+
+	btf.ls.pairWith(ltf.ls, true)
+	btf.ups.pairWith(bkf.ls, false)
+	btf.rs.pairWith(rtf.ls, false)
+	btf.bts.pairWith(ftf.ups, false)
+
+	rtf.ups.pairWith(bkf.bts, false)
+	rtf.rs.pairWith(tpf.rs, true)
+	rtf.bts.pairWith(ftf.rs, false)
+
+	ftf.bts.pairWith(tpf.ups, false)
+	ftf.ls.pairWith(ltf.ups, false)
+
+	tpf.ls.pairWith(ltf.rs, false)
+	tpf.bts.pairWith(bkf.rs, false)
+
+	ltf.bts.pairWith(bkf.ups, false)
+
+	return cube{
+		&btf,
+		&ftf,
+		&rtf,
+		&ltf,
+		&tpf,
+		&bkf,
+	}
 }
 
 func main() {
 	fmt.Println("Starting...")
+	// bs := calcBars(2)
+	// cb := createCube()
+	// sd := cb.ltf.ups
+
+	// for i, nx := range bs.ubar {
+	// 	if i == 50 {
+	// 		sd = cb.btf.ups
+	// 	} else if i == 100 {
+	// 		sd = cb.rtf.ups
+	// 	}
+	// 	nnx := sd.next(i)
+
+	// 	if nx.dir != nnx.dir || nx.pos.col != nnx.pos.col || nx.pos.row != nnx.pos.row {
+	// 		fmt.Print(nx)
+	// 		fmt.Print(" :: ")
+	// 		fmt.Println(nnx)
+	// 	}
+	// }
+
+	// sd = cb.bkf.bts
+	// for i, nx := range bs.dbar {
+	// 	if i == 50 {
+	// 		sd = cb.tpf.bts
+	// 	} else if i == 100 {
+	// 		sd = cb.rtf.bts
+	// 	}
+	// 	nnx := sd.next(i)
+
+	// 	if nx.dir != nnx.dir || nx.pos.col != nnx.pos.col || nx.pos.row != nnx.pos.row {
+	// 		fmt.Print(nx)
+	// 		fmt.Print(" :: ")
+	// 		fmt.Println(nnx)
+	// 	}
+	// }
+
 	name := "input"
 	typ := 1
 	ls := goutils.LinesOf(name)
-	fmt.Println(solve(ls, typ))
+	// fmt.Println(solve(ls, typ))
 
 	name = "input2"
 	typ = 2

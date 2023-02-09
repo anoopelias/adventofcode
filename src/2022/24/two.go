@@ -241,19 +241,16 @@ func getFree(vmap [][][]*bliz) (map[string]bool, string) {
 		}
 	}
 
-	// Assuming target location will be free at all times.
-	fr[keyFor(h-1, w-2)] = true
+	// Assuming source and target location will be free at all times.
+	fr[(&coord{h - 1, w - 2}).hash()] = true
+	fr[(&coord{0, 1}).hash()] = true
 	return fr, state
-}
-
-func keyFor(i, j int) string {
-	return strconv.Itoa(i) + ":" + strconv.Itoa(j)
 }
 
 func (v *valley) neighbors(min int, c coord) []coord {
 
 	min = min % v.rep
-	key := strconv.Itoa(min) + ":" + c.hash()
+	key := strconv.Itoa(min) + "::" + c.hash()
 
 	if cs, ok := v.nbrmap[key]; ok {
 		return cs
@@ -292,23 +289,22 @@ func (n *bfsNode) hash(v *valley) string {
 	return v.hashOf(n.min) + "_" + n.pos.hash()
 }
 
-func solve(ls []string) string {
-	v := newValley(ls)
-	q := []bfsNode{{0, coord{0, 1}}}
+func (v *valley) trip(min int, from coord, to coord) int {
+	q := []bfsNode{{min, from}}
+	v.marked = make(map[string]bool)
 	var hd bfsNode
-	var min int
 
 	for len(q) > 0 {
 		hd, q = q[0], q[1:]
 		ns := v.neighbors(hd.min+1, hd.pos)
 
-		hash := hd.hash(&v)
+		hash := hd.hash(v)
 		if _, ok := v.marked[hash]; ok {
 			continue
 		}
 		v.marked[hash] = true
 
-		if hd.pos.top == v.h-1 && hd.pos.left == v.w-2 {
+		if hd.pos == to {
 			min = hd.min
 			break
 		}
@@ -318,7 +314,7 @@ func solve(ls []string) string {
 		}
 	}
 
-	return strconv.Itoa(min)
+	return min
 }
 
 func lcm(a, b int) int {
@@ -328,6 +324,17 @@ func lcm(a, b int) int {
 		}
 	}
 	return -1
+}
+
+func solve(ls []string) string {
+	v := newValley(ls)
+	start := coord{0, 1}
+	end := coord{v.h - 1, v.w - 2}
+	min := v.trip(0, start, end)
+	min = v.trip(min, end, start)
+	min = v.trip(min, start, end)
+
+	return strconv.Itoa(min)
 }
 
 func main() {

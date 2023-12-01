@@ -12,5 +12,5 @@ pub(crate) fn lines_in(path: &str) -> Vec<String> {
 
     lines.pop();
 
-    return lines
+    lines
 }

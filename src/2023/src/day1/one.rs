@@ -1,6 +1,6 @@
 use std::cmp;
 
-pub(crate) fn solve(lines: Vec<String>) -> i32 {
+pub(crate) fn solve(lines: Vec<String>) -> String {
 
     let mut max = 0;
     let mut curr = 0;
@@ -20,5 +20,23 @@ pub(crate) fn solve(lines: Vec<String>) -> i32 {
 
     max = cmp::max(max, curr);
 
-    return max;
+    return max.to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::day1::one::solve;
+    use crate::util;
+
+    #[test]
+    fn test_sample() {
+        let lines = util::lines_in("./src/day1/input");
+        assert_eq!("24000", solve(lines))
+    }
+
+    #[test]
+    fn test_input() {
+        let lines = util::lines_in("./src/day1/input1");
+        assert_eq!("65912", solve(lines))
+    }
 }

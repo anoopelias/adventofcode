@@ -1,28 +1,36 @@
-use std::cmp;
-
 pub(crate) fn solve(lines: Vec<String>) -> String {
-
-    let mut max = 0;
-    let mut curr = 0;
+    let mut sum = 0;
 
     for line in lines {
-        let n = match line.parse::<i32>() {
-            Result::Ok(n) => n,
-            _ => {
-                max = cmp::max(max, curr);
-                curr = 0;
-                continue
-            }
-        };
+        let mut first = None;
+        let mut last = None;
 
-        curr += n;
+        for ch in line.chars() {
+            if let Some(n) = to_num(ch) {
+                if first == None {
+                    first = Some(n);
+                } else {
+                    last = Some(n);
+                }
+            }
+        }
+
+        if last == None {
+            last = first;
+        }
+
+        sum += first.unwrap() * 10 + last.unwrap();
     }
 
-    max = cmp::max(max, curr);
-
-    return max.to_string()
+    sum.to_string()
 }
 
+fn to_num(ch: char) -> Option<i32> {
+    if ch >= '0' && ch <= '9' {
+        return Some(ch.to_digit(10).unwrap() as i32);
+    }
+    None
+}
 #[cfg(test)]
 mod tests {
     use crate::day1::one::solve;
@@ -30,13 +38,13 @@ mod tests {
 
     #[test]
     fn test_sample() {
-        let lines = util::lines_in("./src/day1/input");
-        assert_eq!("24000", solve(lines))
+        let lines = util::lines_in("./src/day1/input3");
+        assert_eq!("142", solve(lines))
     }
 
     #[test]
     fn test_input() {
         let lines = util::lines_in("./src/day1/input1");
-        assert_eq!("65912", solve(lines))
+        assert_eq!("54159", solve(lines))
     }
 }

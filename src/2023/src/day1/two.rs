@@ -1,15 +1,15 @@
 use std::cmp;
 
-pub(crate) fn solve(lines: Vec<String>) -> i32 {
+pub(crate) fn solve(lines: Vec<String>) -> String {
 
-    let mut max = 0;
+    let mut sums = vec![];
     let mut curr = 0;
 
     for line in lines {
         let n = match line.parse::<i32>() {
             Result::Ok(n) => n,
             _ => {
-                max = cmp::max(max, curr);
+                sums.push(curr);
                 curr = 0;
                 continue
             }
@@ -18,7 +18,7 @@ pub(crate) fn solve(lines: Vec<String>) -> i32 {
         curr += n;
     }
 
-    max = cmp::max(max, curr);
+    sums.sort();
 
-    return max;
+    return format!("{}", sums.pop().unwrap() + sums.pop().unwrap() + sums.pop().unwrap())
 }

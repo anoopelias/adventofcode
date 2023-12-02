@@ -3,6 +3,7 @@ use crate::util;
 pub(crate) mod one;
 pub(crate) mod two;
 
+#[allow(unused)]
 pub(crate) fn solve() -> String {
     let lines = util::lines_in("./src/day1/input1");
 

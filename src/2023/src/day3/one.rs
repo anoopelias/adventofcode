@@ -1,23 +1,5 @@
 use std::usize;
 
-struct Number {
-    p: usize,
-    q: usize,
-    done: bool,
-    value: u32,
-}
-
-impl Number {
-    fn new(p: usize, q: usize, value: u32) -> Number {
-        return Number {
-            p,
-            q,
-            done: false,
-            value,
-        };
-    }
-}
-
 pub(crate) fn solve(lines: Vec<String>) -> String {
     let (m, n) = (lines.len() as i32, lines.get(0).unwrap().len() as i32);
 
@@ -49,11 +31,6 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
 
     sum.to_string()
 }
-
-fn char_to_num(st: &str) -> u32 {
-    st.chars().nth(0).unwrap().to_digit(10).unwrap()
-}
-
 fn has_symbol(lines: &Vec<String>, p: i32, q: i32, m: i32, n: i32) -> bool {
     let neighbors = vec![
         (p - 1, q - 1),

@@ -9,14 +9,14 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
         let line: Vec<&str> = line.split("|").collect();
 
         let winners = string_to_nums(line.get(0).unwrap().trim());
-        let my_nums = string_to_nums(line.get(1).unwrap().trim());
+        let card = string_to_nums(line.get(1).unwrap().trim());
 
-        let mut wins: i32 = 0;
-        for my_num in my_nums {
-            if winners.contains(&my_num) {
-                wins += 1;
-            }
-        }
+        let wins = card
+            .iter()
+            .filter(|num| winners.contains(num))
+            .collect::<Vec<_>>()
+            .len();
+
         let num: i32 = 2;
         if wins > 0 {
             sum += num.pow((wins - 1).try_into().unwrap());

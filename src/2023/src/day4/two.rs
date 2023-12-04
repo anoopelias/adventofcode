@@ -7,24 +7,26 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
     for (i, line) in lines.iter().enumerate() {
         let wins = wins_for(line);
 
-        if copy_counts.get(i) == None {
-            copy_counts.push(1);
-        }
+        fill(&mut copy_counts, i);
 
         let copy_count = copy_counts.get(i).unwrap().clone();
         sum += copy_count;
 
         for j in 0..(wins as usize) {
-            let index = i + j + 1;
-            if copy_counts.get(index) == None {
-                copy_counts.push(1);
-            }
-            let copy_count = copy_counts.get(index).unwrap() + copy_count;
-            let _ = std::mem::replace(&mut copy_counts[index], copy_count);
+            let k = i + j + 1;
+            fill(&mut copy_counts, k);
+            let copy_count = copy_counts.get(k).unwrap() + copy_count;
+            let _ = std::mem::replace(&mut copy_counts[k], copy_count);
         }
     }
 
     sum.to_string()
+}
+
+fn fill(v: &mut Vec<i32>, index: usize) {
+    if v.get(index) == None {
+        v.push(1);
+    }
 }
 
 #[cfg(test)]

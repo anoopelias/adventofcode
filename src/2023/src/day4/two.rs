@@ -26,18 +26,12 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
             .len();
 
         for j in 0..(wins as usize) {
-            let copy_count = if let Some(val) = copy_counts.get(i + j + 1) {
-                Some(val + this_wins)
-            } else {
-                None
-            };
-
-            match copy_count {
-                Some(val) => {
-                    let _ = std::mem::replace(&mut copy_counts[i + j + 1], val);
-                }
-                None => copy_counts.push(this_wins),
+            let index = i + j + 1;
+            if copy_counts.get(index) == None {
+                copy_counts.push(0);
             }
+            let copy_count = copy_counts.get(index).unwrap() + this_wins;
+            let _ = std::mem::replace(&mut copy_counts[index], copy_count);
         }
     }
 

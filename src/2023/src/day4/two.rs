@@ -2,26 +2,21 @@ use std::{collections::HashSet, vec};
 
 pub(crate) fn solve(lines: Vec<String>) -> String {
     let mut sum = 0;
-    let mut winners: Vec<HashSet<i32>> = vec![];
-    let mut cards: Vec<HashSet<i32>> = vec![];
-    let mut no_of_cards: Vec<i32> = vec![];
-    for line in lines.iter() {
+    let mut no_of_cards = vec![];
+    for (i, line) in lines.iter().enumerate() {
         let line: Vec<&str> = line.split(":").collect();
         let line = line.get(1).unwrap().trim();
 
         let line: Vec<&str> = line.split("|").collect();
 
         let winner = string_to_nums(line.get(0).unwrap().trim());
-        let my_nums = string_to_nums(line.get(1).unwrap().trim());
+        let card = string_to_nums(line.get(1).unwrap().trim());
 
-        winners.push(winner);
-        cards.push(my_nums);
-        no_of_cards.push(1);
-    }
+        if no_of_cards.get(i) == None {
+            no_of_cards.push(0);
+        }
 
-    for (i, winner) in winners.iter().enumerate() {
-        let card = cards.get(i).unwrap();
-        let this_wins = no_of_cards.get(i).unwrap().clone();
+        let this_wins = no_of_cards.get(i).unwrap().clone() + 1;
         sum += this_wins;
 
         let mut wins: i32 = 0;
@@ -32,8 +27,18 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
         }
 
         for j in 0..(wins as usize) {
-            let num = no_of_cards[i + j + 1] + this_wins;
-            let _ = std::mem::replace(&mut no_of_cards[i + j + 1], num);
+            let num = if let Some(val) = no_of_cards.get(i + j + 1) {
+                Some(val + this_wins)
+            } else {
+                None
+            };
+
+            match num {
+                Some(val) => {
+                    let _ = std::mem::replace(&mut no_of_cards[i + j + 1], val);
+                }
+                None => no_of_cards.push(this_wins),
+            }
         }
     }
 

@@ -23,6 +23,24 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
 
     let mut sum = 0;
 
+    let nums = lines.iter().enumerate().map(|(p, line)| {
+        line.split('.').enumerate().fold(
+            vec![Number::new(0, 0, 0)],
+            |mut acc: Vec<Number>, (q, ch)| {
+                let num = acc.get_mut(acc.len() - 1).unwrap();
+                if ch.len() == 0 {
+                    num.done = true;
+                } else if num.done {
+                    acc.push(Number::new(p, q, char_to_num(ch)));
+                } else {
+                    num.value = num.value * 10 + char_to_num(ch);
+                }
+
+                acc
+            },
+        )
+    });
+
     for (p, line) in lines.iter().enumerate() {
         let chars = line.chars();
         let mut num_part = 0;

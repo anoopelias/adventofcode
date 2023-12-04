@@ -57,7 +57,7 @@ fn to_num(str: &str) -> Option<i32> {
     }
 }
 
-// #[cfg(test)]
+#[cfg(test)]
 mod tests {
     use crate::day1::two::solve;
     use crate::util;

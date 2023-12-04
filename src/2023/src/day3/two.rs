@@ -3,8 +3,10 @@ use std::{
     usize, vec,
 };
 
+use crate::util::neighbors;
+
 pub(crate) fn solve(lines: Vec<String>) -> String {
-    let (m, n) = (lines.len() as i32, lines.get(0).unwrap().len() as i32);
+    let (m, n) = (lines.len(), lines.get(0).unwrap().len());
 
     let mut sum = 0;
     let mut attached_stars = HashMap::new();
@@ -16,7 +18,7 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
         for (q, ch) in chars.enumerate() {
             if ch.is_numeric() {
                 num_part = (num_part * 10) + ch.to_digit(10).unwrap();
-                let stars = stars_around(&lines, p as i32, q as i32, m, n);
+                let stars = stars_around(&lines, p, q, m, n);
 
                 for star in stars {
                     attached.insert(star);
@@ -43,30 +45,12 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
     sum.to_string()
 }
 
-fn stars_around(lines: &Vec<String>, p: i32, q: i32, m: i32, n: i32) -> Vec<String> {
-    let neighbors = vec![
-        (p - 1, q - 1),
-        (p - 1, q),
-        (p - 1, q + 1),
-        (p, q - 1),
-        (p, q + 1),
-        (p + 1, q - 1),
-        (p + 1, q),
-        (p + 1, q + 1),
-    ];
-    let neighbors: Vec<&(i32, i32)> = neighbors
-        .iter()
-        .filter(|(p, q)| p >= &0 && q >= &0 && p < &m && q < &n)
-        .collect();
+fn stars_around(lines: &Vec<String>, p: usize, q: usize, m: usize, n: usize) -> Vec<String> {
+    let neighbors = neighbors(p, q, m, n);
 
     let mut attached: Vec<String> = vec![];
     for (p, q) in neighbors {
-        let ch = lines
-            .get(*p as usize)
-            .unwrap()
-            .chars()
-            .nth(*q as usize)
-            .unwrap();
+        let ch = lines.get(p).unwrap().chars().nth(q).unwrap();
         if ch == '*' {
             let mut key = p.to_string();
             key.push(':');

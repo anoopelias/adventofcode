@@ -1,7 +1,9 @@
 use std::usize;
 
+use crate::util::neighbors;
+
 pub(crate) fn solve(lines: Vec<String>) -> String {
-    let (m, n) = (lines.len() as i32, lines.get(0).unwrap().len() as i32);
+    let (m, n) = (lines.len(), lines.get(0).unwrap().len());
 
     let mut sum = 0;
 
@@ -12,7 +14,7 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
         for (q, ch) in chars.enumerate() {
             if ch.is_numeric() {
                 num_part = (num_part * 10) + ch.to_digit(10).unwrap();
-                if has_symbol(&lines, p as i32, q as i32, m, n) {
+                if has_symbol(&lines, p, q, m, n) {
                     should_add = true;
                 }
             } else {
@@ -31,28 +33,15 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
 
     sum.to_string()
 }
-fn has_symbol(lines: &Vec<String>, p: i32, q: i32, m: i32, n: i32) -> bool {
-    let neighbors = vec![
-        (p - 1, q - 1),
-        (p - 1, q),
-        (p - 1, q + 1),
-        (p, q - 1),
-        (p, q + 1),
-        (p + 1, q - 1),
-        (p + 1, q),
-        (p + 1, q + 1),
-    ];
-    let neighbors: Vec<&(i32, i32)> = neighbors
-        .iter()
-        .filter(|(p, q)| p >= &0 && q >= &0 && p < &m && q < &n)
-        .collect();
+fn has_symbol(lines: &Vec<String>, p: usize, q: usize, m: usize, n: usize) -> bool {
+    let neighbors = neighbors(p, q, m, n);
 
     for (p, q) in neighbors {
         let ch = lines
-            .get(*p as usize)
+            .get(p as usize)
             .unwrap()
             .chars()
-            .nth(*q as usize)
+            .nth(q as usize)
             .unwrap();
         if ch != '.' && !ch.is_numeric() {
             return true;

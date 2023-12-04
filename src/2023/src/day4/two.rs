@@ -13,10 +13,10 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
         let card = string_to_nums(line.get(1).unwrap().trim());
 
         if copy_counts.get(i) == None {
-            copy_counts.push(0);
+            copy_counts.push(1);
         }
 
-        let this_wins = copy_counts.get(i).unwrap().clone() + 1;
+        let this_wins = copy_counts.get(i).unwrap().clone();
         sum += this_wins;
 
         let wins = card
@@ -28,7 +28,7 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
         for j in 0..(wins as usize) {
             let index = i + j + 1;
             if copy_counts.get(index) == None {
-                copy_counts.push(0);
+                copy_counts.push(1);
             }
             let copy_count = copy_counts.get(index).unwrap() + this_wins;
             let _ = std::mem::replace(&mut copy_counts[index], copy_count);

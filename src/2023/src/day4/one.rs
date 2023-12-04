@@ -1,21 +1,9 @@
-use std::collections::HashSet;
+use crate::day4::wins_for;
 
 pub(crate) fn solve(lines: Vec<String>) -> String {
     let mut sum = 0;
     for line in lines.iter() {
-        let line: Vec<&str> = line.split(":").collect();
-        let line = line.get(1).unwrap().trim();
-
-        let line: Vec<&str> = line.split("|").collect();
-
-        let winners = string_to_nums(line.get(0).unwrap().trim());
-        let card = string_to_nums(line.get(1).unwrap().trim());
-
-        let wins = card
-            .iter()
-            .filter(|num| winners.contains(num))
-            .collect::<Vec<_>>()
-            .len();
+        let wins = wins_for(line);
 
         let num: i32 = 2;
         if wins > 0 {
@@ -23,15 +11,6 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
         }
     }
     sum.to_string()
-}
-
-fn string_to_nums(str: &str) -> HashSet<i32> {
-    let nums: Vec<&str> = str.split(" ").collect();
-    nums.iter()
-        .map(|s| s.trim())
-        .filter(|s| s.len() > 0)
-        .map(|s| s.parse::<i32>().unwrap())
-        .collect()
 }
 
 #[cfg(test)]

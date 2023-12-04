@@ -1,16 +1,11 @@
-use std::{collections::HashSet, vec};
+use crate::day4::wins_for;
+use std::vec;
 
 pub(crate) fn solve(lines: Vec<String>) -> String {
     let mut sum = 0;
     let mut copy_counts = vec![];
     for (i, line) in lines.iter().enumerate() {
-        let line: Vec<&str> = line.split(":").collect();
-        let line = line.get(1).unwrap().trim();
-
-        let line: Vec<&str> = line.split("|").collect();
-
-        let winner = string_to_nums(line.get(0).unwrap());
-        let card = string_to_nums(line.get(1).unwrap());
+        let wins = wins_for(line);
 
         if copy_counts.get(i) == None {
             copy_counts.push(1);
@@ -18,12 +13,6 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
 
         let copy_count = copy_counts.get(i).unwrap().clone();
         sum += copy_count;
-
-        let wins = card
-            .iter()
-            .filter(|num| winner.contains(num))
-            .collect::<Vec<_>>()
-            .len();
 
         for j in 0..(wins as usize) {
             let index = i + j + 1;
@@ -36,15 +25,6 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
     }
 
     sum.to_string()
-}
-
-fn string_to_nums(str: &str) -> HashSet<i32> {
-    let nums: Vec<&str> = str.trim().split(" ").collect();
-    nums.iter()
-        .map(|s| s.trim())
-        .filter(|s| s.len() > 0)
-        .map(|s| s.parse::<i32>().unwrap())
-        .collect()
 }
 
 #[cfg(test)]

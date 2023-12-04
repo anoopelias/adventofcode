@@ -32,7 +32,8 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
         }
 
         for j in 0..(wins as usize) {
-            no_of_cards[i + j + 1] += this_wins;
+            let num = no_of_cards[i + j + 1] + this_wins;
+            let _ = std::mem::replace(&mut no_of_cards[i + j + 1], num);
         }
     }
 

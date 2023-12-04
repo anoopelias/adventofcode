@@ -9,15 +9,15 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
 
         let line: Vec<&str> = line.split("|").collect();
 
-        let winner = string_to_nums(line.get(0).unwrap().trim());
-        let card = string_to_nums(line.get(1).unwrap().trim());
+        let winner = string_to_nums(line.get(0).unwrap());
+        let card = string_to_nums(line.get(1).unwrap());
 
         if copy_counts.get(i) == None {
             copy_counts.push(1);
         }
 
-        let this_wins = copy_counts.get(i).unwrap().clone();
-        sum += this_wins;
+        let copy_count = copy_counts.get(i).unwrap().clone();
+        sum += copy_count;
 
         let wins = card
             .iter()
@@ -30,7 +30,7 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
             if copy_counts.get(index) == None {
                 copy_counts.push(1);
             }
-            let copy_count = copy_counts.get(index).unwrap() + this_wins;
+            let copy_count = copy_counts.get(index).unwrap() + copy_count;
             let _ = std::mem::replace(&mut copy_counts[index], copy_count);
         }
     }
@@ -39,7 +39,7 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
 }
 
 fn string_to_nums(str: &str) -> HashSet<i32> {
-    let nums: Vec<&str> = str.split(" ").collect();
+    let nums: Vec<&str> = str.trim().split(" ").collect();
     nums.iter()
         .map(|s| s.trim())
         .filter(|s| s.len() > 0)

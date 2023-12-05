@@ -64,26 +64,17 @@ impl Mapper {
 
         ranges
     }
-
-    fn map(&self, from: i64) -> i64 {
-        for (dst, src, range) in self.num_maps.iter() {
-            if from >= *src && from < (src + range) {
-                return dst + from - src;
-            }
-        }
-        from
-    }
 }
 
 pub(crate) fn solve(lines: Vec<String>) -> String {
     let splits = lines.get(0).unwrap().split(":").collect::<Vec<_>>();
     let seeds_numbers = string_to_nums(splits.get(1).unwrap());
-    let mut seed_pairs = vec![];
+    let mut inputs = vec![];
 
     let mut prev = None;
     for seed_number in seeds_numbers {
         if let Some(start) = prev {
-            seed_pairs.push((start, seed_number));
+            inputs.push((start, seed_number));
             prev = None;
         } else {
             prev = Some(seed_number);
@@ -111,16 +102,17 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
         }
     }
 
-    let mut min = i64::MAX;
-
-    for (start, range) in seed_pairs {
-        for offset in 0..range {
-            let mut from = start + offset;
-            for mapper in mappers.iter() {
-                from = mapper.map(from);
-            }
-            min = cmp::min(min, from);
+    for mapper in mappers {
+        let mut outputs = vec![];
+        for (from, len) in inputs {
+            outputs.extend(mapper.map_range(from, len));
         }
+        inputs = outputs;
+    }
+
+    let mut min = i64::MAX;
+    for (from, _) in inputs {
+        min = cmp::min(min, from);
     }
 
     min.to_string()
@@ -141,8 +133,8 @@ mod tests {
 
     #[test]
     fn test_input() {
-        // let lines = util::lines_in("./src/day5/input1");
-        // assert_eq!("51752125", solve(lines))
+        let lines = util::lines_in("./src/day5/input1");
+        assert_eq!("12634632", solve(lines))
     }
 
     #[test]

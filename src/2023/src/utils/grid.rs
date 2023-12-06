@@ -155,6 +155,24 @@ impl<T> Grid<T> {
         }
         Ok(())
     }
+
+    pub fn neighbor_tuples(&self, p: usize, q: usize) -> Result<Vec<(usize, usize)>> {
+        self.check_bounds(p, q)?;
+        let mut neighbors = vec![];
+        if p > 0 {
+            neighbors.push((p - 1, q));
+        }
+        if p < self.m - 1 {
+            neighbors.push((p + 1, q));
+        }
+        if q > 0 {
+            neighbors.push((p, q - 1));
+        }
+        if q < self.n - 1 {
+            neighbors.push((p, q + 1));
+        }
+        Ok(neighbors)
+    }
 }
 
 #[cfg(test)]
@@ -365,5 +383,82 @@ mod tests {
             grid.right_cell_by_tuple((0, 1)).unwrap()
         );
         assert!(grid.right_cell_by_tuple((0, 2)).is_err());
+    }
+
+    #[test]
+    fn test_neighbors() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 1, 1).unwrap();
+        grid.set(1, 1, 2).unwrap();
+        grid.set(2, 1, 3).unwrap();
+        grid.set(1, 0, 4).unwrap();
+        grid.set(1, 2, 5).unwrap();
+
+        let neighbor_tuples = grid.neighbor_tuples(1, 1).unwrap();
+        assert_eq!(4, neighbor_tuples.len());
+        assert!(neighbor_tuples.contains(&(0, 1)));
+        assert!(neighbor_tuples.contains(&(1, 0)));
+        assert!(neighbor_tuples.contains(&(1, 2)));
+        assert!(neighbor_tuples.contains(&(2, 1)));
+    }
+
+    #[test]
+    fn test_neighbors_top() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(1, 1, 2).unwrap();
+        grid.set(2, 1, 3).unwrap();
+        grid.set(1, 0, 4).unwrap();
+        grid.set(1, 2, 5).unwrap();
+
+        let neighbor_tuples = grid.neighbor_tuples(0, 1).unwrap();
+        assert_eq!(3, neighbor_tuples.len());
+        assert!(neighbor_tuples.contains(&(0, 0)));
+        assert!(neighbor_tuples.contains(&(0, 2)));
+        assert!(neighbor_tuples.contains(&(1, 1)));
+    }
+
+    #[test]
+    fn test_neighbors_bottom() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 1, 1).unwrap();
+        grid.set(1, 1, 2).unwrap();
+        grid.set(1, 0, 4).unwrap();
+        grid.set(1, 2, 5).unwrap();
+
+        let neighbor_tuples = grid.neighbor_tuples(3, 1).unwrap();
+        assert_eq!(3, neighbor_tuples.len());
+        assert!(neighbor_tuples.contains(&(2, 1)));
+        assert!(neighbor_tuples.contains(&(3, 0)));
+        assert!(neighbor_tuples.contains(&(3, 2)));
+    }
+
+    #[test]
+    fn test_neighbors_left() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 1, 1).unwrap();
+        grid.set(1, 1, 2).unwrap();
+        grid.set(2, 1, 3).unwrap();
+        grid.set(1, 2, 5).unwrap();
+
+        let neighbor_tuples = grid.neighbor_tuples(1, 0).unwrap();
+        assert_eq!(3, neighbor_tuples.len());
+        assert!(neighbor_tuples.contains(&(0, 0)));
+        assert!(neighbor_tuples.contains(&(1, 1)));
+        assert!(neighbor_tuples.contains(&(2, 0)));
+    }
+
+    #[test]
+    fn test_neighbors_right() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 1, 1).unwrap();
+        grid.set(1, 1, 2).unwrap();
+        grid.set(2, 1, 3).unwrap();
+        grid.set(1, 0, 4).unwrap();
+
+        let neighbor_tuples = grid.neighbor_tuples(1, 2).unwrap();
+        assert_eq!(3, neighbor_tuples.len());
+        assert!(neighbor_tuples.contains(&(0, 2)));
+        assert!(neighbor_tuples.contains(&(1, 1)));
+        assert!(neighbor_tuples.contains(&(2, 2)));
     }
 }

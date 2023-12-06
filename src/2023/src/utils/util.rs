@@ -64,14 +64,3 @@ pub(crate) fn neighbors_vh(p: usize, q: usize, m: usize, n: usize) -> Vec<(usize
 
     neighbors
 }
-
-pub(crate) fn string_to_i64_nums(str: &str) -> Vec<i64> {
-    str.trim()
-        .split(" ")
-        .collect::<Vec<_>>()
-        .iter()
-        .map(|s| s.trim())
-        .filter(|s| s.len() > 0)
-        .map(|s| s.parse::<i64>().unwrap())
-        .collect()
-}

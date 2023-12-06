@@ -1,4 +1,4 @@
-use crate::utils::util::string_to_i64_nums;
+use crate::utils::parser::I64Parser;
 
 struct Mapper {
     num_maps: Vec<(i64, i64, i64)>,
@@ -10,7 +10,7 @@ impl Mapper {
     }
 
     fn insert(&mut self, line: &str) {
-        let mut num_maps = string_to_i64_nums(&line);
+        let mut num_maps = line.parse_i64();
         let num_map = (num_maps.remove(0), num_maps.remove(0), num_maps.remove(0));
 
         match self.num_maps.binary_search_by(|nm| nm.1.cmp(&num_map.1)) {
@@ -60,7 +60,7 @@ impl Mapper {
 
 pub(crate) fn solve(lines: Vec<String>) -> String {
     let splits = lines.get(0).unwrap().split(":").collect::<Vec<_>>();
-    let seeds_numbers = string_to_i64_nums(splits.get(1).unwrap());
+    let seeds_numbers = splits.get(1).unwrap().parse_i64();
     let mut inputs: Vec<(i64, i64)> = seeds_numbers
         .chunks_exact(2)
         .map(|chunk| (chunk[0], chunk[1]))

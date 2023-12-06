@@ -2,6 +2,10 @@ pub trait I32Parser {
     fn parse_i32(self) -> Vec<i32>;
 }
 
+pub trait I64Parser {
+    fn parse_i64(self) -> Vec<i64>;
+}
+
 pub trait SpaceParser {
     fn parse_space(self) -> Vec<String>;
 }
@@ -11,6 +15,15 @@ impl I32Parser for &str {
         self.parse_space()
             .iter()
             .map(|s| s.parse::<i32>().unwrap())
+            .collect()
+    }
+}
+
+impl I64Parser for &str {
+    fn parse_i64(self) -> Vec<i64> {
+        self.parse_space()
+            .iter()
+            .map(|s| s.parse::<i64>().unwrap())
             .collect()
     }
 }

@@ -1,6 +1,6 @@
 use std::cmp;
 
-use crate::utils::util::string_to_i64_nums;
+use crate::utils::parser::I64Parser;
 
 struct Mapper {
     num_maps: Vec<(i64, i64, i64)>,
@@ -23,7 +23,7 @@ impl Mapper {
 
 pub(crate) fn solve(lines: Vec<String>) -> String {
     let splits = lines.get(0).unwrap().split(":").collect::<Vec<_>>();
-    let seeds = string_to_i64_nums(splits.get(1).unwrap());
+    let seeds = splits.get(1).unwrap().parse_i64();
 
     let mut mappers = vec![
         Mapper::new(),
@@ -39,7 +39,7 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
     for line in lines {
         if let Some(ch) = line.chars().nth(0) {
             if ch.is_numeric() {
-                let num_maps = string_to_i64_nums(&line);
+                let num_maps = &line.parse_i64();
                 let num_map = (
                     num_maps.get(0).unwrap().clone(),
                     num_maps.get(1).unwrap().clone(),

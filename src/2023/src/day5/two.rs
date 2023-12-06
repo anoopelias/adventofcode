@@ -1,4 +1,4 @@
-use crate::util::string_to_nums;
+use crate::util::string_to_i64_nums;
 
 struct Mapper {
     num_maps: Vec<(i64, i64, i64)>,
@@ -10,12 +10,8 @@ impl Mapper {
     }
 
     fn insert(&mut self, line: &str) {
-        let num_maps = string_to_nums(&line);
-        let num_map = (
-            num_maps.get(0).unwrap().clone(),
-            num_maps.get(1).unwrap().clone(),
-            num_maps.get(2).unwrap().clone(),
-        );
+        let mut num_maps = string_to_i64_nums(&line);
+        let num_map = (num_maps.remove(0), num_maps.remove(0), num_maps.remove(0));
 
         match self.num_maps.binary_search_by(|nm| nm.1.cmp(&num_map.1)) {
             Ok(_) => println!("These should not overlap"),
@@ -65,28 +61,13 @@ impl Mapper {
 
 pub(crate) fn solve(lines: Vec<String>) -> String {
     let splits = lines.get(0).unwrap().split(":").collect::<Vec<_>>();
-    let seeds_numbers = string_to_nums(splits.get(1).unwrap());
-    let mut inputs = vec![];
+    let seeds_numbers = string_to_i64_nums(splits.get(1).unwrap());
+    let mut inputs: Vec<(i64, i64)> = seeds_numbers
+        .chunks_exact(2)
+        .map(|chunk| (chunk[0], chunk[1]))
+        .collect();
 
-    let mut prev = None;
-    for seed_number in seeds_numbers {
-        if let Some(start) = prev {
-            inputs.push((start, seed_number));
-            prev = None;
-        } else {
-            prev = Some(seed_number);
-        }
-    }
-
-    let mut mappers = vec![
-        Mapper::new(),
-        Mapper::new(),
-        Mapper::new(),
-        Mapper::new(),
-        Mapper::new(),
-        Mapper::new(),
-        Mapper::new(),
-    ];
+    let mut mappers: Vec<Mapper> = (0..7).into_iter().map(|_| Mapper::new()).collect();
 
     let mut mindex = 0;
     for line in lines {

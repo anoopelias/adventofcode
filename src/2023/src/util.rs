@@ -65,7 +65,7 @@ pub(crate) fn neighbors_vh(p: usize, q: usize, m: usize, n: usize) -> Vec<(usize
     neighbors
 }
 
-pub(crate) fn string_to_nums(str: &str) -> Vec<i64> {
+pub(crate) fn string_to_i64_nums(str: &str) -> Vec<i64> {
     str.trim()
         .split(" ")
         .collect::<Vec<_>>()

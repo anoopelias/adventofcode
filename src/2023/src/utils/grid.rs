@@ -1,0 +1,243 @@
+#![allow(unused)]
+
+use std::f32::consts::E;
+
+use anyhow::Result;
+
+#[derive(PartialEq, Debug)]
+struct GridCell<T> {
+    val: Option<T>,
+    p: usize,
+    q: usize,
+}
+
+impl<T> GridCell<T> {
+    fn new(p: usize, q: usize, val: Option<T>) -> GridCell<T> {
+        GridCell { val, p, q }
+    }
+}
+
+struct Grid<T> {
+    grid: Vec<Vec<Option<T>>>,
+    m: usize,
+    n: usize,
+}
+
+impl<T> Grid<T> {
+    pub fn new(m: usize, n: usize) -> Grid<T> {
+        let grid = (0..m)
+            .into_iter()
+            .map(|_| (0..n).into_iter().map(|_| None).collect())
+            .collect();
+
+        Grid { grid, m, n }
+    }
+
+    pub fn get(&self, p: usize, q: usize) -> Result<Option<&T>> {
+        if p >= self.m || q >= self.n {
+            return Err(anyhow::anyhow!("Index out of bounds"));
+        }
+        Ok(self.grid[p][q].as_ref())
+    }
+
+    pub fn set(&mut self, p: usize, q: usize, val: T) -> Result<()> {
+        if p >= self.m || q >= self.n {
+            return Err(anyhow::anyhow!("Index out of bounds"));
+        }
+        self.grid[p][q] = Some(val);
+        Ok(())
+    }
+
+    pub fn set_by_tuple(&mut self, coord: (usize, usize), val: T) -> Result<()> {
+        self.set(coord.0, coord.1, val)
+    }
+
+    pub fn get_by_tuple(&self, coord: (usize, usize)) -> Result<Option<&T>> {
+        self.get(coord.0, coord.1)
+    }
+
+    pub fn set_by_cell(&mut self, cell: GridCell<T>) -> Result<()> {
+        self.set(cell.p, cell.q, cell.val.unwrap())
+    }
+
+    pub fn get_by_cell(&self, coord: (usize, usize)) -> Result<Option<GridCell<&T>>> {
+        let val = self.get(coord.0, coord.1)?;
+        Ok(Some(GridCell::new(coord.0, coord.1, val)))
+    }
+
+    pub fn top(&self, p: usize, q: usize) -> Result<Option<&T>> {
+        self.check_bounds(p, q)?;
+        if p == 0 {
+            return Err(anyhow::anyhow!("No top element"));
+        }
+        Ok(self.grid[p - 1][q].as_ref())
+    }
+
+    fn check_bounds(&self, p: usize, q: usize) -> Result<()> {
+        if p >= self.m || q >= self.n {
+            return Err(anyhow::anyhow!("Index out of bounds"));
+        }
+        Ok(())
+    }
+
+    pub fn top_by_tuple(&self, coord: (usize, usize)) -> Result<Option<&T>> {
+        self.top(coord.0, coord.1)
+    }
+
+    pub fn bottom(&self, p: usize, q: usize) -> Result<Option<&T>> {
+        self.check_bounds(p, q)?;
+        if p == self.m - 1 {
+            return Err(anyhow::anyhow!("No bottom element"));
+        }
+        Ok(self.grid[p + 1][q].as_ref())
+    }
+
+    pub fn bottom_by_tuple(&self, coord: (usize, usize)) -> Result<Option<&T>> {
+        self.bottom(coord.0, coord.1)
+    }
+
+    pub fn left(&self, p: usize, q: usize) -> Result<Option<&T>> {
+        self.check_bounds(p, q)?;
+        if q == 0 {
+            return Err(anyhow::anyhow!("No left element"));
+        }
+        Ok(self.grid[p][q - 1].as_ref())
+    }
+
+    pub fn left_by_tuple(&self, coord: (usize, usize)) -> Result<Option<&T>> {
+        self.left(coord.0, coord.1)
+    }
+
+    pub fn right(&self, p: usize, q: usize) -> Result<Option<&T>> {
+        self.check_bounds(p, q)?;
+        if q == self.n - 1 {
+            return Err(anyhow::anyhow!("No right element"));
+        }
+        Ok(self.grid[p][q + 1].as_ref())
+    }
+
+    pub fn right_by_tuple(&self, coord: (usize, usize)) -> Result<Option<&T>> {
+        self.right(coord.0, coord.1)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use std::cell::Cell;
+
+    use crate::utils::grid::GridCell;
+
+    use super::Grid;
+
+    #[test]
+    fn test_empty_grid() {
+        let grid: Grid<i32> = Grid::new(4, 3);
+        assert_eq!(None, grid.get(0, 0).unwrap());
+        assert!(grid.get(4, 2).is_err());
+        assert!(grid.get(1, 3).is_err());
+    }
+
+    #[test]
+    fn test_set_get() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 0, 1).unwrap();
+        assert_eq!(Some(&1), grid.get(0, 0).unwrap());
+    }
+
+    #[test]
+    fn test_set_get_by_tuple() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set_by_tuple((0, 0), 1).unwrap();
+        assert_eq!(Some(&1), grid.get_by_tuple((0, 0)).unwrap());
+    }
+
+    #[test]
+    fn test_set_by_cell() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set_by_cell(GridCell::new(0, 0, Some(1))).unwrap();
+        assert_eq!(Some(&1), grid.get(0, 0).unwrap());
+    }
+
+    #[test]
+    fn test_get_by_cell() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 0, 1).unwrap();
+        assert_eq!(
+            Some(GridCell::new(0, 0, Some(&1))),
+            grid.get_by_cell((0, 0)).unwrap()
+        );
+    }
+
+    #[test]
+    fn test_top() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 1, 2).unwrap();
+        grid.set(1, 1, 1).unwrap();
+        assert!(grid.top(0, 1).is_err());
+        assert_eq!(Some(&2), grid.top(1, 1).unwrap());
+    }
+
+    #[test]
+    fn test_top_by_tuple() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 1, 2).unwrap();
+        grid.set(1, 1, 1).unwrap();
+        assert!(grid.top_by_tuple((0, 1)).is_err());
+        assert_eq!(Some(&2), grid.top_by_tuple((1, 1)).unwrap());
+    }
+
+    #[test]
+    fn test_bottom() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 1, 2).unwrap();
+        grid.set(1, 1, 1).unwrap();
+        assert_eq!(Some(&1), grid.bottom(0, 1).unwrap());
+        assert!(grid.bottom(3, 1).is_err());
+    }
+
+    #[test]
+    fn test_bottom_by_tuple() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 1, 2).unwrap();
+        grid.set(1, 1, 1).unwrap();
+        assert_eq!(Some(&1), grid.bottom_by_tuple((0, 1)).unwrap());
+        assert!(grid.bottom_by_tuple((3, 1)).is_err());
+    }
+
+    #[test]
+    fn test_left() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 1, 2).unwrap();
+        grid.set(0, 2, 1).unwrap();
+        assert!(grid.left(0, 0).is_err());
+        assert_eq!(Some(&2), grid.left(0, 2).unwrap());
+    }
+
+    #[test]
+    fn test_left_by_tuple() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 1, 2).unwrap();
+        grid.set(0, 2, 1).unwrap();
+        assert!(grid.left_by_tuple((0, 0)).is_err());
+        assert_eq!(Some(&2), grid.left_by_tuple((0, 2)).unwrap());
+    }
+
+    #[test]
+    fn test_right() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 1, 2).unwrap();
+        grid.set(0, 2, 1).unwrap();
+        assert_eq!(Some(&1), grid.right(0, 1).unwrap());
+        assert!(grid.right(0, 2).is_err());
+    }
+
+    #[test]
+    fn test_right_by_tuple() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 1, 2).unwrap();
+        grid.set(0, 2, 1).unwrap();
+        assert_eq!(Some(&1), grid.right_by_tuple((0, 1)).unwrap());
+        assert!(grid.right_by_tuple((0, 2)).is_err());
+    }
+}

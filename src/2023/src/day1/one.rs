@@ -34,7 +34,7 @@ fn to_num(ch: char) -> Option<i32> {
 #[cfg(test)]
 mod tests {
     use crate::day1::one::solve;
-    use crate::util;
+    use crate::utils::util;
 
     #[test]
     fn test_sample() {

@@ -1,4 +1,4 @@
-use crate::util::string_to_nums;
+use crate::utils::util::string_to_nums;
 
 pub(crate) fn solve(lines: Vec<String>) -> String {
     let times = string_to_nums(lines.get(0).unwrap().split(":").nth(1).unwrap());
@@ -16,7 +16,7 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
 #[cfg(test)]
 mod tests {
     use crate::day6::one::solve;
-    use crate::util;
+    use crate::utils::util;
 
     #[test]
     fn test_sample() {

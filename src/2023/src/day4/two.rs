@@ -32,7 +32,7 @@ fn fill(v: &mut Vec<i32>, index: usize) {
 #[cfg(test)]
 mod tests {
     use crate::day4::two::solve;
-    use crate::util;
+    use crate::utils::util;
 
     #[test]
     fn test_sample() {

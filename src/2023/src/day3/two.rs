@@ -3,7 +3,7 @@ use std::{
     usize, vec,
 };
 
-use crate::util::neighbors;
+use crate::utils::util::neighbors;
 
 pub(crate) fn solve(lines: Vec<String>) -> String {
     let (m, n) = (lines.len(), lines.get(0).unwrap().len());
@@ -65,7 +65,7 @@ fn stars_around(lines: &Vec<String>, p: usize, q: usize, m: usize, n: usize) -> 
 #[cfg(test)]
 mod tests {
     use crate::day3::two::solve;
-    use crate::util;
+    use crate::utils::util;
 
     #[test]
     fn test_sample() {

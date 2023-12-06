@@ -49,7 +49,7 @@ fn is_possible(count: i32, color: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use crate::day2::one::solve;
-    use crate::util;
+    use crate::utils::util;
 
     #[test]
     fn test_sample() {

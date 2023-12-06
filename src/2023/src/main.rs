@@ -4,7 +4,7 @@ mod day3;
 mod day4;
 mod day5;
 mod day6;
-mod util;
+mod utils;
 
 fn main() {
     let ans = day1::solve();

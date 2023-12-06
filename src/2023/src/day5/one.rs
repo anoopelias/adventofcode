@@ -1,6 +1,6 @@
 use std::cmp;
 
-use crate::util::string_to_i64_nums;
+use crate::utils::util::string_to_i64_nums;
 
 struct Mapper {
     num_maps: Vec<(i64, i64, i64)>,
@@ -67,7 +67,7 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
 #[cfg(test)]
 mod tests {
     use crate::day5::one::solve;
-    use crate::util;
+    use crate::utils::util;
 
     #[test]
     fn test_sample() {

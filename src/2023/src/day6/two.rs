@@ -21,7 +21,7 @@ fn line_to_num(line: &str) -> i64 {
 
 #[cfg(test)]
 mod tests {
-    use crate::{day6::two::solve, util};
+    use crate::{day6::two::solve, utils::util};
 
     #[test]
     fn test_sample() {

@@ -1,6 +1,6 @@
 use std::usize;
 
-use crate::util::neighbors;
+use crate::utils::util::neighbors;
 
 pub(crate) fn solve(lines: Vec<String>) -> String {
     let (m, n) = (lines.len(), lines.get(0).unwrap().len());
@@ -54,7 +54,7 @@ fn has_symbol(lines: &Vec<String>, p: usize, q: usize, m: usize, n: usize) -> bo
 #[cfg(test)]
 mod tests {
     use crate::day3::one::solve;
-    use crate::util;
+    use crate::utils::util;
 
     #[test]
     fn test_sample() {

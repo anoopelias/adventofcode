@@ -37,7 +37,7 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
 #[cfg(test)]
 mod tests {
     use crate::day2::two::solve;
-    use crate::util;
+    use crate::utils::util;
 
     #[test]
     fn test_sample() {

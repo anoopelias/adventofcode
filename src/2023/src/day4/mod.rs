@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::util;
+use crate::utils::util;
 
 pub(crate) mod one;
 pub(crate) mod two;

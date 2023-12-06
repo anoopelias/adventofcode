@@ -40,15 +40,15 @@ impl<T> Grid<T> {
         Ok(self.grid[p][q].as_ref())
     }
 
-    pub fn set(&mut self, p: usize, q: usize, val: T) -> Result<()> {
+    pub fn set(&mut self, p: usize, q: usize, val: Option<T>) -> Result<()> {
         if p >= self.m || q >= self.n {
             return Err(anyhow::anyhow!("Index out of bounds"));
         }
-        self.grid[p][q] = Some(val);
+        self.grid[p][q] = val;
         Ok(())
     }
 
-    pub fn set_by_tuple(&mut self, coord: (usize, usize), val: T) -> Result<()> {
+    pub fn set_by_tuple(&mut self, coord: (usize, usize), val: Option<T>) -> Result<()> {
         self.set(coord.0, coord.1, val)
     }
 
@@ -57,7 +57,7 @@ impl<T> Grid<T> {
     }
 
     pub fn set_by_cell(&mut self, cell: GridCell<T>) -> Result<()> {
-        self.set(cell.p, cell.q, cell.val.unwrap())
+        self.set(cell.p, cell.q, cell.val)
     }
 
     pub fn get_by_cell(&self, coord: (usize, usize)) -> Result<Option<GridCell<&T>>> {
@@ -285,14 +285,14 @@ mod tests {
     #[test]
     fn test_set_get() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 0, 1).unwrap();
+        grid.set(0, 0, Some(1)).unwrap();
         assert_eq!(Some(&1), grid.get(0, 0).unwrap());
     }
 
     #[test]
     fn test_set_get_by_tuple() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set_by_tuple((0, 0), 1).unwrap();
+        grid.set_by_tuple((0, 0), Some(1)).unwrap();
         assert_eq!(Some(&1), grid.get_by_tuple((0, 0)).unwrap());
     }
 
@@ -306,7 +306,7 @@ mod tests {
     #[test]
     fn test_get_by_cell() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 0, 1).unwrap();
+        grid.set(0, 0, Some(1)).unwrap();
         assert_eq!(
             Some(GridCell::new(0, 0, Some(&1))),
             grid.get_by_cell((0, 0)).unwrap()
@@ -316,8 +316,8 @@ mod tests {
     #[test]
     fn test_top() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 2).unwrap();
-        grid.set(1, 1, 1).unwrap();
+        grid.set(0, 1, Some(2)).unwrap();
+        grid.set(1, 1, Some(1)).unwrap();
         assert!(grid.top(0, 1).is_err());
         assert_eq!(Some(&2), grid.top(1, 1).unwrap());
     }
@@ -325,8 +325,8 @@ mod tests {
     #[test]
     fn test_top_by_tuple() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 2).unwrap();
-        grid.set(1, 1, 1).unwrap();
+        grid.set(0, 1, Some(2)).unwrap();
+        grid.set(1, 1, Some(1)).unwrap();
         assert!(grid.top_by_tuple((0, 1)).is_err());
         assert_eq!(Some(&2), grid.top_by_tuple((1, 1)).unwrap());
     }
@@ -334,8 +334,8 @@ mod tests {
     #[test]
     fn test_bottom() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 2).unwrap();
-        grid.set(1, 1, 1).unwrap();
+        grid.set(0, 1, Some(2)).unwrap();
+        grid.set(1, 1, Some(1)).unwrap();
         assert_eq!(Some(&1), grid.bottom(0, 1).unwrap());
         assert!(grid.bottom(3, 1).is_err());
     }
@@ -343,8 +343,8 @@ mod tests {
     #[test]
     fn test_bottom_by_tuple() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 2).unwrap();
-        grid.set(1, 1, 1).unwrap();
+        grid.set(0, 1, Some(2)).unwrap();
+        grid.set(1, 1, Some(1)).unwrap();
         assert_eq!(Some(&1), grid.bottom_by_tuple((0, 1)).unwrap());
         assert!(grid.bottom_by_tuple((3, 1)).is_err());
     }
@@ -352,8 +352,8 @@ mod tests {
     #[test]
     fn test_left() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 2).unwrap();
-        grid.set(0, 2, 1).unwrap();
+        grid.set(0, 1, Some(2)).unwrap();
+        grid.set(0, 2, Some(1)).unwrap();
         assert!(grid.left(0, 0).is_err());
         assert_eq!(Some(&2), grid.left(0, 2).unwrap());
     }
@@ -361,8 +361,8 @@ mod tests {
     #[test]
     fn test_left_by_tuple() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 2).unwrap();
-        grid.set(0, 2, 1).unwrap();
+        grid.set(0, 1, Some(2)).unwrap();
+        grid.set(0, 2, Some(1)).unwrap();
         assert!(grid.left_by_tuple((0, 0)).is_err());
         assert_eq!(Some(&2), grid.left_by_tuple((0, 2)).unwrap());
     }
@@ -370,8 +370,8 @@ mod tests {
     #[test]
     fn test_right() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 2).unwrap();
-        grid.set(0, 2, 1).unwrap();
+        grid.set(0, 1, Some(2)).unwrap();
+        grid.set(0, 2, Some(1)).unwrap();
         assert_eq!(Some(&1), grid.right(0, 1).unwrap());
         assert!(grid.right(0, 2).is_err());
     }
@@ -379,8 +379,8 @@ mod tests {
     #[test]
     fn test_right_by_tuple() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 2).unwrap();
-        grid.set(0, 2, 1).unwrap();
+        grid.set(0, 1, Some(2)).unwrap();
+        grid.set(0, 2, Some(1)).unwrap();
         assert_eq!(Some(&1), grid.right_by_tuple((0, 1)).unwrap());
         assert!(grid.right_by_tuple((0, 2)).is_err());
     }
@@ -388,8 +388,8 @@ mod tests {
     #[test]
     fn test_top_cell() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 2).unwrap();
-        grid.set(1, 1, 1).unwrap();
+        grid.set(0, 1, Some(2)).unwrap();
+        grid.set(1, 1, Some(1)).unwrap();
         assert!(grid.top_cell(0, 1).is_err());
         assert_eq!(GridCell::new(0, 1, Some(&2)), grid.top_cell(1, 1).unwrap());
     }
@@ -397,8 +397,8 @@ mod tests {
     #[test]
     fn test_top_cell_by_tuple() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 2).unwrap();
-        grid.set(1, 1, 1).unwrap();
+        grid.set(0, 1, Some(2)).unwrap();
+        grid.set(1, 1, Some(1)).unwrap();
         assert!(grid.top_cell_by_tuple((0, 1)).is_err());
         assert_eq!(
             GridCell::new(0, 1, Some(&2)),
@@ -409,8 +409,8 @@ mod tests {
     #[test]
     fn test_bottom_cell() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 2).unwrap();
-        grid.set(1, 1, 1).unwrap();
+        grid.set(0, 1, Some(2)).unwrap();
+        grid.set(1, 1, Some(1)).unwrap();
         assert_eq!(
             GridCell::new(1, 1, Some(&1)),
             grid.bottom_cell(0, 1).unwrap()
@@ -421,8 +421,8 @@ mod tests {
     #[test]
     fn test_bottom_cell_by_tuple() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 2).unwrap();
-        grid.set(1, 1, 1).unwrap();
+        grid.set(0, 1, Some(2)).unwrap();
+        grid.set(1, 1, Some(1)).unwrap();
         assert_eq!(
             GridCell::new(1, 1, Some(&1)),
             grid.bottom_cell_by_tuple((0, 1)).unwrap()
@@ -433,8 +433,8 @@ mod tests {
     #[test]
     fn test_left_cell() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 1).unwrap();
-        grid.set(0, 2, 2).unwrap();
+        grid.set(0, 1, Some(1)).unwrap();
+        grid.set(0, 2, Some(2)).unwrap();
         assert!(grid.left_cell(0, 0).is_err());
         assert_eq!(GridCell::new(0, 1, Some(&1)), grid.left_cell(0, 2).unwrap());
     }
@@ -442,8 +442,8 @@ mod tests {
     #[test]
     fn test_left_cell_by_tuple() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 1).unwrap();
-        grid.set(0, 2, 2).unwrap();
+        grid.set(0, 1, Some(1)).unwrap();
+        grid.set(0, 2, Some(2)).unwrap();
         assert!(grid.left_cell_by_tuple((0, 0)).is_err());
         assert_eq!(
             GridCell::new(0, 1, Some(&1)),
@@ -454,8 +454,8 @@ mod tests {
     #[test]
     fn test_right_cell() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 1).unwrap();
-        grid.set(0, 2, 2).unwrap();
+        grid.set(0, 1, Some(1)).unwrap();
+        grid.set(0, 2, Some(2)).unwrap();
         assert_eq!(
             GridCell::new(0, 2, Some(&2)),
             grid.right_cell(0, 1).unwrap()
@@ -466,8 +466,8 @@ mod tests {
     #[test]
     fn test_right_cell_by_tuple() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 1).unwrap();
-        grid.set(0, 2, 2).unwrap();
+        grid.set(0, 1, Some(1)).unwrap();
+        grid.set(0, 2, Some(2)).unwrap();
         assert_eq!(
             GridCell::new(0, 2, Some(&2)),
             grid.right_cell_by_tuple((0, 1)).unwrap()
@@ -478,11 +478,11 @@ mod tests {
     #[test]
     fn test_neighbor_tuples() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 1).unwrap();
-        grid.set(1, 1, 2).unwrap();
-        grid.set(2, 1, 3).unwrap();
-        grid.set(1, 0, 4).unwrap();
-        grid.set(1, 2, 5).unwrap();
+        grid.set(0, 1, Some(1)).unwrap();
+        grid.set(1, 1, Some(2)).unwrap();
+        grid.set(2, 1, Some(3)).unwrap();
+        grid.set(1, 0, Some(4)).unwrap();
+        grid.set(1, 2, Some(5)).unwrap();
 
         let neighbor_tuples = grid.neighbor_tuples(1, 1).unwrap();
         assert_eq!(4, neighbor_tuples.len());
@@ -495,11 +495,11 @@ mod tests {
     #[test]
     fn test_neighbors() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 1).unwrap();
-        grid.set(1, 1, 2).unwrap();
-        grid.set(2, 1, 3).unwrap();
-        grid.set(1, 0, 4).unwrap();
-        grid.set(1, 2, 5).unwrap();
+        grid.set(0, 1, Some(1)).unwrap();
+        grid.set(1, 1, Some(2)).unwrap();
+        grid.set(2, 1, Some(3)).unwrap();
+        grid.set(1, 0, Some(4)).unwrap();
+        grid.set(1, 2, Some(5)).unwrap();
 
         let neighbors = grid.neighbors(1, 1).unwrap();
         assert_eq!(4, neighbors.len());
@@ -512,10 +512,10 @@ mod tests {
     #[test]
     fn test_neighbors_top() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(1, 1, 2).unwrap();
-        grid.set(2, 1, 3).unwrap();
-        grid.set(1, 0, 4).unwrap();
-        grid.set(1, 2, 5).unwrap();
+        grid.set(1, 1, Some(2)).unwrap();
+        grid.set(2, 1, Some(3)).unwrap();
+        grid.set(1, 0, Some(4)).unwrap();
+        grid.set(1, 2, Some(5)).unwrap();
 
         let neighbor_tuples = grid.neighbor_tuples(0, 1).unwrap();
         assert_eq!(3, neighbor_tuples.len());
@@ -527,10 +527,10 @@ mod tests {
     #[test]
     fn test_neighbors_bottom() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 1).unwrap();
-        grid.set(1, 1, 2).unwrap();
-        grid.set(1, 0, 4).unwrap();
-        grid.set(1, 2, 5).unwrap();
+        grid.set(0, 1, Some(1)).unwrap();
+        grid.set(1, 1, Some(2)).unwrap();
+        grid.set(1, 0, Some(4)).unwrap();
+        grid.set(1, 2, Some(5)).unwrap();
 
         let neighbor_tuples = grid.neighbor_tuples(3, 1).unwrap();
         assert_eq!(3, neighbor_tuples.len());
@@ -542,10 +542,10 @@ mod tests {
     #[test]
     fn test_neighbors_left() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 1).unwrap();
-        grid.set(1, 1, 2).unwrap();
-        grid.set(2, 1, 3).unwrap();
-        grid.set(1, 2, 5).unwrap();
+        grid.set(0, 1, Some(1)).unwrap();
+        grid.set(1, 1, Some(2)).unwrap();
+        grid.set(2, 1, Some(3)).unwrap();
+        grid.set(1, 2, Some(5)).unwrap();
 
         let neighbor_tuples = grid.neighbor_tuples(1, 0).unwrap();
         assert_eq!(3, neighbor_tuples.len());
@@ -557,10 +557,10 @@ mod tests {
     #[test]
     fn test_neighbors_right() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 1).unwrap();
-        grid.set(1, 1, 2).unwrap();
-        grid.set(2, 1, 3).unwrap();
-        grid.set(1, 0, 4).unwrap();
+        grid.set(0, 1, Some(1)).unwrap();
+        grid.set(1, 1, Some(2)).unwrap();
+        grid.set(2, 1, Some(3)).unwrap();
+        grid.set(1, 0, Some(4)).unwrap();
 
         let neighbor_tuples = grid.neighbor_tuples(1, 2).unwrap();
         assert_eq!(3, neighbor_tuples.len());
@@ -572,11 +572,11 @@ mod tests {
     #[test]
     fn test_neighbor_tuples_by_tuple() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 1).unwrap();
-        grid.set(1, 1, 2).unwrap();
-        grid.set(2, 1, 3).unwrap();
-        grid.set(1, 0, 4).unwrap();
-        grid.set(1, 2, 5).unwrap();
+        grid.set(0, 1, Some(1)).unwrap();
+        grid.set(1, 1, Some(2)).unwrap();
+        grid.set(2, 1, Some(3)).unwrap();
+        grid.set(1, 0, Some(4)).unwrap();
+        grid.set(1, 2, Some(5)).unwrap();
 
         let neighbor_tuples = grid.neighbor_tuples_by_tuple((1, 1)).unwrap();
         assert_eq!(4, neighbor_tuples.len());
@@ -589,11 +589,11 @@ mod tests {
     #[test]
     fn test_neighbor_cells() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 1).unwrap();
-        grid.set(1, 1, 2).unwrap();
-        grid.set(2, 1, 3).unwrap();
-        grid.set(1, 0, 4).unwrap();
-        grid.set(1, 2, 5).unwrap();
+        grid.set(0, 1, Some(1)).unwrap();
+        grid.set(1, 1, Some(2)).unwrap();
+        grid.set(2, 1, Some(3)).unwrap();
+        grid.set(1, 0, Some(4)).unwrap();
+        grid.set(1, 2, Some(5)).unwrap();
 
         let neighbor_cells = grid.neighbor_cells(1, 1).unwrap();
         assert_eq!(4, neighbor_cells.len());
@@ -606,11 +606,11 @@ mod tests {
     #[test]
     fn test_neighbor_cells_by_tuple() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 1, 1).unwrap();
-        grid.set(1, 1, 2).unwrap();
-        grid.set(2, 1, 3).unwrap();
-        grid.set(1, 0, 4).unwrap();
-        grid.set(1, 2, 5).unwrap();
+        grid.set(0, 1, Some(1)).unwrap();
+        grid.set(1, 1, Some(2)).unwrap();
+        grid.set(2, 1, Some(3)).unwrap();
+        grid.set(1, 0, Some(4)).unwrap();
+        grid.set(1, 2, Some(5)).unwrap();
 
         let neighbor_cells = grid.neighbor_cells_by_tuple((1, 1)).unwrap();
         assert_eq!(4, neighbor_cells.len());
@@ -623,18 +623,18 @@ mod tests {
     #[test]
     fn test_all_neighbor_tuples() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 0, 1).unwrap();
-        grid.set(0, 1, 2).unwrap();
-        grid.set(0, 2, 3).unwrap();
-        grid.set(1, 0, 4).unwrap();
-        grid.set(1, 1, 5).unwrap();
-        grid.set(1, 2, 6).unwrap();
-        grid.set(2, 0, 7).unwrap();
-        grid.set(2, 1, 8).unwrap();
-        grid.set(2, 2, 9).unwrap();
-        grid.set(3, 0, 10).unwrap();
-        grid.set(3, 1, 11).unwrap();
-        grid.set(3, 2, 12).unwrap();
+        grid.set(0, 0, Some(1)).unwrap();
+        grid.set(0, 1, Some(2)).unwrap();
+        grid.set(0, 2, Some(3)).unwrap();
+        grid.set(1, 0, Some(4)).unwrap();
+        grid.set(1, 1, Some(5)).unwrap();
+        grid.set(1, 2, Some(6)).unwrap();
+        grid.set(2, 0, Some(7)).unwrap();
+        grid.set(2, 1, Some(8)).unwrap();
+        grid.set(2, 2, Some(9)).unwrap();
+        grid.set(3, 0, Some(10)).unwrap();
+        grid.set(3, 1, Some(11)).unwrap();
+        grid.set(3, 2, Some(12)).unwrap();
 
         let neighbor_tuples = grid.all_neighbor_tuples(1, 1).unwrap();
         assert_eq!(8, neighbor_tuples.len());
@@ -651,18 +651,18 @@ mod tests {
     #[test]
     fn test_all_neighbor_cells() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
-        grid.set(0, 0, 1).unwrap();
-        grid.set(0, 1, 2).unwrap();
-        grid.set(0, 2, 3).unwrap();
-        grid.set(1, 0, 4).unwrap();
-        grid.set(1, 1, 5).unwrap();
-        grid.set(1, 2, 6).unwrap();
-        grid.set(2, 0, 7).unwrap();
-        grid.set(2, 1, 8).unwrap();
-        grid.set(2, 2, 9).unwrap();
-        grid.set(3, 0, 10).unwrap();
-        grid.set(3, 1, 11).unwrap();
-        grid.set(3, 2, 12).unwrap();
+        grid.set(0, 0, Some(1)).unwrap();
+        grid.set(0, 1, Some(2)).unwrap();
+        grid.set(0, 2, Some(3)).unwrap();
+        grid.set(1, 0, Some(4)).unwrap();
+        grid.set(1, 1, Some(5)).unwrap();
+        grid.set(1, 2, Some(6)).unwrap();
+        grid.set(2, 0, Some(7)).unwrap();
+        grid.set(2, 1, Some(8)).unwrap();
+        grid.set(2, 2, Some(9)).unwrap();
+        grid.set(3, 0, Some(10)).unwrap();
+        grid.set(3, 1, Some(11)).unwrap();
+        grid.set(3, 2, Some(12)).unwrap();
 
         let neighbor_cells = grid.all_neighbor_cells(1, 1).unwrap();
         assert_eq!(8, neighbor_cells.len());

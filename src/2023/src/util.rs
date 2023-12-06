@@ -75,3 +75,14 @@ pub(crate) fn string_to_i64_nums(str: &str) -> Vec<i64> {
         .map(|s| s.parse::<i64>().unwrap())
         .collect()
 }
+
+pub(crate) fn string_to_nums(str: &str) -> Vec<i32> {
+    str.trim()
+        .split(" ")
+        .collect::<Vec<_>>()
+        .iter()
+        .map(|s| s.trim())
+        .filter(|s| s.len() > 0)
+        .map(|s| s.parse::<i32>().unwrap())
+        .collect()
+}

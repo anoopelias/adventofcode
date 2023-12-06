@@ -26,38 +26,37 @@ impl Mapper {
     fn map_range(&self, from: i64, len: i64) -> Vec<(i64, i64)> {
         let mut ranges = vec![];
 
+        let to = from + len;
         let mut start = from;
-        let mut remain = len;
         for (dest, src, range) in self.num_maps.iter() {
-            if start + remain < *src {
+            let tip = src + range;
+            if to <= *src {
                 break;
-            } else if start < *src && (start + remain) > *src {
-                let offset = src - start;
-                ranges.push((start, offset));
-                if (start + remain) < (src + range) {
-                    ranges.push((*dest, range - offset));
-                    start = start + remain;
-                    remain = 0;
+            }
+
+            if start < *src {
+                ranges.push((start, src - start));
+                if to < tip {
+                    ranges.push((*dest, to - src));
+                    start = to;
                 } else {
                     ranges.push((*dest, *range));
-                    start = start + offset + range;
-                    remain = remain - offset - range;
+                    start = tip;
                 }
-            } else if start >= *src && (start + remain) < (src + range) {
+            } else if start >= *src {
                 let offset = start - src;
-                ranges.push((dest + offset, remain));
-                start = start + remain;
-                remain = 0;
-            } else if start >= *src && start < (src + range) && (start + remain) >= (src + range) {
-                let offset = start - src;
-                ranges.push((dest + offset, (src + range) - start));
-                start = start + (range - offset);
-                remain = remain - range + offset;
+                if to < tip {
+                    ranges.push((dest + offset, to - start));
+                    start = to;
+                } else if start < tip && to >= tip {
+                    ranges.push((dest + offset, tip - start));
+                    start = tip;
+                }
             }
         }
 
-        if remain != 0 {
-            ranges.push((start, remain));
+        if start < to {
+            ranges.push((start, to - start));
         }
 
         ranges

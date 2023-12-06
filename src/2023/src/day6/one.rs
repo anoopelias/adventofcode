@@ -1,4 +1,4 @@
-use crate::utils::parser::I32Parser;
+use crate::utils::parser::{I32Parser, SeparatorParser};
 
 pub(crate) fn solve(lines: Vec<String>) -> String {
     let times = line_to_nums(lines.get(0).unwrap());
@@ -14,7 +14,7 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
 }
 
 fn line_to_nums(line: &str) -> Vec<i32> {
-    line.split(":").nth(1).unwrap().parse_i32()
+    line.parse_separator(":").get(1).unwrap().parse_i32()
 }
 
 #[cfg(test)]

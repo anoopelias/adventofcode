@@ -174,6 +174,18 @@ impl<T> Grid<T> {
         Ok(neighbors)
     }
 
+    pub fn neighbors(&self, p: usize, q: usize) -> Result<Vec<Option<&T>>> {
+        let neighbor_tuples = self.neighbor_tuples(p, q)?;
+        Ok(neighbor_tuples
+            .iter()
+            .map(|(p, q)| self.get(*p, *q).unwrap())
+            .collect())
+    }
+
+    pub fn neighbors_by_tuple(&self, coord: (usize, usize)) -> Result<Vec<Option<&T>>> {
+        self.neighbors(coord.0, coord.1)
+    }
+
     pub fn neighbor_tuples_by_tuple(&self, coord: (usize, usize)) -> Result<Vec<(usize, usize)>> {
         self.neighbor_tuples(coord.0, coord.1)
     }
@@ -219,6 +231,18 @@ impl<T> Grid<T> {
             }
         }
         Ok(neighbors)
+    }
+
+    pub fn all_neighbors(&self, p: usize, q: usize) -> Result<Vec<Option<&T>>> {
+        let neighbor_tuples = self.all_neighbor_tuples(p, q)?;
+        Ok(neighbor_tuples
+            .iter()
+            .map(|(p, q)| self.get(*p, *q).unwrap())
+            .collect())
+    }
+
+    pub fn all_neighbors_by_tuple(&self, coord: (usize, usize)) -> Result<Vec<Option<&T>>> {
+        self.all_neighbors(coord.0, coord.1)
     }
 
     pub fn all_neighbor_cells(&self, p: usize, q: usize) -> Result<Vec<GridCell<&T>>> {
@@ -452,7 +476,7 @@ mod tests {
     }
 
     #[test]
-    fn test_neighbors() {
+    fn test_neighbor_tuples() {
         let mut grid: Grid<i32> = Grid::new(4, 3);
         grid.set(0, 1, 1).unwrap();
         grid.set(1, 1, 2).unwrap();
@@ -466,6 +490,23 @@ mod tests {
         assert!(neighbor_tuples.contains(&(1, 0)));
         assert!(neighbor_tuples.contains(&(1, 2)));
         assert!(neighbor_tuples.contains(&(2, 1)));
+    }
+
+    #[test]
+    fn test_neighbors() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 1, 1).unwrap();
+        grid.set(1, 1, 2).unwrap();
+        grid.set(2, 1, 3).unwrap();
+        grid.set(1, 0, 4).unwrap();
+        grid.set(1, 2, 5).unwrap();
+
+        let neighbors = grid.neighbors(1, 1).unwrap();
+        assert_eq!(4, neighbors.len());
+        assert_eq!(Some(&1), neighbors[0]);
+        assert_eq!(Some(&4), neighbors[1]);
+        assert_eq!(Some(&5), neighbors[2]);
+        assert_eq!(Some(&3), neighbors[3]);
     }
 
     #[test]

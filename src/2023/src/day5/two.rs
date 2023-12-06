@@ -1,5 +1,3 @@
-use std::cmp;
-
 use crate::util::string_to_nums;
 
 struct Mapper {
@@ -110,12 +108,12 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
         inputs = outputs;
     }
 
-    let mut min = i64::MAX;
-    for (from, _) in inputs {
-        min = cmp::min(min, from);
-    }
-
-    min.to_string()
+    inputs
+        .iter()
+        .min_by(|x, y| x.0.cmp(&y.0))
+        .unwrap()
+        .0
+        .to_string()
 }
 
 #[cfg(test)]

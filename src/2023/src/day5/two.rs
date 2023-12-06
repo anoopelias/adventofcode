@@ -19,11 +19,10 @@ impl Mapper {
         }
     }
 
-    fn map_range(&self, from: i64, len: i64) -> Vec<(i64, i64)> {
+    fn map_range(&self, mut start: i64, len: i64) -> Vec<(i64, i64)> {
         let mut ranges = vec![];
 
-        let to = from + len;
-        let mut start = from;
+        let to = start + len;
         for (dest, src, range) in self.num_maps.iter() {
             let tip = src + range;
             if to <= *src {

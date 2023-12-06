@@ -180,15 +180,64 @@ impl<T> Grid<T> {
 
     pub fn neighbor_cells(&self, p: usize, q: usize) -> Result<Vec<GridCell<&T>>> {
         let neighbor_tuples = self.neighbor_tuples(p, q)?;
-        let mut neighbors = neighbor_tuples
+        Ok(neighbor_tuples
             .iter()
             .map(|(p, q)| GridCell::new(*p, *q, self.get(*p, *q).unwrap()))
-            .collect();
-        Ok(neighbors)
+            .collect())
     }
 
     pub fn neighbor_cells_by_tuple(&self, coord: (usize, usize)) -> Result<Vec<GridCell<&T>>> {
         self.neighbor_cells(coord.0, coord.1)
+    }
+
+    pub fn all_neighbor_tuples(&self, p: usize, q: usize) -> Result<Vec<(usize, usize)>> {
+        self.check_bounds(p, q)?;
+        let mut neighbors = vec![];
+
+        if p > 0 {
+            if q > 0 {
+                neighbors.push((p - 1, q - 1));
+            }
+            neighbors.push((p - 1, q));
+            if q < self.n - 1 {
+                neighbors.push((p - 1, q + 1));
+            }
+        }
+        if q > 0 {
+            neighbors.push((p, q - 1));
+        }
+        if q < self.n - 1 {
+            neighbors.push((p, q + 1));
+        }
+        if p < self.m - 1 {
+            if q > 0 {
+                neighbors.push((p + 1, q - 1));
+            }
+            neighbors.push((p + 1, q));
+            if q < self.n - 1 {
+                neighbors.push((p + 1, q + 1));
+            }
+        }
+        Ok(neighbors)
+    }
+
+    pub fn all_neighbor_cells(&self, p: usize, q: usize) -> Result<Vec<GridCell<&T>>> {
+        let neighbor_tuples = self.all_neighbor_tuples(p, q)?;
+        Ok(neighbor_tuples
+            .iter()
+            .map(|(p, q)| GridCell::new(*p, *q, self.get(*p, *q).unwrap()))
+            .collect())
+    }
+
+    pub fn all_neighbor_tuples_by_tuple(
+        &self,
+        coord: (usize, usize),
+    ) -> Result<Vec<(usize, usize)>> {
+        self.all_neighbor_tuples(coord.0, coord.1)
+    }
+
+    pub fn all_neighbor_cells_by_tuple(&self, coord: (usize, usize)) -> Result<Vec<GridCell<&T>>> {
+        self.all_neighbor_cells(coord.0, coord.1)
     }
 }
 
@@ -528,5 +577,61 @@ mod tests {
         assert_eq!(GridCell::new(1, 0, Some(&4)), neighbor_cells[1]);
         assert_eq!(GridCell::new(1, 2, Some(&5)), neighbor_cells[2]);
         assert_eq!(GridCell::new(2, 1, Some(&3)), neighbor_cells[3]);
+    }
+
+    #[test]
+    fn test_all_neighbor_tuples() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 0, 1).unwrap();
+        grid.set(0, 1, 2).unwrap();
+        grid.set(0, 2, 3).unwrap();
+        grid.set(1, 0, 4).unwrap();
+        grid.set(1, 1, 5).unwrap();
+        grid.set(1, 2, 6).unwrap();
+        grid.set(2, 0, 7).unwrap();
+        grid.set(2, 1, 8).unwrap();
+        grid.set(2, 2, 9).unwrap();
+        grid.set(3, 0, 10).unwrap();
+        grid.set(3, 1, 11).unwrap();
+        grid.set(3, 2, 12).unwrap();
+
+        let neighbor_tuples = grid.all_neighbor_tuples(1, 1).unwrap();
+        assert_eq!(8, neighbor_tuples.len());
+        assert!(neighbor_tuples.contains(&(0, 0)));
+        assert!(neighbor_tuples.contains(&(0, 1)));
+        assert!(neighbor_tuples.contains(&(0, 2)));
+        assert!(neighbor_tuples.contains(&(1, 0)));
+        assert!(neighbor_tuples.contains(&(1, 2)));
+        assert!(neighbor_tuples.contains(&(2, 0)));
+        assert!(neighbor_tuples.contains(&(2, 1)));
+        assert!(neighbor_tuples.contains(&(2, 2)));
+    }
+
+    #[test]
+    fn test_all_neighbor_cells() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 0, 1).unwrap();
+        grid.set(0, 1, 2).unwrap();
+        grid.set(0, 2, 3).unwrap();
+        grid.set(1, 0, 4).unwrap();
+        grid.set(1, 1, 5).unwrap();
+        grid.set(1, 2, 6).unwrap();
+        grid.set(2, 0, 7).unwrap();
+        grid.set(2, 1, 8).unwrap();
+        grid.set(2, 2, 9).unwrap();
+        grid.set(3, 0, 10).unwrap();
+        grid.set(3, 1, 11).unwrap();
+        grid.set(3, 2, 12).unwrap();
+
+        let neighbor_cells = grid.all_neighbor_cells(1, 1).unwrap();
+        assert_eq!(8, neighbor_cells.len());
+        assert_eq!(GridCell::new(0, 0, Some(&1)), neighbor_cells[0]);
+        assert_eq!(GridCell::new(0, 1, Some(&2)), neighbor_cells[1]);
+        assert_eq!(GridCell::new(0, 2, Some(&3)), neighbor_cells[2]);
+        assert_eq!(GridCell::new(1, 0, Some(&4)), neighbor_cells[3]);
+        assert_eq!(GridCell::new(1, 2, Some(&6)), neighbor_cells[4]);
+        assert_eq!(GridCell::new(2, 0, Some(&7)), neighbor_cells[5]);
+        assert_eq!(GridCell::new(2, 1, Some(&8)), neighbor_cells[6]);
+        assert_eq!(GridCell::new(2, 2, Some(&9)), neighbor_cells[7]);
     }
 }

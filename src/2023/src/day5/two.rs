@@ -31,18 +31,18 @@ impl Mapper {
         for (dest, src, range) in self.num_maps.iter() {
             if start + remain < *src {
                 break;
-            } else if start < *src && (start + remain) > *src && (start + remain) < (src + range) {
-                let offset = src - start;
-                ranges.push((start, offset));
-                ranges.push((*dest, range - offset));
-                start = start + remain;
-                remain = 0;
             } else if start < *src && (start + remain) > *src {
                 let offset = src - start;
                 ranges.push((start, offset));
-                ranges.push((*dest, *range));
-                start = start + offset + range;
-                remain = remain - offset - range;
+                if (start + remain) < (src + range) {
+                    ranges.push((*dest, range - offset));
+                    start = start + remain;
+                    remain = 0;
+                } else {
+                    ranges.push((*dest, *range));
+                    start = start + offset + range;
+                    remain = remain - offset - range;
+                }
             } else if start >= *src && (start + remain) < (src + range) {
                 let offset = start - src;
                 ranges.push((dest + offset, remain));

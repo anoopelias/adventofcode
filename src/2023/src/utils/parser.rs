@@ -1,9 +1,9 @@
 pub trait I32Parser {
-    fn parse_i32(&self) -> Vec<i32>;
+    fn parse_i32(self) -> Vec<i32>;
 }
 
 impl I32Parser for &str {
-    fn parse_i32(&self) -> Vec<i32> {
+    fn parse_i32(self) -> Vec<i32> {
         self.trim()
             .split(" ")
             .collect::<Vec<_>>()

@@ -5,7 +5,7 @@ use std::f32::consts::E;
 use anyhow::Result;
 
 #[derive(PartialEq, Debug)]
-struct GridCell<T> {
+pub struct GridCell<T> {
     val: Option<T>,
     p: usize,
     q: usize,
@@ -17,7 +17,7 @@ impl<T> GridCell<T> {
     }
 }
 
-struct Grid<T> {
+pub struct Grid<T = ()> {
     grid: Vec<Vec<Option<T>>>,
     m: usize,
     n: usize,

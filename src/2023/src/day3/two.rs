@@ -3,10 +3,10 @@ use std::{
     usize, vec,
 };
 
-use crate::utils::util::neighbors;
+use crate::utils::grid::Grid;
 
 pub(crate) fn solve(lines: Vec<String>) -> String {
-    let (m, n) = (lines.len(), lines.get(0).unwrap().len());
+    let grid = Grid::new(lines.len(), lines.get(0).unwrap().len());
 
     let mut sum = 0;
     let mut attached_stars = HashMap::new();
@@ -18,7 +18,7 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
         for (q, ch) in chars.enumerate() {
             if ch.is_numeric() {
                 num_part = (num_part * 10) + ch.to_digit(10).unwrap();
-                let stars = stars_around(&lines, p, q, m, n);
+                let stars = stars_around(&lines, p, q, &grid);
 
                 for star in stars {
                     attached.insert(star);
@@ -45,8 +45,8 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
     sum.to_string()
 }
 
-fn stars_around(lines: &Vec<String>, p: usize, q: usize, m: usize, n: usize) -> Vec<String> {
-    let neighbors = neighbors(p, q, m, n);
+fn stars_around(lines: &Vec<String>, p: usize, q: usize, grid: &Grid) -> Vec<String> {
+    let neighbors = grid.all_neighbor_tuples(p, q).unwrap();
 
     let mut attached: Vec<String> = vec![];
     for (p, q) in neighbors {

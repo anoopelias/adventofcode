@@ -162,15 +162,24 @@ impl<T> Grid<T> {
         if p > 0 {
             neighbors.push((p - 1, q));
         }
-        if p < self.m - 1 {
-            neighbors.push((p + 1, q));
-        }
         if q > 0 {
             neighbors.push((p, q - 1));
         }
         if q < self.n - 1 {
             neighbors.push((p, q + 1));
         }
+        if p < self.m - 1 {
+            neighbors.push((p + 1, q));
+        }
+        Ok(neighbors)
+    }
+
+    pub fn neighbor_cells(&self, p: usize, q: usize) -> Result<Vec<GridCell<&T>>> {
+        let neighbor_tuples = self.neighbor_tuples(p, q)?;
+        let mut neighbors = neighbor_tuples
+            .iter()
+            .map(|(p, q)| GridCell::new(*p, *q, self.get(*p, *q).unwrap()))
+            .collect();
         Ok(neighbors)
     }
 }
@@ -460,5 +469,22 @@ mod tests {
         assert!(neighbor_tuples.contains(&(0, 2)));
         assert!(neighbor_tuples.contains(&(1, 1)));
         assert!(neighbor_tuples.contains(&(2, 2)));
+    }
+
+    #[test]
+    fn test_neighbor_cells() {
+        let mut grid: Grid<i32> = Grid::new(4, 3);
+        grid.set(0, 1, 1).unwrap();
+        grid.set(1, 1, 2).unwrap();
+        grid.set(2, 1, 3).unwrap();
+        grid.set(1, 0, 4).unwrap();
+        grid.set(1, 2, 5).unwrap();
+
+        let neighbor_cells = grid.neighbor_cells(1, 1).unwrap();
+        assert_eq!(4, neighbor_cells.len());
+        assert_eq!(GridCell::new(0, 1, Some(&1)), neighbor_cells[0]);
+        assert_eq!(GridCell::new(1, 0, Some(&4)), neighbor_cells[1]);
+        assert_eq!(GridCell::new(1, 2, Some(&5)), neighbor_cells[2]);
+        assert_eq!(GridCell::new(2, 1, Some(&3)), neighbor_cells[3]);
     }
 }

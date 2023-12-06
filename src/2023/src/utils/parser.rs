@@ -6,13 +6,13 @@ pub trait I64Parser {
     fn parse_i64(self) -> Vec<i64>;
 }
 
-pub trait SpaceParser {
-    fn parse_space(self) -> Vec<String>;
+pub trait SeparatorParser {
+    fn parse_separator(self, sep: &str) -> Vec<String>;
 }
 
 impl I32Parser for &str {
     fn parse_i32(self) -> Vec<i32> {
-        self.parse_space()
+        self.parse_separator(" ")
             .iter()
             .map(|s| s.parse::<i32>().unwrap())
             .collect()
@@ -21,17 +21,17 @@ impl I32Parser for &str {
 
 impl I64Parser for &str {
     fn parse_i64(self) -> Vec<i64> {
-        self.parse_space()
+        self.parse_separator(" ")
             .iter()
             .map(|s| s.parse::<i64>().unwrap())
             .collect()
     }
 }
 
-impl SpaceParser for &str {
-    fn parse_space(self) -> Vec<String> {
+impl SeparatorParser for &str {
+    fn parse_separator(self, sep: &str) -> Vec<String> {
         self.trim()
-            .split(" ")
+            .split(sep)
             .collect::<Vec<_>>()
             .iter()
             .map(|s| s.trim())

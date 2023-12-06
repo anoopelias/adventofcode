@@ -1,8 +1,8 @@
-use crate::utils::util::string_to_nums;
+use crate::utils::parser::I32Parser;
 
 pub(crate) fn solve(lines: Vec<String>) -> String {
-    let times = string_to_nums(lines.get(0).unwrap().split(":").nth(1).unwrap());
-    let distances = string_to_nums(lines.get(1).unwrap().split(":").nth(1).unwrap());
+    let times = line_to_nums(lines.get(0).unwrap());
+    let distances = line_to_nums(lines.get(1).unwrap());
 
     let races = times.iter().zip(distances.iter());
 
@@ -11,6 +11,10 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
             acc * (0..*race.0).filter(|i| (race.0 - i) * i > *race.1).count()
         })
         .to_string()
+}
+
+fn line_to_nums(line: &str) -> Vec<i32> {
+    line.split(":").nth(1).unwrap().parse_i32()
 }
 
 #[cfg(test)]

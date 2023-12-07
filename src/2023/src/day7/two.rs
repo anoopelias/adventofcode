@@ -17,7 +17,7 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
         hands.push(Hand {
             cards: cards.to_string(),
             bid,
-            ty: calculate_type(cards),
+            ty: type_of(cards),
         });
     }
 
@@ -50,7 +50,7 @@ fn compare(hand_a: &Hand, hand_b: &Hand) -> Ordering {
     Ordering::Equal
 }
 
-fn calculate_type(cards: &str) -> usize {
+fn type_of(cards: &str) -> usize {
     let mut card_set = HashMap::new();
     cards.chars().for_each(|card| {
         if !card_set.contains_key(&card) {

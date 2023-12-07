@@ -17,7 +17,7 @@ pub(crate) fn solve(lines: Vec<String>) -> String {
         hands.push(Hand {
             cards: cards.to_string(),
             bid,
-            ty: calculate_type(cards),
+            ty: type_of(cards),
         });
     }
 
@@ -50,7 +50,7 @@ fn compare(hand_a: &Hand, hand_b: &Hand) -> Ordering {
     Ordering::Equal
 }
 
-fn calculate_type(cards: &str) -> usize {
+fn type_of(cards: &str) -> usize {
     let mut card_set = HashMap::new();
     cards.chars().for_each(|card| {
         if !card_set.contains_key(&card) {
@@ -92,7 +92,7 @@ mod tests {
     use crate::day7::one::solve;
     use crate::utils::util;
 
-    use super::calculate_type;
+    use super::type_of;
 
     #[test]
     fn test_sample() {
@@ -108,13 +108,13 @@ mod tests {
 
     #[test]
     fn test_type_calculation() {
-        let ty = calculate_type("AAAAA");
+        let ty = type_of("AAAAA");
         assert_eq!(6, ty);
     }
 
     #[test]
     fn test_type_calculation_four_of_a_kind() {
-        let ty = calculate_type("AAA3A");
+        let ty = type_of("AAA3A");
         assert_eq!(5, ty);
     }
 }

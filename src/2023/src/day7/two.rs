@@ -60,70 +60,48 @@ fn calculate_type(cards: &str) -> usize {
         card_set.insert(card, n + 1);
     });
 
-    match card_set.remove(&'J') {
-        Some(js) => match (js, card_set.keys().len()) {
-            (1, 4) => {
-                // 1J, 1 1 1 1 : Two pair
-                return 1;
-            }
-            (1, 3) => {
-                // 1J, 2 1 1 : Three of a kind
-                return 3;
-            }
-            (1, 2) if card_set.values().collect::<Vec<&i32>>().contains(&&2) => {
-                // 1J, 2, 2: Full house
-                return 4;
-            }
-            (1, 2) => {
-                // 1J, 3, 1: Four of a kind
-                return 5;
-            }
-            (1, 1) => {
-                // 1J, 4: Five of a kind
-                return 6;
-            }
-            (2, 3) => {
-                // 2J, 1 1 1: Three of a kind
-                return 3;
-            }
-            (2, 2) => {
-                // 2J, 2, 1 : Four of a kind
-                return 5;
-            }
-            (2, 1) => {
-                // 2J, 3 : Five of a kind
-                return 6;
-            }
-            (3, 2) => {
-                // 3J, 1, 1: Four of a kind
-                return 5;
-            }
-            (3, 1) => {
-                // 3J, 2: Five of a kind
-                return 6;
-            }
-            (4, 1) => {
-                // 4J, 1: Five of a kind
-                return 6;
-            }
-            (5, 0) => {
-                // 5J
-                return 6;
-            }
-            _ => {}
-        },
-        None => {}
-    };
+    let js = card_set.remove(&'J').unwrap_or(0);
 
-    match card_set.keys().len() {
-        5 => 0,                                                           // High card
-        4 => 1,                                                           // One pair
-        3 if card_set.values().collect::<Vec<&i32>>().contains(&&2) => 2, // Two pairs
-        3 => 3,                                                           // Three of a kind
-        2 if card_set.values().collect::<Vec<&i32>>().contains(&&2) => 4, // Full house
-        2 => 5,                                                           // Four of a kind
-        1 => 6,                                                           // Five of a kind
-        _ => panic!("unexpected"),
+    match (js, card_set.keys().len()) {
+        // High card
+        (0, 5) => 0,
+        // One pair
+        (0, 4) => 1,
+        // Two pairs
+        (0, 3) if card_set.values().collect::<Vec<&i32>>().contains(&&2) => 2,
+        // Three of a kind
+        (0, 3) => 3,
+        // Full house
+        (0, 2) if card_set.values().collect::<Vec<&i32>>().contains(&&2) => 4,
+        // Four of a kind
+        (0, 2) => 5,
+        // Five of a kind
+        (0, 1) => 6,
+        // 1J, 1 1 1 1 : Two pair
+        (1, 4) => 1,
+        // 1J, 2 1 1 : Three of a kind
+        (1, 3) => 3,
+        // 1J, 2, 2: Full house
+        (1, 2) if card_set.values().collect::<Vec<&i32>>().contains(&&2) => 4,
+        // 1J, 3, 1: Four of a kind
+        (1, 2) => 5,
+        // 1J, 4: Five of a kind
+        (1, 1) => 6,
+        // 2J, 1 1 1: Three of a kind
+        (2, 3) => 3,
+        // 2J, 2, 1 : Four of a kind
+        (2, 2) => 5,
+        // 2J, 3 : Five of a kind
+        (2, 1) => 6,
+        // 3J, 1, 1: Four of a kind
+        (3, 2) => 5,
+        // 3J, 2: Five of a kind
+        (3, 1) => 6,
+        // 4J, 1: Five of a kind
+        (4, 1) => 6,
+        // 5J
+        (5, 0) => 6,
+        _ => panic!(),
     }
 }
 

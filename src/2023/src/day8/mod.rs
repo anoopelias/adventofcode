@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::utils::{parser::SepParser, string::WrapperRemover, util};
+use crate::utils::{parser::SeparatorParser, string::WrapperRemover, util};
 
 use self::{one::ProblemOne, two::ProblemTwo};
 
@@ -41,7 +41,7 @@ impl Problem {
                 .unwrap()
                 .trim()
                 .remove_wrapping()
-                .parse_sep(", ");
+                .parse_separator(", ");
             map.insert(key, (values.remove(0), values.remove(0)));
         }
         (instr, map)

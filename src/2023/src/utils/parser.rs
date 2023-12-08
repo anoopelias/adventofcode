@@ -7,11 +7,7 @@ pub trait I64Parser {
 }
 
 pub trait SeparatorParser {
-    fn parse_separator(self, sep: &str) -> Vec<String>;
-}
-
-pub trait SepParser {
-    fn parse_sep(self, sep: Self) -> Vec<Self>
+    fn parse_separator(self, sep: Self) -> Vec<Self>
     where
         Self: Sized;
 }
@@ -35,20 +31,7 @@ impl I64Parser for &str {
 }
 
 impl SeparatorParser for &str {
-    fn parse_separator(self, sep: &str) -> Vec<String> {
-        self.trim()
-            .split(sep)
-            .collect::<Vec<_>>()
-            .iter()
-            .map(|s| s.trim())
-            .filter(|s| s.len() > 0)
-            .map(|s| s.to_string())
-            .collect()
-    }
-}
-
-impl SepParser for &str {
-    fn parse_sep(self, sep: &str) -> Vec<Self>
+    fn parse_separator(self, sep: &str) -> Vec<Self>
     where
         Self: Sized,
     {

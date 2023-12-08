@@ -17,16 +17,15 @@ impl Solution for ProblemTwo {
         let starts = ends_with(&map.keys().map(|st| *st).collect(), 'A');
         let mut steps = vec![];
 
-        for start in starts {
+        for mut start in starts {
             let mut ip = 0;
             let mut cnt = 0;
 
-            let mut st = start.to_string();
-            while !is_ending_with(&st, 'Z') {
-                st = if instr.get(ip).unwrap() == &'L' {
-                    map.get(st.as_str()).unwrap().0.clone()
+            while !is_ending_with(start, 'Z') {
+                start = if instr.get(ip).unwrap() == &'L' {
+                    map.get(start).unwrap().0.as_str()
                 } else {
-                    map.get(st.as_str()).unwrap().1.clone()
+                    map.get(start).unwrap().1.as_str()
                 };
                 cnt += 1;
                 ip += 1;

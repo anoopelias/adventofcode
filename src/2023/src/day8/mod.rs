@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::utils::{parser::SepParser, util};
+use crate::utils::{parser::SepParser, string::WrapperRemover, util};
 
 use self::{one::ProblemOne, two::ProblemTwo};
 
@@ -38,23 +38,12 @@ impl Problem {
         for line in lines {
             let splits = line.parse_sep("=");
             let key = splits.get(0).unwrap().to_string();
-            let mut values = splits.get(1).unwrap().parse_sep(", ");
+            let mut values = splits.get(1).unwrap().remove_wrapping().parse_sep(", ");
             map.insert(
                 key,
-                (
-                    remove_first(values.remove(0)),
-                    remove_last(values.remove(0)),
-                ),
+                (values.remove(0).to_string(), values.remove(0).to_string()),
             );
         }
         (instr, map)
     }
-}
-
-fn remove_first(s: &str) -> String {
-    s[1..].to_string()
-}
-
-fn remove_last(s: &str) -> String {
-    s[0..s.len() - 1].to_string()
 }

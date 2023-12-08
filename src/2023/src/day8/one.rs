@@ -12,7 +12,8 @@ impl ProblemOne {
 
 impl Solution for ProblemOne {
     fn solve(&self) -> String {
-        let (instr, map) = self.problem.parse();
+        let map = self.problem.parse();
+        let instr = self.problem.instr();
 
         let mut start = "AAA";
         let mut ip = 0;

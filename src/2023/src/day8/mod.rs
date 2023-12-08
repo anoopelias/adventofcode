@@ -30,13 +30,16 @@ trait Solution {
 }
 
 impl Problem {
-    fn parse(&self) -> (Vec<char>, HashMap<&str, (&str, &str)>) {
+    fn parse(&self) -> HashMap<&str, (&str, &str)> {
         let mut map: HashMap<&str, (&str, &str)> = HashMap::new();
-        let instr: Vec<char> = self.lines.get(0).unwrap().chars().collect();
         for line in self.lines.iter().skip(2) {
             let (key, value) = line.split_in_two("=");
             map.insert(key, value.remove_wrapping().split_in_two(", "));
         }
-        (instr, map)
+        map
+    }
+
+    fn instr(&self) -> Vec<char> {
+        self.lines.get(0).unwrap().chars().collect()
     }
 }

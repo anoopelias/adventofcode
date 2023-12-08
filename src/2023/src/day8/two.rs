@@ -12,7 +12,8 @@ impl ProblemTwo {
 
 impl Solution for ProblemTwo {
     fn solve(&self) -> String {
-        let (instr, map) = self.problem.parse();
+        let map = self.problem.parse();
+        let instr = self.problem.instr();
 
         let starts = ends_with(&map.keys().map(|st| *st).collect(), 'A');
         let mut steps = vec![];

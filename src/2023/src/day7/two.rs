@@ -18,7 +18,7 @@ impl Solution for ProblemTwo {
     fn solve(&self) -> String {
         let mut hands = vec![];
         for line in &self.problem.lines {
-            let splits = line.parse_separator(" ");
+            let splits = line.as_str().parse_separator(" ");
             let cards = splits.get(0).unwrap();
             let bid = splits.get(1).unwrap().parse::<i32>().unwrap();
             hands.push(Hand {

@@ -33,31 +33,36 @@ impl Solution for ProblemTwo {
             );
         }
 
-        let mut starts = ends_with(&map.keys().map(|st| st.as_str()).collect(), 'A');
-        let len = starts.len();
+        let starts = ends_with(&map.keys().map(|st| st.as_str()).collect(), 'A');
+        let mut steps = vec![];
 
-        let mut ip = 0;
-        let mut cnt = 0;
+        for start in starts {
+            let mut ip = 0;
+            let mut cnt = 0;
 
-        while ends_with(&starts, 'Z').len() != len {
-            let mut new_starts = vec![];
-            for start in starts {
-                let new_start = if instr.get(ip).unwrap() == &'L' {
-                    map.get(start).unwrap().0.as_str()
+            let mut st = start.to_string();
+            while !is_ending_with(&st, 'Z') {
+                st = if instr.get(ip).unwrap() == &'L' {
+                    map.get(&st).unwrap().0.clone()
                 } else {
-                    map.get(start).unwrap().1.as_str()
+                    map.get(&st).unwrap().1.clone()
                 };
-                new_starts.push(new_start);
+                cnt += 1;
+                ip += 1;
+                if ip == instr.len() {
+                    ip = 0;
+                }
             }
-            starts = new_starts;
-            cnt += 1;
-            ip += 1;
-            if ip == instr.len() {
-                ip = 0;
-            }
+            steps.push(cnt);
         }
 
-        cnt.to_string()
+        let mut l = *steps.get(0).unwrap() as u64;
+
+        for step in steps {
+            l = num::integer::lcm(l, step);
+        }
+
+        l.to_string()
     }
 }
 
@@ -66,6 +71,10 @@ fn ends_with<'a>(strs: &Vec<&'a str>, ch: char) -> Vec<&'a str> {
         .filter(|st| st.chars().nth(2).unwrap() == ch)
         .map(|st| *st)
         .collect()
+}
+
+fn is_ending_with(str: &str, ch: char) -> bool {
+    str.chars().into_iter().nth(2).unwrap() == ch
 }
 
 fn remove_first(s: String) -> String {
@@ -96,6 +105,6 @@ mod tests {
     fn test_input() {
         let lines = util::lines_in("./src/day8/input1");
         let problem = ProblemTwo::new(Problem { lines });
-        assert_eq!("249781879", problem.solve())
+        assert_eq!("13133452426987", problem.solve())
     }
 }

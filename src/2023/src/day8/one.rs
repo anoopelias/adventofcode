@@ -20,15 +20,16 @@ impl Solution for ProblemOne {
         let mut lines = self.problem.lines.clone();
         let instr: Vec<char> = lines.remove(0).chars().collect();
         lines.remove(0);
-        for line in lines {
-            let splits = line.parse_separator("=");
+        for line in lines.iter() {
+            let ref_line = line.as_str();
+            let splits = ref_line.parse_separator("=");
             let key = splits.get(0).unwrap().to_string();
             let mut values = splits.get(1).unwrap().parse_separator(", ");
             map.insert(
                 key,
                 (
-                    remove_first(values.remove(0)),
-                    remove_last(values.remove(0)),
+                    remove_first(values.remove(0).to_string()),
+                    remove_last(values.remove(0).to_string()),
                 ),
             );
         }

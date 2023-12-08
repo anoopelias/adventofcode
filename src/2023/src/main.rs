@@ -9,6 +9,6 @@ mod day8;
 mod utils;
 
 fn main() {
-    let ans = day7::solve();
+    let ans = day8::solve();
     println!("{}", ans);
 }

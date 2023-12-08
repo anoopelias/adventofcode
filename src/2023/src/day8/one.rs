@@ -1,3 +1,7 @@
+use std::collections::HashMap;
+
+use crate::utils::parser::SeparatorParser;
+
 use super::{Problem, Solution};
 
 pub(crate) struct ProblemOne {
@@ -12,8 +16,54 @@ impl ProblemOne {
 
 impl Solution for ProblemOne {
     fn solve(&self) -> String {
-        todo!()
+        let mut map: HashMap<String, (String, String)> = HashMap::new();
+        let mut lines = self.problem.lines.clone();
+        let instr: Vec<char> = lines.remove(0).chars().collect();
+        lines.remove(0);
+        for line in lines {
+            let splits = line.parse_separator("=");
+            let key = splits.get(0).unwrap().to_string();
+            let mut values = splits.get(1).unwrap().parse_separator(", ");
+            map.insert(
+                key,
+                (
+                    remove_first(values.remove(0)),
+                    remove_last(values.remove(0)),
+                ),
+            );
+        }
+
+        let mut start = "AAA".to_string();
+        let mut ip = 0;
+        let mut cnt = 0;
+
+        while start != "ZZZ" {
+            start = if instr.get(ip).unwrap() == &'L' {
+                map.get(&start).unwrap().0.clone()
+            } else {
+                map.get(&start).unwrap().1.clone()
+            };
+            cnt += 1;
+            ip += 1;
+            if ip == instr.len() {
+                ip = 0;
+            }
+        }
+
+        cnt.to_string()
     }
+}
+
+fn remove_first(s: String) -> String {
+    let mut chs = s.chars();
+    chs.next();
+    chs.as_str().to_string()
+}
+
+fn remove_last(s: String) -> String {
+    let mut chs = s.chars();
+    chs.next_back();
+    chs.as_str().to_string()
 }
 
 #[cfg(test)]
@@ -23,15 +73,15 @@ mod tests {
 
     #[test]
     fn test_sample() {
-        let lines = util::lines_in("./src/day7/input");
+        let lines = util::lines_in("./src/day8/input");
         let problem = ProblemOne::new(Problem { lines });
-        assert_eq!("6440", problem.solve())
+        assert_eq!("2", problem.solve())
     }
 
     #[test]
     fn test_input() {
-        let lines = util::lines_in("./src/day7/input1");
+        let lines = util::lines_in("./src/day8/input1");
         let problem = ProblemOne::new(Problem { lines });
-        assert_eq!("251058093", problem.solve())
+        assert_eq!("12643", problem.solve())
     }
 }

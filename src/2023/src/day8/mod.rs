@@ -7,7 +7,7 @@ pub(crate) mod two;
 
 #[allow(unused)]
 pub(crate) fn solve() -> String {
-    let lines = util::lines_in("./src/day7/input1");
+    let lines = util::lines_in("./src/day8/input1");
     let problem = Problem { lines };
 
     let problem_one = ProblemOne::new(problem.clone());

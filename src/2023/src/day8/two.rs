@@ -23,9 +23,9 @@ impl Solution for ProblemTwo {
 
             while !is_ending_with(start, 'Z') {
                 start = if instr.get(ip).unwrap() == &'L' {
-                    map.get(start).unwrap().0.as_str()
+                    map.get(start).unwrap().0
                 } else {
-                    map.get(start).unwrap().1.as_str()
+                    map.get(start).unwrap().1
                 };
                 cnt += 1;
                 ip += 1;

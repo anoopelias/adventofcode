@@ -14,7 +14,7 @@ impl Solution for ProblemTwo {
     fn solve(&self) -> String {
         let (instr, map) = self.problem.parse();
 
-        let starts = ends_with(&map.keys().map(|st| st.as_str()).collect(), 'A');
+        let starts = ends_with(&map.keys().map(|st| *st).collect(), 'A');
         let mut steps = vec![];
 
         for start in starts {
@@ -24,9 +24,9 @@ impl Solution for ProblemTwo {
             let mut st = start.to_string();
             while !is_ending_with(&st, 'Z') {
                 st = if instr.get(ip).unwrap() == &'L' {
-                    map.get(&st).unwrap().0.clone()
+                    map.get(st.as_str()).unwrap().0.clone()
                 } else {
-                    map.get(&st).unwrap().1.clone()
+                    map.get(st.as_str()).unwrap().1.clone()
                 };
                 cnt += 1;
                 ip += 1;

@@ -14,15 +14,15 @@ impl Solution for ProblemOne {
     fn solve(&self) -> String {
         let (instr, map) = self.problem.parse();
 
-        let mut start = "AAA".to_string();
+        let mut start = "AAA";
         let mut ip = 0;
         let mut cnt = 0;
 
         while start != "ZZZ" {
             start = if instr.get(ip).unwrap() == &'L' {
-                map.get(&start).unwrap().0.clone()
+                map.get(start).unwrap().0.as_str()
             } else {
-                map.get(&start).unwrap().1.clone()
+                map.get(start).unwrap().1.as_str()
             };
             cnt += 1;
             ip += 1;

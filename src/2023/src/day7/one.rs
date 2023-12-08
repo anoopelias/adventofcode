@@ -2,34 +2,47 @@ use std::{cmp::Ordering, collections::HashMap};
 
 use crate::utils::parser::SeparatorParser;
 
+use super::{Problem, Solution};
+
+pub(crate) struct ProblemOne {
+    problem: Problem,
+}
+
+impl ProblemOne {
+    pub(crate) fn new(problem: Problem) -> ProblemOne {
+        ProblemOne { problem }
+    }
+}
+
+impl Solution for ProblemOne {
+    fn solve(&self) -> String {
+        let mut hands = vec![];
+        for line in &self.problem.lines {
+            let splits = line.parse_separator(" ");
+            let cards = splits.get(0).unwrap();
+            let bid = splits.get(1).unwrap().parse::<i32>().unwrap();
+            hands.push(Hand {
+                cards: cards.to_string(),
+                bid,
+                ty: type_of(cards),
+            });
+        }
+
+        hands.sort_by(|hand_a, hand_b| compare(hand_a, hand_b));
+
+        let mut sum = 0;
+        for (i, hand) in hands.iter().enumerate() {
+            let winnings = ((i + 1) as i32) * hand.bid;
+            sum += winnings;
+        }
+        sum.to_string()
+    }
+}
+
 struct Hand {
     cards: String,
     bid: i32,
     ty: usize,
-}
-
-pub(crate) fn solve(lines: Vec<String>) -> String {
-    let mut hands = vec![];
-    for line in lines {
-        let splits = line.parse_separator(" ");
-        let cards = splits.get(0).unwrap();
-        let bid = splits.get(1).unwrap().parse::<i32>().unwrap();
-        hands.push(Hand {
-            cards: cards.to_string(),
-            bid,
-            ty: type_of(cards),
-        });
-    }
-
-    hands.sort_by(|hand_a, hand_b| compare(hand_a, hand_b));
-
-    let mut sum = 0;
-    for (i, hand) in hands.iter().enumerate() {
-        let winnings = ((i + 1) as i32) * hand.bid;
-        println!("{}", winnings);
-        sum += winnings;
-    }
-    sum.to_string()
 }
 
 fn compare(hand_a: &Hand, hand_b: &Hand) -> Ordering {
@@ -89,21 +102,25 @@ fn to_num(ch: char) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::day7::one::solve;
     use crate::utils::util;
 
+    use super::super::Solution;
     use super::type_of;
+    use super::Problem;
+    use super::ProblemOne;
 
     #[test]
     fn test_sample() {
         let lines = util::lines_in("./src/day7/input");
-        assert_eq!("6440", solve(lines))
+        let problem = ProblemOne::new(Problem { lines });
+        assert_eq!("6440", problem.solve())
     }
 
     #[test]
     fn test_input() {
         let lines = util::lines_in("./src/day7/input1");
-        assert_eq!("251058093", solve(lines))
+        let problem = ProblemOne::new(Problem { lines });
+        assert_eq!("251058093", problem.solve())
     }
 
     #[test]

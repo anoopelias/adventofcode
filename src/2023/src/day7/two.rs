@@ -2,33 +2,47 @@ use std::{cmp::Ordering, collections::HashMap};
 
 use crate::utils::parser::SeparatorParser;
 
+use super::{Problem, Solution};
+
+pub(crate) struct ProblemTwo {
+    problem: Problem,
+}
+
+impl ProblemTwo {
+    pub(crate) fn new(problem: Problem) -> ProblemTwo {
+        ProblemTwo { problem }
+    }
+}
+
+impl Solution for ProblemTwo {
+    fn solve(&self) -> String {
+        let mut hands = vec![];
+        for line in &self.problem.lines {
+            let splits = line.parse_separator(" ");
+            let cards = splits.get(0).unwrap();
+            let bid = splits.get(1).unwrap().parse::<i32>().unwrap();
+            hands.push(Hand {
+                cards: cards.to_string(),
+                bid,
+                ty: type_of(cards),
+            });
+        }
+
+        hands.sort_by(|hand_a, hand_b| compare(hand_a, hand_b));
+
+        let mut sum = 0;
+        for (i, hand) in hands.iter().enumerate() {
+            let winnings = ((i + 1) as i32) * hand.bid;
+            sum += winnings;
+        }
+        sum.to_string()
+    }
+}
+
 struct Hand {
     cards: String,
     bid: i32,
     ty: usize,
-}
-
-pub(crate) fn solve(lines: Vec<String>) -> String {
-    let mut hands = vec![];
-    for line in lines {
-        let splits = line.parse_separator(" ");
-        let cards = splits.get(0).unwrap();
-        let bid = splits.get(1).unwrap().parse::<i32>().unwrap();
-        hands.push(Hand {
-            cards: cards.to_string(),
-            bid,
-            ty: type_of(cards),
-        });
-    }
-
-    hands.sort_by(|hand_a, hand_b| compare(hand_a, hand_b));
-
-    let mut sum = 0;
-    for (i, hand) in hands.iter().enumerate() {
-        let winnings = ((i + 1) as i32) * hand.bid;
-        sum += winnings;
-    }
-    sum.to_string()
 }
 
 fn compare(hand_a: &Hand, hand_b: &Hand) -> Ordering {
@@ -97,17 +111,20 @@ fn to_num(ch: char) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::{day7::two::solve, utils::util};
+    use super::{super::Solution, Problem, ProblemTwo};
+    use crate::utils::util;
 
     #[test]
     fn test_sample() {
         let lines = util::lines_in("./src/day7/input");
-        assert_eq!("5905", solve(lines))
+        let problem = ProblemTwo::new(Problem { lines });
+        assert_eq!("5905", problem.solve())
     }
 
     #[test]
     fn test_input() {
         let lines = util::lines_in("./src/day7/input1");
-        assert_eq!("249781879", solve(lines))
+        let problem = ProblemTwo::new(Problem { lines });
+        assert_eq!("249781879", problem.solve())
     }
 }

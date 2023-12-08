@@ -8,6 +8,6 @@ mod day7;
 mod utils;
 
 fn main() {
-    let ans = day1::solve();
+    let ans = day7::solve();
     println!("{}", ans);
 }

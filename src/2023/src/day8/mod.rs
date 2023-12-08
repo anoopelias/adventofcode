@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::utils::{parser::SeparatorParser, string::WrapperRemover, util};
+use crate::utils::{parser::TwoSplitter, string::WrapperRemover, util};
 
 use self::{one::ProblemOne, two::ProblemTwo};
 
@@ -34,15 +34,8 @@ impl Problem {
         let mut map: HashMap<&str, (&str, &str)> = HashMap::new();
         let instr: Vec<char> = self.lines.get(0).unwrap().chars().collect();
         for line in self.lines.iter().skip(2) {
-            let mut splits = line.split("=");
-            let key = splits.next().unwrap().trim();
-            let mut values = splits
-                .next()
-                .unwrap()
-                .trim()
-                .remove_wrapping()
-                .parse_separator(", ");
-            map.insert(key, (values.remove(0), values.remove(0)));
+            let (key, value) = line.split_in_two("=");
+            map.insert(key, value.remove_wrapping().split_in_two(", "));
         }
         (instr, map)
     }

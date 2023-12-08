@@ -44,3 +44,19 @@ impl SeparatorParser for &str {
             .collect()
     }
 }
+
+pub trait TwoSplitter {
+    fn split_in_two(self, sep: &str) -> (Self, Self)
+    where
+        Self: Sized;
+}
+
+impl TwoSplitter for &str {
+    fn split_in_two(self, sep: &str) -> (Self, Self)
+    where
+        Self: Sized,
+    {
+        let mut splits = self.split(sep);
+        (splits.next().unwrap().trim(), splits.next().unwrap().trim())
+    }
+}

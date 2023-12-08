@@ -1,7 +1,3 @@
-use std::collections::HashMap;
-
-use crate::utils::parser::SeparatorParser;
-
 use super::{Problem, Solution};
 
 pub(crate) struct ProblemTwo {
@@ -16,22 +12,7 @@ impl ProblemTwo {
 
 impl Solution for ProblemTwo {
     fn solve(&self) -> String {
-        let mut map: HashMap<String, (String, String)> = HashMap::new();
-        let mut lines = self.problem.lines.clone();
-        let instr: Vec<char> = lines.remove(0).chars().collect();
-        lines.remove(0);
-        for line in lines {
-            let splits = line.parse_separator("=");
-            let key = splits.get(0).unwrap().to_string();
-            let mut values = splits.get(1).unwrap().parse_separator(", ");
-            map.insert(
-                key,
-                (
-                    remove_first(values.remove(0)),
-                    remove_last(values.remove(0)),
-                ),
-            );
-        }
+        let (instr, map) = self.problem.parse();
 
         let starts = ends_with(&map.keys().map(|st| st.as_str()).collect(), 'A');
         let mut steps = vec![];
@@ -75,18 +56,6 @@ fn ends_with<'a>(strs: &Vec<&'a str>, ch: char) -> Vec<&'a str> {
 
 fn is_ending_with(str: &str, ch: char) -> bool {
     str.chars().into_iter().nth(2).unwrap() == ch
-}
-
-fn remove_first(s: String) -> String {
-    let mut chs = s.chars();
-    chs.next();
-    chs.as_str().to_string()
-}
-
-fn remove_last(s: String) -> String {
-    let mut chs = s.chars();
-    chs.next_back();
-    chs.as_str().to_string()
 }
 
 #[cfg(test)]

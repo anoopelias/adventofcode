@@ -1,6 +1,4 @@
-use std::collections::HashMap;
-
-use crate::utils::{parser::TwoSplitter, string::WrapperRemover, util};
+use crate::utils::util;
 
 use self::{one::ProblemOne, two::ProblemTwo};
 
@@ -9,7 +7,7 @@ pub(crate) mod two;
 
 #[allow(unused)]
 pub(crate) fn solve() -> String {
-    let lines = util::lines_in("./src/day8/input1");
+    let lines = util::lines_in("./src/day9/input1");
     let problem = Problem { lines };
 
     let problem_one = ProblemOne::new(problem.clone());

@@ -8,56 +8,36 @@ pub(crate) fn solve() -> String {
     return format!("result1: {}\nresult2: {}", part1(&lines), part2(&lines));
 }
 
-fn part1(lines: &Vec<String>) -> String {
+fn find_sum<V, O>(lines: &Vec<String>, v: V, o: O) -> String
+where
+    V: Fn(&Vec<i32>) -> &i32,
+    O: Fn(i32, i32) -> i32,
+{
     let mut sum = 0;
     for line in lines.iter() {
         let nums = line.parse_i32();
 
-        let mut lasts = vec![nums.last().unwrap().clone()];
+        let mut ends = vec![*v(&nums)];
         let mut row = nums.clone();
         while row.iter().filter(|n| n == &&0).count() != row.len() {
             let pairs = row.to_pairs();
             row = pairs.iter().map(|(p, q)| *q - *p).collect();
-            lasts.push(row.last().unwrap().clone());
+            ends.push(*v(&row));
         }
 
-        let mut tip = 0;
-        lasts.reverse();
-        for last in lasts {
-            tip += last;
-        }
-
-        println!("{}", tip);
-        sum += tip;
+        ends.reverse();
+        sum += ends.iter().fold(0, |tip, next| o(tip, *next));
     }
 
     sum.to_string()
 }
 
+fn part1(lines: &Vec<String>) -> String {
+    find_sum(lines, |n| n.last().unwrap(), |tip, next| tip + next)
+}
+
 fn part2(lines: &Vec<String>) -> String {
-    let mut sum = 0;
-    for line in lines.iter() {
-        let nums = line.parse_i32();
-
-        let mut firsts = vec![nums.first().unwrap().clone()];
-        let mut row = nums.clone();
-        while row.iter().filter(|n| n == &&0).count() != row.len() {
-            let pairs = row.to_pairs();
-            row = pairs.iter().map(|(p, q)| *q - *p).collect();
-            firsts.push(row.first().unwrap().clone());
-        }
-
-        let mut tip = 0;
-        firsts.reverse();
-        for first in firsts {
-            tip = first - tip;
-        }
-
-        println!("{}", tip);
-        sum += tip;
-    }
-
-    sum.to_string()
+    find_sum(lines, |n| n.first().unwrap(), |tip, next| next - tip)
 }
 
 #[cfg(test)]

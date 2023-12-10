@@ -1,4 +1,4 @@
-use crate::utils::{parser::I32Parser, util};
+use crate::utils::{iter::Pairs, parser::I32Parser, util};
 
 const DAY: &str = "day9";
 
@@ -16,10 +16,7 @@ fn part1(lines: &Vec<String>) -> String {
         let mut lasts = vec![nums.last().unwrap().clone()];
         let mut row = nums.clone();
         while row.iter().filter(|n| n == &&0).count() != row.len() {
-            let pairs = row
-                .iter()
-                .zip(row[1..].iter())
-                .collect::<Vec<(&i32, &i32)>>();
+            let pairs = row.to_pairs();
             row = pairs.iter().map(|(p, q)| *q - *p).collect();
             lasts.push(row.last().unwrap().clone());
         }
@@ -45,10 +42,7 @@ fn part2(lines: &Vec<String>) -> String {
         let mut firsts = vec![nums.first().unwrap().clone()];
         let mut row = nums.clone();
         while row.iter().filter(|n| n == &&0).count() != row.len() {
-            let pairs = row
-                .iter()
-                .zip(row[1..].iter())
-                .collect::<Vec<(&i32, &i32)>>();
+            let pairs = row.to_pairs();
             row = pairs.iter().map(|(p, q)| *q - *p).collect();
             firsts.push(row.first().unwrap().clone());
         }

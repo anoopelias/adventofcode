@@ -13,23 +13,22 @@ where
     V: Fn(&Vec<i32>) -> &i32,
     O: Fn(i32, i32) -> i32,
 {
-    let mut sum = 0;
-    for line in lines.iter() {
-        let nums = line.parse_i32();
+    lines
+        .iter()
+        .map(|line| {
+            let mut row = line.parse_i32();
+            let mut ends = vec![*v(&row)];
+            while row.iter().filter(|n| n == &&0).count() != row.len() {
+                let pairs = row.to_pairs();
+                row = pairs.iter().map(|(p, q)| *q - *p).collect();
+                ends.push(*v(&row));
+            }
 
-        let mut ends = vec![*v(&nums)];
-        let mut row = nums.clone();
-        while row.iter().filter(|n| n == &&0).count() != row.len() {
-            let pairs = row.to_pairs();
-            row = pairs.iter().map(|(p, q)| *q - *p).collect();
-            ends.push(*v(&row));
-        }
-
-        ends.reverse();
-        sum += ends.iter().fold(0, |tip, next| o(tip, *next));
-    }
-
-    sum.to_string()
+            ends.reverse();
+            ends.iter().fold(0, |tip, next| o(tip, *next))
+        })
+        .sum::<i32>()
+        .to_string()
 }
 
 fn part1(lines: &Vec<String>) -> String {

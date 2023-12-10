@@ -4,6 +4,19 @@ use crate::utils::{grid::Grid, parser::TwoSplitter, util};
 
 const DAY: &str = "day10";
 
+#[derive(Debug)]
+enum Direction {
+    left,
+    right,
+    top,
+    bottom,
+}
+
+struct Connection {
+    to: (usize, usize),
+    con_grid: (usize, usize),
+}
+
 #[allow(unused)]
 pub(crate) fn solve() -> String {
     let lines = util::lines_in(&format!("./src/{}/input1", DAY));
@@ -22,15 +35,23 @@ fn part1(lines: &Vec<String>) -> String {
 
     let start = grid.find('S');
     let start_key = tuple_to_key(&start);
-    let start_ns = connected_neighbors(&grid, start);
-    let from = start_ns.get(0).unwrap();
-    let from_key = tuple_to_key(&from);
-    let to = start_ns.get(1).unwrap();
-    let to_key = tuple_to_key(to);
+    let mut start_ns = connected_neighbors(&grid, start);
 
-    let mut nexts = vec![*from];
+    let from_nav = start_ns.pop().unwrap();
+    let from = from_nav.0;
+    let from_key = tuple_to_key(&from);
+
+    let to_nav = start_ns.pop().unwrap();
+    let to = to_nav.0;
+    let to_key = tuple_to_key(&to);
+
+    let mut nexts = vec![from];
     let mut from_map = HashMap::new();
-    from_map.insert(tuple_to_key(from), start_key.clone());
+    let mut navigation_map = HashMap::new();
+    from_map.insert(from_key.clone(), start_key.clone());
+    from_map.insert(start_key.clone(), to_key.clone());
+    navigation_map.insert(from_key.clone(), from_nav);
+    navigation_map.insert(start_key.clone(), to_nav);
 
     while nexts.len() > 0 {
         let curr = nexts.remove(0);
@@ -39,50 +60,59 @@ fn part1(lines: &Vec<String>) -> String {
 
         while cns.len() != 0 {
             let cn = cns.pop().unwrap();
-            let nk = tuple_to_key(&cn);
+            let nk = tuple_to_key(&cn.0);
             if !from_map.contains_key(&nk) {
-                from_map.insert(nk, curr_key.clone());
-                nexts.push(cn);
+                nexts.push(cn.0);
+                from_map.insert(nk.clone(), curr_key.clone());
+                navigation_map.insert(nk, cn);
             }
         }
     }
 
     let mut path = &to_key;
     let mut route = vec![&to_key];
+    let mut full_route = vec![navigation_map.remove(path).unwrap()];
     while *path != from_key {
         path = from_map.get(path).unwrap();
+        full_route.push(navigation_map.remove(path).unwrap());
         route.push(path);
         println!("path {}", path);
     }
+
+    full_route.push(navigation_map.remove(&start_key).unwrap());
     route.push(&start_key);
+    println!("{:?}", full_route);
     (route.len() / 2).to_string()
 }
 
-fn connected_neighbors(grid: &Grid<char>, start: (usize, usize)) -> Vec<(usize, usize)> {
+fn connected_neighbors(
+    grid: &Grid<char>,
+    start: (usize, usize),
+) -> Vec<((usize, usize), Direction)> {
     let mut connected_neighbors = vec![];
     let left = grid.left_cell(start.0, start.1);
     if let Ok(cell) = left {
         if cell.val.unwrap() == &'F' || cell.val.unwrap() == &'-' || cell.val.unwrap() == &'L' {
-            connected_neighbors.push(cell.to_tuple())
+            connected_neighbors.push((cell.to_tuple(), Direction::left))
         }
     }
     let right = grid.right_cell(start.0, start.1);
     if let Ok(cell) = right {
         if cell.val.unwrap() == &'-' || cell.val.unwrap() == &'J' || cell.val.unwrap() == &'7' {
-            connected_neighbors.push(cell.to_tuple())
+            connected_neighbors.push((cell.to_tuple(), Direction::right))
         }
     }
     let top = grid.top_cell(start.0, start.1);
     if let Ok(cell) = top {
         if cell.val.unwrap() == &'|' || cell.val.unwrap() == &'7' || cell.val.unwrap() == &'F' {
-            connected_neighbors.push(cell.to_tuple())
+            connected_neighbors.push((cell.to_tuple(), Direction::top))
         }
     }
 
     let bottom = grid.bottom_cell(start.0, start.1);
     if let Ok(cell) = bottom {
         if cell.val.unwrap() == &'|' || cell.val.unwrap() == &'L' || cell.val.unwrap() == &'J' {
-            connected_neighbors.push(cell.to_tuple())
+            connected_neighbors.push((cell.to_tuple(), Direction::bottom))
         }
     }
     connected_neighbors
@@ -92,17 +122,8 @@ fn tuple_to_key((p, q): &(usize, usize)) -> String {
     format!("{}:{}", p, q)
 }
 
-fn key_to_tuple(st: &str) -> (usize, usize) {
-    let nums = st
-        .split(":")
-        .map(|st| st.parse::<usize>().unwrap())
-        .collect::<Vec<usize>>();
-    (*nums.get(0).unwrap(), *nums.get(1).unwrap())
-}
-
 fn part2(lines: &Vec<String>) -> String {
-    let mut sum = 0;
-    sum.to_string()
+    "".to_string()
 }
 
 #[cfg(test)]

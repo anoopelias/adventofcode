@@ -8,7 +8,7 @@ pub(crate) fn solve() -> String {
     return format!("result1: {}\nresult2: {}", part1(&lines), part2(&lines));
 }
 
-fn find_sum<V, O>(lines: &Vec<String>, v: V, o: O) -> String
+fn find_sum<V, O>(lines: &Vec<String>, value_of: V, operation: O) -> String
 where
     V: Fn(&Vec<i32>) -> &i32,
     O: Fn(i32, i32) -> i32,
@@ -17,15 +17,15 @@ where
         .iter()
         .map(|line| {
             let mut row = line.parse_i32();
-            let mut ends = vec![*v(&row)];
+            let mut ends = vec![*value_of(&row)];
             while row.iter().filter(|n| n == &&0).count() != row.len() {
                 let pairs = row.to_pairs();
                 row = pairs.iter().map(|(p, q)| *q - *p).collect();
-                ends.push(*v(&row));
+                ends.push(*value_of(&row));
             }
 
             ends.reverse();
-            ends.iter().fold(0, |tip, next| o(tip, *next))
+            ends.iter().fold(0, |tip, next| operation(tip, *next))
         })
         .sum::<i32>()
         .to_string()

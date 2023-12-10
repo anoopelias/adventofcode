@@ -5,16 +5,9 @@ use crate::utils::{grid::Grid, parser::TwoSplitter, util};
 const DAY: &str = "day10";
 
 #[derive(Debug)]
-enum Direction {
-    left,
-    right,
-    top,
-    bottom,
-}
-
 struct Connection {
-    to: (usize, usize),
-    con_grid: (usize, usize),
+    node: (usize, usize),
+    con_node: (usize, usize),
 }
 
 #[allow(unused)]
@@ -26,23 +19,32 @@ pub(crate) fn solve() -> String {
 fn part1(lines: &Vec<String>) -> String {
     let (m, n) = (lines.len(), lines.get(0).unwrap().len());
     let mut grid: Grid<char> = Grid::new(m, n);
+    parse_lines(&mut grid, lines);
 
+    let full_route = find_route(&grid);
+    println!("{:?}", full_route);
+    (full_route.len() / 2).to_string()
+}
+
+fn parse_lines(grid: &mut Grid<char>, lines: &Vec<String>) {
     for (p, line) in lines.iter().enumerate() {
         for (q, ch) in line.chars().enumerate() {
             grid.set(p, q, Some(ch)).unwrap();
         }
     }
+}
 
+fn find_route(grid: &Grid<char>) -> Vec<Connection> {
     let start = grid.find('S');
     let start_key = tuple_to_key(&start);
     let mut start_ns = connected_neighbors(&grid, start);
 
     let from_nav = start_ns.pop().unwrap();
-    let from = from_nav.0;
+    let from = from_nav.node;
     let from_key = tuple_to_key(&from);
 
     let to_nav = start_ns.pop().unwrap();
-    let to = to_nav.0;
+    let to = to_nav.node;
     let to_key = tuple_to_key(&to);
 
     let mut nexts = vec![from];
@@ -60,9 +62,9 @@ fn part1(lines: &Vec<String>) -> String {
 
         while cns.len() != 0 {
             let cn = cns.pop().unwrap();
-            let nk = tuple_to_key(&cn.0);
+            let nk = tuple_to_key(&cn.node);
             if !from_map.contains_key(&nk) {
-                nexts.push(cn.0);
+                nexts.push(cn.node);
                 from_map.insert(nk.clone(), curr_key.clone());
                 navigation_map.insert(nk, cn);
             }
@@ -70,49 +72,62 @@ fn part1(lines: &Vec<String>) -> String {
     }
 
     let mut path = &to_key;
-    let mut route = vec![&to_key];
     let mut full_route = vec![navigation_map.remove(path).unwrap()];
     while *path != from_key {
         path = from_map.get(path).unwrap();
         full_route.push(navigation_map.remove(path).unwrap());
-        route.push(path);
         println!("path {}", path);
     }
 
     full_route.push(navigation_map.remove(&start_key).unwrap());
-    route.push(&start_key);
-    println!("{:?}", full_route);
-    (route.len() / 2).to_string()
+    full_route
 }
 
-fn connected_neighbors(
-    grid: &Grid<char>,
-    start: (usize, usize),
-) -> Vec<((usize, usize), Direction)> {
+fn connected_neighbors(grid: &Grid<char>, start: (usize, usize)) -> Vec<Connection> {
     let mut connected_neighbors = vec![];
     let left = grid.left_cell(start.0, start.1);
     if let Ok(cell) = left {
         if cell.val.unwrap() == &'F' || cell.val.unwrap() == &'-' || cell.val.unwrap() == &'L' {
-            connected_neighbors.push((cell.to_tuple(), Direction::left))
+            let to = cell.to_tuple();
+            let connection = Connection {
+                node: to,
+                con_node: (to.0, to.1 + 1),
+            };
+            connected_neighbors.push(connection)
         }
     }
     let right = grid.right_cell(start.0, start.1);
     if let Ok(cell) = right {
         if cell.val.unwrap() == &'-' || cell.val.unwrap() == &'J' || cell.val.unwrap() == &'7' {
-            connected_neighbors.push((cell.to_tuple(), Direction::right))
+            let to = cell.to_tuple();
+            let connection = Connection {
+                node: to,
+                con_node: to.clone(),
+            };
+            connected_neighbors.push(connection);
         }
     }
     let top = grid.top_cell(start.0, start.1);
     if let Ok(cell) = top {
         if cell.val.unwrap() == &'|' || cell.val.unwrap() == &'7' || cell.val.unwrap() == &'F' {
-            connected_neighbors.push((cell.to_tuple(), Direction::top))
+            let to = cell.to_tuple();
+            let connection = Connection {
+                node: to,
+                con_node: (to.0 + 1, to.1),
+            };
+            connected_neighbors.push(connection);
         }
     }
 
     let bottom = grid.bottom_cell(start.0, start.1);
     if let Ok(cell) = bottom {
         if cell.val.unwrap() == &'|' || cell.val.unwrap() == &'L' || cell.val.unwrap() == &'J' {
-            connected_neighbors.push((cell.to_tuple(), Direction::bottom))
+            let to = cell.to_tuple();
+            let connection = Connection {
+                node: to,
+                con_node: (to.0 + 1, to.1),
+            };
+            connected_neighbors.push(connection);
         }
     }
     connected_neighbors

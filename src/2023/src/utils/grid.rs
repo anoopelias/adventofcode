@@ -1,14 +1,21 @@
 #![allow(unused)]
 
-use std::f32::consts::E;
+use std::{f32::consts::E, io::Read, sync::RwLock};
 
 use anyhow::Result;
+use num::{complex::ComplexFloat, Float};
 
 #[derive(PartialEq, Debug)]
 pub struct GridCell<T> {
-    val: Option<T>,
+    pub val: Option<T>,
     p: usize,
     q: usize,
+}
+
+impl<T> GridCell<T> {
+    pub fn to_tuple(&self) -> (usize, usize) {
+        (self.p, self.q)
+    }
 }
 
 impl<T> GridCell<T> {
@@ -46,6 +53,23 @@ impl<T> Grid<T> {
         }
         self.grid[p][q] = val;
         Ok(())
+    }
+
+    pub fn find(&self, v: T) -> (usize, usize)
+    where
+        T: Sized + PartialEq,
+    {
+        for (p, row) in self.grid.iter().enumerate() {
+            for (q, cell) in row.iter().enumerate() {
+                if let Some(value) = cell {
+                    if *value == v {
+                        return (p, q);
+                    }
+                }
+            }
+        }
+        // TODO: Throw error
+        (usize::MAX, usize::MAX)
     }
 
     pub fn set_by_tuple(&mut self, coord: (usize, usize), val: Option<T>) -> Result<()> {

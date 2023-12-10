@@ -18,9 +18,8 @@ where
         .map(|line| {
             let mut row = line.parse_i32();
             let mut ends = vec![*value_of(&row)];
-            while row.iter().filter(|n| n == &&0).count() != row.len() {
-                let pairs = row.to_pairs();
-                row = pairs.iter().map(|(p, q)| *q - *p).collect();
+            while row.iter().filter(|n| n != &&0).count() != 0 {
+                row = row.to_pairs().iter().map(|(p, q)| *q - *p).collect();
                 ends.push(*value_of(&row));
             }
 

@@ -2,17 +2,17 @@ use crate::utils::parser::I32Parser;
 
 use super::{Problem, Solution};
 
-pub(crate) struct ProblemTwo {
-    problem: Problem,
+pub(crate) struct ProblemTwo<'a> {
+    problem: &'a Problem,
 }
 
-impl ProblemTwo {
-    pub(crate) fn new(problem: Problem) -> ProblemTwo {
+impl<'a> ProblemTwo<'a> {
+    pub(crate) fn new(problem: &Problem) -> ProblemTwo {
         ProblemTwo { problem }
     }
 }
 
-impl Solution for ProblemTwo {
+impl<'a> Solution for ProblemTwo<'a> {
     fn solve(&self) -> String {
         let mut sum = 0;
         for line in self.problem.lines.iter() {
@@ -50,15 +50,19 @@ mod tests {
 
     #[test]
     fn test_sample() {
-        let lines = util::lines_in("./src/day9/input");
-        let problem = ProblemTwo::new(Problem { lines });
+        let problem = Problem {
+            lines: util::lines_in("./src/day9/input"),
+        };
+        let problem = ProblemTwo::new(&problem);
         assert_eq!("2", problem.solve())
     }
 
     #[test]
     fn test_input() {
-        let lines = util::lines_in("./src/day9/input1");
-        let problem = ProblemTwo::new(Problem { lines });
+        let problem = Problem {
+            lines: util::lines_in("./src/day9/input1"),
+        };
+        let problem = ProblemTwo::new(&problem);
         assert_eq!("928", problem.solve())
     }
 }

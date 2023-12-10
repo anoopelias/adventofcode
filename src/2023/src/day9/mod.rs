@@ -10,10 +10,10 @@ pub(crate) fn solve() -> String {
     let lines = util::lines_in("./src/day9/input1");
     let problem = Problem { lines };
 
-    let problem_one = ProblemOne::new(problem.clone());
+    let problem_one = ProblemOne::new(&problem);
     let result1 = problem_one.solve();
 
-    let problem_two = ProblemTwo::new(problem);
+    let problem_two = ProblemTwo::new(&problem);
     let result2 = problem_two.solve();
     return format!("result1: {}\nresult2: {}", result1, result2);
 }

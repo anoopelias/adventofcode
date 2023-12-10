@@ -1,28 +1,95 @@
-use crate::utils::util;
-
-use self::{one::ProblemOne, two::ProblemTwo};
-
-pub(crate) mod one;
-pub(crate) mod two;
+use crate::utils::{parser::I32Parser, util};
 
 #[allow(unused)]
 pub(crate) fn solve() -> String {
     let lines = util::lines_in("./src/day9/input1");
-    let problem = Problem { lines };
-
-    let problem_one = ProblemOne::new(&problem);
-    let result1 = problem_one.solve();
-
-    let problem_two = ProblemTwo::new(&problem);
-    let result2 = problem_two.solve();
-    return format!("result1: {}\nresult2: {}", result1, result2);
+    return format!("result1: {}\nresult2: {}", part1(&lines), part2(&lines));
 }
 
-#[derive(Clone)]
-pub(crate) struct Problem {
-    lines: Vec<String>,
+fn part1(lines: &Vec<String>) -> String {
+    let mut sum = 0;
+    for line in lines.iter() {
+        let nums = line.parse_i32();
+
+        let mut lasts = vec![nums.last().unwrap().clone()];
+        let mut row = nums.clone();
+        while row.iter().filter(|n| n == &&0).count() != row.len() {
+            let pairs = row
+                .iter()
+                .zip(row[1..].iter())
+                .collect::<Vec<(&i32, &i32)>>();
+            row = pairs.iter().map(|(p, q)| *q - *p).collect();
+            lasts.push(row.last().unwrap().clone());
+        }
+
+        let mut tip = 0;
+        lasts.reverse();
+        for last in lasts {
+            tip += last;
+        }
+
+        println!("{}", tip);
+        sum += tip;
+    }
+
+    sum.to_string()
 }
 
-trait Solution {
-    fn solve(&self) -> String;
+fn part2(lines: &Vec<String>) -> String {
+    let mut sum = 0;
+    for line in lines.iter() {
+        let nums = line.parse_i32();
+
+        let mut firsts = vec![nums.first().unwrap().clone()];
+        let mut row = nums.clone();
+        while row.iter().filter(|n| n == &&0).count() != row.len() {
+            let pairs = row
+                .iter()
+                .zip(row[1..].iter())
+                .collect::<Vec<(&i32, &i32)>>();
+            row = pairs.iter().map(|(p, q)| *q - *p).collect();
+            firsts.push(row.first().unwrap().clone());
+        }
+
+        let mut tip = 0;
+        firsts.reverse();
+        for first in firsts {
+            tip = first - tip;
+        }
+
+        println!("{}", tip);
+        sum += tip;
+    }
+
+    sum.to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{part1, part2};
+    use crate::utils::util;
+
+    #[test]
+    fn test_part1_sample() {
+        let lines = util::lines_in("./src/day9/input");
+        assert_eq!("114", part1(&lines))
+    }
+
+    #[test]
+    fn test_part1_input() {
+        let lines = util::lines_in("./src/day9/input1");
+        assert_eq!("1974232246", part1(&lines))
+    }
+
+    #[test]
+    fn test_sample() {
+        let lines = util::lines_in("./src/day9/input");
+        assert_eq!("2", part2(&lines))
+    }
+
+    #[test]
+    fn test_input() {
+        let lines = util::lines_in("./src/day9/input1");
+        assert_eq!("928", part2(&lines))
+    }
 }

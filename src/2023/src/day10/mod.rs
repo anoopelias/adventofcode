@@ -32,12 +32,10 @@ fn find_route(grid: &Grid<char>) -> Vec<(usize, usize)> {
     let start_key = tuple_to_key(&start);
     let mut start_ns = connected_neighbors(&grid, start);
 
-    let from_nav = start_ns.pop().unwrap();
-    let from = from_nav;
+    let from = start_ns.pop().unwrap();
     let from_key = tuple_to_key(&from);
 
-    let to_nav = start_ns.pop().unwrap();
-    let to = to_nav;
+    let to = start_ns.pop().unwrap();
     let to_key = tuple_to_key(&to);
 
     let mut nexts = vec![from];
@@ -45,8 +43,8 @@ fn find_route(grid: &Grid<char>) -> Vec<(usize, usize)> {
     let mut navigation_map = HashMap::new();
     from_map.insert(from_key.clone(), start_key.clone());
     from_map.insert(start_key.clone(), to_key.clone());
-    navigation_map.insert(from_key.clone(), from_nav);
-    navigation_map.insert(start_key.clone(), to_nav);
+    navigation_map.insert(from_key.clone(), from);
+    navigation_map.insert(start_key.clone(), to);
 
     while nexts.len() > 0 {
         let curr = nexts.remove(0);

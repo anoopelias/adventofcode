@@ -1,14 +1,8 @@
 use std::{collections::HashMap, usize};
 
-use crate::utils::{grid::Grid, parser::TwoSplitter, util};
+use crate::utils::{grid::Grid, util};
 
 const DAY: &str = "day10";
-
-#[derive(Debug)]
-struct Connection {
-    node: (usize, usize),
-    con_node: (usize, usize),
-}
 
 #[allow(unused)]
 pub(crate) fn solve() -> String {
@@ -33,17 +27,17 @@ fn parse_lines(grid: &mut Grid<char>, lines: &Vec<String>) {
     }
 }
 
-fn find_route(grid: &Grid<char>) -> Vec<Connection> {
+fn find_route(grid: &Grid<char>) -> Vec<(usize, usize)> {
     let start = grid.find('S');
     let start_key = tuple_to_key(&start);
     let mut start_ns = connected_neighbors(&grid, start);
 
     let from_nav = start_ns.pop().unwrap();
-    let from = from_nav.node;
+    let from = from_nav;
     let from_key = tuple_to_key(&from);
 
     let to_nav = start_ns.pop().unwrap();
-    let to = to_nav.node;
+    let to = to_nav;
     let to_key = tuple_to_key(&to);
 
     let mut nexts = vec![from];
@@ -61,9 +55,9 @@ fn find_route(grid: &Grid<char>) -> Vec<Connection> {
 
         while cns.len() != 0 {
             let cn = cns.pop().unwrap();
-            let nk = tuple_to_key(&cn.node);
+            let nk = tuple_to_key(&cn);
             if !from_map.contains_key(&nk) {
-                nexts.push(cn.node);
+                nexts.push(cn);
                 from_map.insert(nk.clone(), curr_key.clone());
                 navigation_map.insert(nk, cn);
             }
@@ -82,51 +76,31 @@ fn find_route(grid: &Grid<char>) -> Vec<Connection> {
     route
 }
 
-fn connected_neighbors(grid: &Grid<char>, start: (usize, usize)) -> Vec<Connection> {
+fn connected_neighbors(grid: &Grid<char>, start: (usize, usize)) -> Vec<(usize, usize)> {
     let mut connected_neighbors = vec![];
     let left = grid.left_cell(start.0, start.1);
     if let Ok(cell) = left {
         if cell.val.unwrap() == &'F' || cell.val.unwrap() == &'-' || cell.val.unwrap() == &'L' {
-            let to = cell.to_tuple();
-            let connection = Connection {
-                node: to,
-                con_node: (to.0, to.1 + 1),
-            };
-            connected_neighbors.push(connection)
+            connected_neighbors.push(cell.to_tuple())
         }
     }
     let right = grid.right_cell(start.0, start.1);
     if let Ok(cell) = right {
         if cell.val.unwrap() == &'-' || cell.val.unwrap() == &'J' || cell.val.unwrap() == &'7' {
-            let to = cell.to_tuple();
-            let connection = Connection {
-                node: to,
-                con_node: to.clone(),
-            };
-            connected_neighbors.push(connection);
+            connected_neighbors.push(cell.to_tuple())
         }
     }
     let top = grid.top_cell(start.0, start.1);
     if let Ok(cell) = top {
         if cell.val.unwrap() == &'|' || cell.val.unwrap() == &'7' || cell.val.unwrap() == &'F' {
-            let to = cell.to_tuple();
-            let connection = Connection {
-                node: to,
-                con_node: (to.0 + 1, to.1),
-            };
-            connected_neighbors.push(connection);
+            connected_neighbors.push(cell.to_tuple())
         }
     }
 
     let bottom = grid.bottom_cell(start.0, start.1);
     if let Ok(cell) = bottom {
         if cell.val.unwrap() == &'|' || cell.val.unwrap() == &'L' || cell.val.unwrap() == &'J' {
-            let to = cell.to_tuple();
-            let connection = Connection {
-                node: to,
-                con_node: (to.0 + 1, to.1),
-            };
-            connected_neighbors.push(connection);
+            connected_neighbors.push(cell.to_tuple())
         }
     }
     connected_neighbors
@@ -147,9 +121,7 @@ fn part2(lines: &Vec<String>) -> String {
     con_grid.fill(true);
 
     for con in route {
-        con_grid
-            .set(con.con_node.0, con.con_node.0, Some(false))
-            .unwrap();
+        con_grid.set(con.0, con.0, Some(false)).unwrap();
     }
 
     "".to_string()

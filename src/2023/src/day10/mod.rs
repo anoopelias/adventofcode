@@ -21,9 +21,8 @@ fn part1(lines: &Vec<String>) -> String {
     let mut grid: Grid<char> = Grid::new(m, n);
     parse_lines(&mut grid, lines);
 
-    let full_route = find_route(&grid);
-    println!("{:?}", full_route);
-    (full_route.len() / 2).to_string()
+    let route = find_route(&grid);
+    (route.len() / 2).to_string()
 }
 
 fn parse_lines(grid: &mut Grid<char>, lines: &Vec<String>) {
@@ -72,15 +71,15 @@ fn find_route(grid: &Grid<char>) -> Vec<Connection> {
     }
 
     let mut path = &to_key;
-    let mut full_route = vec![navigation_map.remove(path).unwrap()];
+    let mut route = vec![navigation_map.remove(path).unwrap()];
     while *path != from_key {
         path = from_map.get(path).unwrap();
-        full_route.push(navigation_map.remove(path).unwrap());
+        route.push(navigation_map.remove(path).unwrap());
         println!("path {}", path);
     }
 
-    full_route.push(navigation_map.remove(&start_key).unwrap());
-    full_route
+    route.push(navigation_map.remove(&start_key).unwrap());
+    route
 }
 
 fn connected_neighbors(grid: &Grid<char>, start: (usize, usize)) -> Vec<Connection> {
@@ -138,6 +137,21 @@ fn tuple_to_key((p, q): &(usize, usize)) -> String {
 }
 
 fn part2(lines: &Vec<String>) -> String {
+    let (m, n) = (lines.len(), lines.get(0).unwrap().len());
+    let mut grid: Grid<char> = Grid::new(m, n);
+    parse_lines(&mut grid, lines);
+
+    let route = find_route(&grid);
+
+    let mut con_grid: Grid<bool> = Grid::new(m + 1, n + 1);
+    con_grid.fill(true);
+
+    for con in route {
+        con_grid
+            .set(con.con_node.0, con.con_node.0, Some(false))
+            .unwrap();
+    }
+
     "".to_string()
 }
 

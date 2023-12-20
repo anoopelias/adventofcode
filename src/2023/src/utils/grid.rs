@@ -55,6 +55,17 @@ impl<T> Grid<T> {
         Ok(())
     }
 
+    pub fn fill(&mut self, val: T)
+    where
+        T: Clone,
+    {
+        for p in (0..self.m) {
+            for q in (0..self.n) {
+                self.grid[p][q] = Some(val.clone());
+            }
+        }
+    }
+
     pub fn find(&self, v: T) -> (usize, usize)
     where
         T: Sized + PartialEq,

@@ -29,48 +29,38 @@ fn parse_lines(grid: &mut Grid<char>, lines: &Vec<String>) {
 
 fn find_route(grid: &Grid<char>) -> Vec<(usize, usize)> {
     let start = grid.find('S');
-    let start_key = tuple_to_key(&start);
     let mut start_ns = connected_neighbors(&grid, start);
 
     let from = start_ns.pop().unwrap();
-    let from_key = tuple_to_key(&from);
-
     let to = start_ns.pop().unwrap();
-    let to_key = tuple_to_key(&to);
 
     let mut nexts = vec![from];
     let mut from_map = HashMap::new();
-    let mut navigation_map = HashMap::new();
-    from_map.insert(from_key.clone(), start_key.clone());
-    from_map.insert(start_key.clone(), to_key.clone());
-    navigation_map.insert(from_key.clone(), from);
-    navigation_map.insert(start_key.clone(), to);
+    from_map.insert(start, to);
+    from_map.insert(from, start);
 
     while nexts.len() > 0 {
         let curr = nexts.remove(0);
-        let curr_key = tuple_to_key(&curr);
         let mut cns = connected_neighbors(&grid, curr);
 
         while cns.len() != 0 {
             let cn = cns.pop().unwrap();
-            let nk = tuple_to_key(&cn);
-            if !from_map.contains_key(&nk) {
+            if !from_map.contains_key(&cn) {
                 nexts.push(cn);
-                from_map.insert(nk.clone(), curr_key.clone());
-                navigation_map.insert(nk, cn);
+                from_map.insert(cn, curr);
             }
         }
     }
 
-    let mut path = &to_key;
-    let mut route = vec![navigation_map.remove(path).unwrap()];
-    while *path != from_key {
+    let mut path = &to;
+    let mut route = vec![to];
+    while *path != from {
         path = from_map.get(path).unwrap();
-        route.push(navigation_map.remove(path).unwrap());
-        println!("path {}", path);
+        route.push(*path);
+        println!("path {:?}", path);
     }
 
-    route.push(navigation_map.remove(&start_key).unwrap());
+    route.push(start);
     route
 }
 

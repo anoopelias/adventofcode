@@ -66,10 +66,11 @@ fn find_route(grid: &Grid<char>) -> Vec<(usize, usize)> {
 }
 
 fn start_value(grid: &Grid<char>, start: (usize, usize)) -> char {
-    let dirs: Vec<Direction> = connected_neighbors(grid, start)
+    let neighbors = connected_neighbors(grid, start);
+    let dirs: Vec<&Direction> = neighbors
         .iter()
-        .map(|n| n.dir.clone())
-        .collect::<Vec<Direction>>();
+        .map(|n| &n.dir)
+        .collect::<Vec<&Direction>>();
 
     let dir_tuple = (dirs.get(0).unwrap(), dirs.get(1).unwrap());
 

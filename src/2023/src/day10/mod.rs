@@ -123,9 +123,9 @@ fn connected_neighbors(grid: &Grid<char>, start: (usize, usize)) -> Vec<Neighbor
     });
 
     vec![left, right, top, bottom]
-        .iter()
+        .into_iter()
         .filter(|n| n.is_ok())
-        .map(|n| n.as_ref().unwrap().clone())
+        .map(|n| n.unwrap())
         .filter(|n| match n.dir {
             Direction::Left => n.val == 'F' || n.val == '-' || n.val == 'L',
             Direction::Right => n.val == 'J' || n.val == '-' || n.val == '7',

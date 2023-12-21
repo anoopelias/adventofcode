@@ -85,9 +85,11 @@ fn start_value(grid: &Grid<char>, start: (usize, usize)) -> char {
     }
 }
 
+#[derive(Clone, PartialEq)]
 struct Neighbor {
     pos: (usize, usize),
     dir: Direction,
+    val: char,
 }
 
 #[derive(Clone, PartialEq)]
@@ -99,45 +101,38 @@ enum Direction {
 }
 
 fn connected_neighbors(grid: &Grid<char>, start: (usize, usize)) -> Vec<Neighbor> {
-    let mut connected_neighbors = vec![];
-    let left = grid.left_cell_by_tuple(start);
-    if let Ok(cell) = left {
-        if cell.val.unwrap() == &'F' || cell.val.unwrap() == &'-' || cell.val.unwrap() == &'L' {
-            connected_neighbors.push(Neighbor {
-                pos: cell.to_tuple(),
-                dir: Direction::Left,
-            });
-        }
-    }
-    let right = grid.right_cell_by_tuple(start);
-    if let Ok(cell) = right {
-        if cell.val.unwrap() == &'-' || cell.val.unwrap() == &'J' || cell.val.unwrap() == &'7' {
-            connected_neighbors.push(Neighbor {
-                pos: cell.to_tuple(),
-                dir: Direction::Right,
-            });
-        }
-    }
-    let top = grid.top_cell_by_tuple(start);
-    if let Ok(cell) = top {
-        if cell.val.unwrap() == &'|' || cell.val.unwrap() == &'7' || cell.val.unwrap() == &'F' {
-            connected_neighbors.push(Neighbor {
-                pos: cell.to_tuple(),
-                dir: Direction::Top,
-            });
-        }
-    }
+    let left = grid.left_cell_by_tuple(start).map(|cell| Neighbor {
+        pos: cell.to_tuple(),
+        dir: Direction::Left,
+        val: *cell.val.unwrap(),
+    });
+    let right = grid.right_cell_by_tuple(start).map(|cell| Neighbor {
+        pos: cell.to_tuple(),
+        dir: Direction::Right,
+        val: *cell.val.unwrap(),
+    });
+    let top = grid.top_cell_by_tuple(start).map(|cell| Neighbor {
+        pos: cell.to_tuple(),
+        dir: Direction::Top,
+        val: *cell.val.unwrap(),
+    });
+    let bottom = grid.bottom_cell_by_tuple(start).map(|cell| Neighbor {
+        pos: cell.to_tuple(),
+        dir: Direction::Bottom,
+        val: *cell.val.unwrap(),
+    });
 
-    let bottom = grid.bottom_cell_by_tuple(start);
-    if let Ok(cell) = bottom {
-        if cell.val.unwrap() == &'|' || cell.val.unwrap() == &'L' || cell.val.unwrap() == &'J' {
-            connected_neighbors.push(Neighbor {
-                pos: cell.to_tuple(),
-                dir: Direction::Bottom,
-            });
-        }
-    }
-    connected_neighbors
+    vec![left, right, top, bottom]
+        .iter()
+        .filter(|n| n.is_ok())
+        .map(|n| n.as_ref().unwrap().clone())
+        .filter(|n| match n.dir {
+            Direction::Left => n.val == 'F' || n.val == '-' || n.val == 'L',
+            Direction::Right => n.val == 'J' || n.val == '-' || n.val == '7',
+            Direction::Top => n.val == '|' || n.val == '7' || n.val == 'F',
+            Direction::Bottom => n.val == '|' || n.val == 'L' || n.val == 'J',
+        })
+        .collect()
 }
 
 #[derive(PartialEq)]

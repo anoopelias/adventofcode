@@ -100,7 +100,7 @@ enum Direction {
 
 fn connected_neighbors(grid: &Grid<char>, start: (usize, usize)) -> Vec<Neighbor> {
     let mut connected_neighbors = vec![];
-    let left = grid.left_cell(start.0, start.1);
+    let left = grid.left_cell_by_tuple(start);
     if let Ok(cell) = left {
         if cell.val.unwrap() == &'F' || cell.val.unwrap() == &'-' || cell.val.unwrap() == &'L' {
             connected_neighbors.push(Neighbor {
@@ -109,7 +109,7 @@ fn connected_neighbors(grid: &Grid<char>, start: (usize, usize)) -> Vec<Neighbor
             });
         }
     }
-    let right = grid.right_cell(start.0, start.1);
+    let right = grid.right_cell_by_tuple(start);
     if let Ok(cell) = right {
         if cell.val.unwrap() == &'-' || cell.val.unwrap() == &'J' || cell.val.unwrap() == &'7' {
             connected_neighbors.push(Neighbor {
@@ -118,7 +118,7 @@ fn connected_neighbors(grid: &Grid<char>, start: (usize, usize)) -> Vec<Neighbor
             });
         }
     }
-    let top = grid.top_cell(start.0, start.1);
+    let top = grid.top_cell_by_tuple(start);
     if let Ok(cell) = top {
         if cell.val.unwrap() == &'|' || cell.val.unwrap() == &'7' || cell.val.unwrap() == &'F' {
             connected_neighbors.push(Neighbor {
@@ -128,7 +128,7 @@ fn connected_neighbors(grid: &Grid<char>, start: (usize, usize)) -> Vec<Neighbor
         }
     }
 
-    let bottom = grid.bottom_cell(start.0, start.1);
+    let bottom = grid.bottom_cell_by_tuple(start);
     if let Ok(cell) = bottom {
         if cell.val.unwrap() == &'|' || cell.val.unwrap() == &'L' || cell.val.unwrap() == &'J' {
             connected_neighbors.push(Neighbor {

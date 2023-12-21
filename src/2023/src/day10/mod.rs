@@ -29,10 +29,11 @@ fn parse_lines(grid: &mut Grid<char>, lines: &Vec<String>) {
 
 fn find_route(grid: &Grid<char>) -> Vec<(usize, usize)> {
     let start = grid.find('S');
-    let mut start_ns = connected_neighbors(&grid, start);
+    let mut start_neighbors = connected_neighbors(&grid, start);
+    assert_eq!(start_neighbors.len(), 2);
 
-    let from = start_ns.pop().unwrap();
-    let to = start_ns.pop().unwrap();
+    let from = start_neighbors.pop().unwrap();
+    let to = start_neighbors.pop().unwrap();
 
     let mut nexts = vec![from];
     let mut from_map = HashMap::new();
@@ -41,10 +42,10 @@ fn find_route(grid: &Grid<char>) -> Vec<(usize, usize)> {
 
     while nexts.len() > 0 {
         let curr = nexts.remove(0);
-        let mut cns = connected_neighbors(&grid, curr);
+        let mut neighbors = connected_neighbors(&grid, curr);
 
-        while cns.len() != 0 {
-            let cn = cns.pop().unwrap();
+        while neighbors.len() != 0 {
+            let cn = neighbors.pop().unwrap();
             if !from_map.contains_key(&cn) {
                 nexts.push(cn);
                 from_map.insert(cn, curr);

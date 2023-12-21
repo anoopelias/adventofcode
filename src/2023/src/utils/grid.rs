@@ -26,8 +26,8 @@ impl<T> GridCell<T> {
 
 pub struct Grid<T = ()> {
     grid: Vec<Vec<Option<T>>>,
-    m: usize,
-    n: usize,
+    pub m: usize,
+    pub n: usize,
 }
 
 impl<T> Grid<T> {

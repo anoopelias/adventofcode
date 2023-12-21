@@ -195,9 +195,10 @@ fn part2(lines: &Vec<String>) -> String {
     let route = find_route(&grid);
     let start = grid.find('S');
     let start_value = start_value(&grid, start);
-    grid.set(start.0, start.1, Some(start_value)).unwrap();
+    grid.set_by_tuple(start, Some(start_value)).unwrap();
     let mut count = 0;
 
+    // Ray tracing
     for p in 0..m {
         let mut state = State::Outside(Break::None);
         for q in 0..n {

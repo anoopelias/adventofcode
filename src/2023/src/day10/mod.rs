@@ -1,6 +1,9 @@
 use std::{collections::HashMap, usize};
 
-use crate::utils::{grid::Grid, util};
+use crate::utils::{
+    grid::{Coord, Direction, Grid, Neighbor},
+    util,
+};
 
 const DAY: &str = "day10";
 
@@ -22,18 +25,18 @@ fn part1(lines: &Vec<String>) -> String {
 fn parse_lines(grid: &mut Grid<char>, lines: &Vec<String>) {
     for (p, line) in lines.iter().enumerate() {
         for (q, ch) in line.chars().enumerate() {
-            grid.set(p, q, Some(ch)).unwrap();
+            grid.set(&Coord { p, q }, Some(ch)).unwrap();
         }
     }
 }
 
-fn find_route(grid: &Grid<char>) -> Vec<(usize, usize)> {
-    let start = grid.find('S');
-    let mut start_neighbors = connected_neighbors(&grid, start);
+fn find_route(grid: &Grid<char>) -> Vec<&Coord> {
+    let start = &grid.find('S');
+    let mut start_neighbors = connected_neighbors(&grid, &start);
     assert_eq!(start_neighbors.len(), 2);
 
-    let from = start_neighbors.pop().unwrap().pos;
-    let to = start_neighbors.pop().unwrap().pos;
+    let from = &start_neighbors.pop().unwrap().cell.coord;
+    let to = &start_neighbors.pop().unwrap().cell.coord;
 
     let mut nexts = vec![from];
     let mut from_map = HashMap::new();
@@ -46,9 +49,9 @@ fn find_route(grid: &Grid<char>) -> Vec<(usize, usize)> {
 
         while neighbors.len() != 0 {
             let neighbor = neighbors.pop().unwrap();
-            if !from_map.contains_key(&neighbor.pos) {
-                nexts.push(neighbor.pos);
-                from_map.insert(neighbor.pos, curr);
+            if !from_map.contains_key(&neighbor.cell.coord) {
+                nexts.push(&neighbor.cell.coord);
+                from_map.insert(&neighbor.cell.coord, curr);
             }
         }
     }
@@ -65,8 +68,8 @@ fn find_route(grid: &Grid<char>) -> Vec<(usize, usize)> {
     route
 }
 
-fn start_value(grid: &Grid<char>, start: (usize, usize)) -> char {
-    let neighbors = connected_neighbors(grid, start);
+fn start_value(grid: &Grid<char>, coord: &Coord) -> char {
+    let neighbors = connected_neighbors(grid, coord);
     let dirs: Vec<&Direction> = neighbors
         .iter()
         .map(|n| &n.dir)
@@ -85,52 +88,17 @@ fn start_value(grid: &Grid<char>, start: (usize, usize)) -> char {
     }
 }
 
-#[derive(Clone, PartialEq)]
-struct Neighbor {
-    pos: (usize, usize),
-    dir: Direction,
-    val: char,
-}
-
-#[derive(Clone, PartialEq)]
-enum Direction {
-    Top,
-    Bottom,
-    Left,
-    Right,
-}
-
-fn connected_neighbors(grid: &Grid<char>, start: (usize, usize)) -> Vec<Neighbor> {
-    let left = grid.left_cell_by_tuple(start).map(|cell| Neighbor {
-        pos: cell.to_tuple(),
-        dir: Direction::Left,
-        val: *cell.val.unwrap(),
-    });
-    let right = grid.right_cell_by_tuple(start).map(|cell| Neighbor {
-        pos: cell.to_tuple(),
-        dir: Direction::Right,
-        val: *cell.val.unwrap(),
-    });
-    let top = grid.top_cell_by_tuple(start).map(|cell| Neighbor {
-        pos: cell.to_tuple(),
-        dir: Direction::Top,
-        val: *cell.val.unwrap(),
-    });
-    let bottom = grid.bottom_cell_by_tuple(start).map(|cell| Neighbor {
-        pos: cell.to_tuple(),
-        dir: Direction::Bottom,
-        val: *cell.val.unwrap(),
-    });
-
-    vec![left, right, top, bottom]
+fn connected_neighbors<'a>(grid: &'a Grid<char>, coord: &Coord) -> Vec<Neighbor<&'a char>> {
+    grid.neighbors(coord)
         .into_iter()
-        .filter(|n| n.is_ok())
-        .map(|n| n.unwrap())
-        .filter(|n| match n.dir {
-            Direction::Left => n.val == 'F' || n.val == '-' || n.val == 'L',
-            Direction::Right => n.val == 'J' || n.val == '-' || n.val == '7',
-            Direction::Top => n.val == '|' || n.val == '7' || n.val == 'F',
-            Direction::Bottom => n.val == '|' || n.val == 'L' || n.val == 'J',
+        .filter(|n| {
+            let val = *n.cell.val.unwrap();
+            match n.dir {
+                Direction::Left => val == 'F' || val == '-' || val == 'L',
+                Direction::Right => val == 'J' || val == '-' || val == '7',
+                Direction::Top => val == '|' || val == '7' || val == 'F',
+                Direction::Bottom => val == '|' || val == 'L' || val == 'J',
+            }
         })
         .collect()
 }
@@ -194,20 +162,20 @@ fn part2(lines: &Vec<String>) -> String {
 
     let route = find_route(&grid);
     let start = grid.find('S');
-    let start_value = start_value(&grid, start);
-    grid.set_by_tuple(start, Some(start_value)).unwrap();
+    let start_value = start_value(&grid, &start);
+    grid.set(&start, Some(start_value)).unwrap();
     let mut count = 0;
 
     // Ray tracing
     for p in 0..m {
         let mut state = State::Outside(Break::None);
         for q in 0..n {
-            if let Ok(Some(val)) = grid.get(p, q) {
-                if route.contains(&(p, q)) {
+            if let Ok(Some(val)) = grid.get(&Coord { p, q }) {
+                if route.contains(&&Coord { p, q }) {
                     state = state.next(val);
                     // grid.set(p, q, Some('I')).unwrap();
                 } else if let State::Inside(_) = state {
-                    grid.set(p, q, Some('O')).unwrap();
+                    grid.set(&Coord { p, q }, Some('O')).unwrap();
                     count += 1;
                 } else {
                     //grid.set(p, q, Some('.')).unwrap();
@@ -222,9 +190,9 @@ fn part2(lines: &Vec<String>) -> String {
 }
 
 fn print_grid(grid: &Grid<char>) {
-    for i in 0..grid.m {
-        for j in 0..grid.n {
-            print!("{}", grid.get(i, j).unwrap().unwrap());
+    for p in 0..grid.m {
+        for q in 0..grid.n {
+            print!("{}", grid.get(&Coord { p, q }).unwrap().unwrap());
         }
         println!()
     }

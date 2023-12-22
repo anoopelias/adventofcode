@@ -1,6 +1,8 @@
+mod grid;
 use std::{collections::HashMap, usize};
 
-use crate::utils::{grid::Grid, util};
+use crate::utils::util;
+use grid::Grid;
 
 const DAY: &str = "day10";
 

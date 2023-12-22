@@ -1,6 +1,6 @@
 use std::usize;
 
-use crate::utils::grid::Grid;
+use super::grid::Grid;
 
 pub(crate) fn solve(lines: Vec<String>) -> String {
     let (m, n) = (lines.len(), lines.get(0).unwrap().len());

@@ -3,7 +3,7 @@ use std::{
     usize, vec,
 };
 
-use crate::utils::grid::Grid;
+use super::grid::Grid;
 
 pub(crate) fn solve(lines: Vec<String>) -> String {
     let grid = Grid::new(lines.len(), lines.get(0).unwrap().len());

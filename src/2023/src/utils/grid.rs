@@ -1,4 +1,6 @@
 #![allow(unused)]
+use std::{collections::HashMap, io::SeekFrom};
+
 use anyhow::Result;
 use num::{complex::ComplexFloat, Float};
 
@@ -14,7 +16,7 @@ impl<T> GridCell<T> {
     }
 }
 
-pub struct Grid<T = ()> {
+pub struct Grid<T: Clone = ()> {
     grid: Vec<Vec<Option<T>>>,
     pub m: usize,
     pub n: usize,
@@ -52,7 +54,37 @@ impl<T> Neighbor<T> {
     }
 }
 
-impl<T> Grid<T> {
+pub struct BfsResult {
+    pub from: Coord,
+    pub from_map: HashMap<Coord, Option<Coord>>,
+    pub dist_map: HashMap<Coord, usize>,
+}
+
+impl BfsResult {
+    fn new(from: &Coord) -> BfsResult {
+        let mut bfs_result = BfsResult {
+            from: from.clone(),
+            from_map: HashMap::new(),
+            dist_map: HashMap::new(),
+        };
+
+        bfs_result.from_map.insert(from.clone(), None);
+        bfs_result.dist_map.insert(from.clone(), 0);
+        bfs_result
+    }
+
+    fn add_map(&mut self, coord: &Coord, from: &Coord) {
+        let dist = self.dist_map.get(from).unwrap() + 1;
+        self.from_map.insert(coord.clone(), Some(from.clone()));
+        self.dist_map.insert(coord.clone(), dist);
+    }
+
+    fn has(&self, coord: &Coord) -> bool {
+        self.from_map.contains_key(coord)
+    }
+}
+
+impl<T: Clone> Grid<T> {
     pub fn new(m: usize, n: usize) -> Grid<T> {
         let grid = (0..m)
             .into_iter()
@@ -71,6 +103,20 @@ impl<T> Grid<T> {
         self.check_bounds(coord)?;
         self.grid[coord.p][coord.q] = val;
         Ok(())
+    }
+
+    pub fn all(&self) -> Vec<GridCell<T>> {
+        let mut all = vec![];
+        for p in 0..self.m {
+            for q in 0..self.n {
+                let val = self.grid.get(p).unwrap().get(q).unwrap().clone();
+                all.push(GridCell {
+                    val,
+                    coord: Coord { p, q },
+                })
+            }
+        }
+        all
     }
 
     pub fn fill(&mut self, val: T)
@@ -178,5 +224,41 @@ impl<T> Grid<T> {
         .filter(|result| result.is_ok())
         .map(|result| result.unwrap())
         .collect()
+    }
+
+    pub fn duplicate_row(&mut self, row_num: usize) {
+        let new_row = self.grid.get(row_num).unwrap().clone();
+        self.grid.insert(row_num, new_row);
+        self.m += 1;
+    }
+
+    pub fn duplicate_column(&mut self, col_num: usize) {
+        for row in self.grid.iter_mut() {
+            let new_value = row.get(col_num).unwrap().clone();
+            row.insert(col_num, new_value);
+        }
+        self.n += 1;
+    }
+
+    pub fn bfs(&self, from: &Coord) -> BfsResult {
+        let mut bfs_result = BfsResult::new(from);
+
+        let mut nexts = vec![from.clone()];
+
+        while nexts.len() > 0 {
+            let curr = nexts.remove(0);
+            let mut neighbors = self.neighbors(&curr);
+
+            while neighbors.len() != 0 {
+                let neighbor = neighbors.pop().unwrap();
+                let neighbor_coord = neighbor.cell.coord;
+                if !bfs_result.has(&neighbor_coord) {
+                    bfs_result.add_map(&neighbor_coord, &curr);
+                    nexts.push(neighbor_coord);
+                }
+            }
+        }
+
+        bfs_result
     }
 }

@@ -1,4 +1,4 @@
-#![allow(unused)]
+use std::cmp::Ordering;
 
 pub enum PqStrategy {
     Min,
@@ -20,14 +20,69 @@ impl<T: Ord> Pq<T> {
 
     pub fn insert(&mut self, value: T) {
         self.values.push(value);
-        self.values.sort_by(|a, b| match self.strategy {
-            PqStrategy::Min => b.cmp(a),
-            PqStrategy::Max => a.cmp(b),
-        });
+        self.swim(self.values.len() - 1);
     }
 
     pub fn remove(&mut self) -> Option<T> {
-        self.values.pop()
+        if self.values.is_empty() {
+            None
+        } else {
+            let result = self.values.swap_remove(0);
+            self.sink(0);
+            Some(result)
+        }
+    }
+
+    fn swim(&mut self, n: usize) {
+        if n == 0 {
+            return;
+        }
+
+        // 0 -> 1, 2
+        // 1 -> 3, 4
+        // 2 -> 5, 6
+        // 3 -> 7, 8
+        // 4 -> 9, 10
+        //
+        // Children: 2n + 1, 2n + 2
+        // Parent: Math.floor((n - 1) / 2)
+        //
+        let pi = (n - 1) / 2;
+        let child = self.values.get(n).unwrap();
+        let parent = self.values.get(pi).unwrap();
+        if !self.less(parent, child) {
+            self.values.swap(n, pi);
+            self.swim(pi);
+        }
+    }
+
+    fn less(&self, a: &T, b: &T) -> bool {
+        match self.strategy {
+            PqStrategy::Min => a.cmp(b) == Ordering::Less,
+            PqStrategy::Max => b.cmp(a) == Ordering::Less,
+        }
+    }
+
+    fn lesser_child(&self, n: usize) -> Option<(usize, &T)> {
+        let ci = (2 * n) + 1;
+
+        match (self.values.get(ci), self.values.get(ci + 1)) {
+            (Some(child1), Some(child2)) if !self.less(child1, child2) => Some((ci + 1, child2)),
+            (Some(child), _) => Some((ci, child)),
+            (None, Some(child)) => Some((ci + 1, child)),
+            _ => None,
+        }
+    }
+
+    fn sink(&mut self, n: usize) {
+        if let Some(parent) = self.values.get(n) {
+            if let Some((ci, child)) = self.lesser_child(n) {
+                if !self.less(parent, child) {
+                    self.values.swap(n, ci);
+                    self.sink(ci);
+                }
+            }
+        }
     }
 }
 
@@ -73,5 +128,19 @@ mod tests {
         pq.insert(12);
         pq.insert(10);
         assert_eq!(Some(12), pq.remove());
+    }
+
+    #[test]
+    fn insert_remove_min_many() {
+        let mut pq = Pq::new(PqStrategy::Max);
+        pq.insert(12);
+        pq.insert(10);
+        pq.insert(9);
+        pq.insert(11);
+        assert_eq!(Some(12), pq.remove());
+        assert_eq!(Some(11), pq.remove());
+        assert_eq!(Some(10), pq.remove());
+        assert_eq!(Some(9), pq.remove());
+        assert_eq!(None, pq.remove());
     }
 }

@@ -16,7 +16,7 @@ impl<T> GridCell<T> {
     }
 }
 
-pub struct Grid<T: Clone = ()> {
+pub struct Grid<T: Clone + PartialEq = ()> {
     grid: Vec<Vec<T>>,
     pub m: usize,
     pub n: usize,
@@ -94,7 +94,7 @@ impl Grid<()> {
     }
 }
 
-impl<T: Clone> Grid<T> {
+impl<T: Clone + PartialEq> Grid<T> {
     pub fn new_fill(m: usize, n: usize, fill: &T) -> Grid<T> {
         let grid = (0..m)
             .into_iter()
@@ -134,34 +134,56 @@ impl<T: Clone> Grid<T> {
         all
     }
 
+    pub fn find_all(&self, v: &T) -> Vec<GridCell<&T>> {
+        self.all()
+            .into_iter()
+            .filter(|cell| cell.val == v)
+            .collect()
+    }
+
     pub fn row(&self, p: usize) -> Result<Vec<GridCell<&T>>> {
         self.check_row_bounds(p)?;
+        Ok(self
+            .grid
+            .get(p)
+            .unwrap()
+            .iter()
+            .enumerate()
+            .map(|(q, val)| GridCell::new(Coord::new(p, q), val))
+            .collect())
+    }
 
-        let mut row = vec![];
-        for q in 0..self.n {
-            let coord = Coord { p, q };
-            row.push(GridCell {
-                val: self.get(&coord).unwrap(),
-                coord: coord,
-            });
-        }
+    pub fn row_mut(&mut self, p: usize) -> Result<Vec<GridCell<&mut T>>> {
+        self.check_row_bounds(p)?;
 
-        Ok(row)
+        Ok(self
+            .grid
+            .get_mut(p)
+            .unwrap()
+            .iter_mut()
+            .enumerate()
+            .map(|(q, val)| GridCell::new(Coord::new(p, q), val))
+            .collect())
     }
 
     pub fn col(&self, q: usize) -> Result<Vec<GridCell<&T>>> {
         self.check_col_bounds(q)?;
+        Ok(self
+            .grid
+            .iter()
+            .enumerate()
+            .map(|(p, row)| GridCell::new(Coord::new(p, q), row.get(q).unwrap()))
+            .collect())
+    }
 
-        let mut col = vec![];
-        for p in 0..self.m {
-            let coord = Coord { p, q };
-            col.push(GridCell {
-                val: self.get(&coord).unwrap(),
-                coord: coord,
-            });
-        }
-
-        Ok(col)
+    pub fn col_mut(&mut self, q: usize) -> Result<Vec<GridCell<&mut T>>> {
+        self.check_col_bounds(q)?;
+        Ok(self
+            .grid
+            .iter_mut()
+            .enumerate()
+            .map(|(p, row)| GridCell::new(Coord::new(p, q), row.get_mut(q).unwrap()))
+            .collect())
     }
 
     pub fn rows(&self) -> Vec<Vec<GridCell<&T>>> {

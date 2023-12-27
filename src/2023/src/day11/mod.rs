@@ -2,6 +2,7 @@ const DAY: &str = "day11";
 
 use crate::utils::{
     grid::{Coord, Grid, GridCell},
+    pq::{Pq, PqType},
     util,
 };
 
@@ -26,9 +27,7 @@ fn part1(lines: &Vec<String>) -> String {
 
     duplicate_row(&mut grid);
     duplicate_column(&mut grid);
-    let all = grid.all();
-
-    let all_hash: Vec<&GridCell<&char>> = all.iter().filter(|cell| *cell.val == '#').collect();
+    let all_hash = grid.find_all(&'#');
 
     let mut sum = 0;
     for p in 0..all_hash.len() {
@@ -69,6 +68,78 @@ fn duplicate_column(grid: &mut Grid<char>) {
         .for_each(|q| grid.duplicate_column(*q).unwrap());
 }
 
+const DUPLICATES: usize = 2;
+struct PqItem<T> {
+    cell: GridCell<T>,
+    distance: usize,
+}
+
+impl<T> PqItem<T> {
+    fn new(cell: GridCell<T>, distance: usize) -> PqItem<T> {
+        PqItem { cell, distance }
+    }
+}
+
+impl<T> Eq for PqItem<T> {}
+
+impl<T> PartialEq for PqItem<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.distance == other.distance
+    }
+}
+
+impl<T> PartialOrd for PqItem<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.distance.partial_cmp(&other.distance)
+    }
+}
+
+impl<T> Ord for PqItem<T> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.distance.cmp(&other.distance)
+    }
+}
+
+#[derive(Clone)]
+struct Distance {
+    left: usize,
+    right: usize,
+    top: usize,
+    bottom: usize,
+}
+
+impl Distance {
+    fn new() -> Distance {
+        Distance {
+            left: 1,
+            right: 1,
+            top: 1,
+            bottom: 1,
+        }
+    }
+}
+
+#[derive(Clone)]
+struct Value {
+    ch: char,
+    distance: Distance,
+}
+
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        self.ch == other.ch
+    }
+}
+
+impl Value {
+    fn new(ch: char) -> Value {
+        Value {
+            ch: ch,
+            distance: Distance::new(),
+        }
+    }
+}
+
 fn empty_rows(grid: &Grid<Value>) -> Vec<usize> {
     grid.rows()
         .iter()
@@ -97,65 +168,66 @@ fn parse_lines_part2(grid: &mut Grid<Value>, lines: &Vec<String>) {
     }
 }
 
-const DUPLICATES: usize = 2;
-fn part2(lines: &Vec<String>) -> String {
-    let (m, n) = (lines.len(), lines.get(0).unwrap().len());
-    let mut grid: Grid<Value> = Grid::new_fill(m, n, &Value::new('.'));
-    parse_lines_part2(&mut grid, lines);
+fn set_row_distance(grid: &mut Grid<Value>) {
     let empty_rows = empty_rows(&grid);
     empty_rows.iter().for_each(|&p| {
         if p > 0 {
-            for q in 0..grid.n {
-                let value = grid.get_mut(&Coord::new(p - 1, q)).unwrap();
-                value.distance.bottom = DUPLICATES;
-            }
+            grid.row_mut(p - 1)
+                .unwrap()
+                .iter_mut()
+                .for_each(|cell| cell.val.distance.bottom = DUPLICATES);
         }
         if p < grid.m - 1 {
-            for q in 0..grid.n {
-                let value = grid.get_mut(&Coord::new(p + 1, q)).unwrap();
-                value.distance.bottom = DUPLICATES;
-            }
+            grid.row_mut(p + 1)
+                .unwrap()
+                .iter_mut()
+                .for_each(|cell| cell.val.distance.top = DUPLICATES);
         }
     });
     empty_rows
         .iter()
         .rev()
         .for_each(|&p| grid.delete_row(p).unwrap());
+}
+
+fn set_col_distance(grid: &mut Grid<Value>) {
+    let empty_cols = empty_cols(&grid);
+    empty_cols.iter().for_each(|&q| {
+        if q > 0 {
+            grid.col_mut(q - 1)
+                .unwrap()
+                .iter_mut()
+                .for_each(|cell| cell.val.distance.right = DUPLICATES)
+        }
+        if q < grid.n - 1 {
+            grid.col_mut(q + 1)
+                .unwrap()
+                .iter_mut()
+                .for_each(|cell| cell.val.distance.left = DUPLICATES)
+        }
+    });
+    empty_cols
+        .iter()
+        .rev()
+        .for_each(|&q| grid.delete_col(q).unwrap());
+}
+
+fn part2(lines: &Vec<String>) -> String {
+    let (m, n) = (lines.len(), lines.get(0).unwrap().len());
+    let mut grid: Grid<Value> = Grid::new_fill(m, n, &Value::new('.'));
+    parse_lines_part2(&mut grid, lines);
+    set_row_distance(&mut grid);
+    set_col_distance(&mut grid);
+
+    let hashes = grid.find_all(&Value::new('#'));
+
+    for hash in hashes {
+        let mut pq = Pq::new(PqType::Min);
+        let start = PqItem::new(hash, 0);
+        pq.insert(start);
+    }
+
     "".to_string()
-}
-
-#[derive(Clone)]
-struct Distance {
-    left: usize,
-    right: usize,
-    top: usize,
-    bottom: usize,
-}
-
-impl Distance {
-    fn new() -> Distance {
-        Distance {
-            left: 1,
-            right: 1,
-            top: 1,
-            bottom: 1,
-        }
-    }
-}
-
-#[derive(Clone)]
-struct Value {
-    ch: char,
-    distance: Distance,
-}
-
-impl Value {
-    fn new(ch: char) -> Value {
-        Value {
-            ch: ch,
-            distance: Distance::new(),
-        }
-    }
 }
 
 #[cfg(test)]
@@ -172,8 +244,8 @@ mod tests {
     #[test]
     fn test_part1_input() {
         // Too slow to test
-        // let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        // assert_eq!("9648398", part1(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        assert_eq!("9648398", part1(&lines))
     }
 
     #[test]

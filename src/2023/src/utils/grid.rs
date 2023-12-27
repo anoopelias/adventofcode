@@ -1,5 +1,5 @@
 #![allow(unused)]
-use std::{collections::HashMap, io::SeekFrom};
+use std::{collections::HashMap, fmt::Debug, io::SeekFrom};
 
 use anyhow::{anyhow, Result};
 use num::{complex::ComplexFloat, Float};
@@ -125,9 +125,7 @@ impl<T: Clone> Grid<T> {
     }
 
     pub fn row(&self, p: usize) -> Result<Vec<GridCell<&T>>> {
-        if p >= self.m {
-            return Err(anyhow!("Index out of bounds"));
-        }
+        self.check_row_bounds(p)?;
 
         let mut row = vec![];
         for q in 0..self.n {
@@ -142,9 +140,7 @@ impl<T: Clone> Grid<T> {
     }
 
     pub fn col(&self, q: usize) -> Result<Vec<GridCell<&T>>> {
-        if q >= self.n {
-            return Err(anyhow!("Index out of bounds"));
-        }
+        self.check_col_bounds(q)?;
 
         let mut col = vec![];
         for p in 0..self.m {
@@ -156,6 +152,28 @@ impl<T: Clone> Grid<T> {
         }
 
         Ok(col)
+    }
+
+    pub fn rows(&self) -> Vec<Vec<GridCell<&T>>> {
+        (0..self.m)
+            .into_iter()
+            .map(|p| {
+                self.grid
+                    .get(p)
+                    .unwrap()
+                    .iter()
+                    .enumerate()
+                    .map(|(q, val)| GridCell::new(Coord::new(p, q), val.as_ref()))
+                    .collect::<Vec<GridCell<&T>>>()
+            })
+            .collect()
+    }
+
+    pub fn cols(&self) -> Vec<Vec<GridCell<&T>>> {
+        (0..self.n)
+            .into_iter()
+            .map(|q| self.col(q).unwrap())
+            .collect()
     }
 
     pub fn fill(&mut self, val: T)
@@ -248,6 +266,20 @@ impl<T: Clone> Grid<T> {
         Ok(())
     }
 
+    fn check_row_bounds(&self, p: usize) -> Result<()> {
+        if p >= self.m {
+            return Err(anyhow::anyhow!("Index out of bounds"));
+        }
+        Ok(())
+    }
+
+    fn check_col_bounds(&self, q: usize) -> Result<()> {
+        if q >= self.n {
+            return Err(anyhow::anyhow!("Index out of bounds"));
+        }
+        Ok(())
+    }
+
     pub fn neighbors(&self, coord: &Coord) -> Vec<Neighbor<&T>> {
         vec![
             self.left_cell(coord)
@@ -265,30 +297,38 @@ impl<T: Clone> Grid<T> {
         .collect()
     }
 
-    pub fn duplicate_row(&mut self, row_num: usize) {
+    pub fn duplicate_row(&mut self, row_num: usize) -> Result<()> {
+        self.check_row_bounds(row_num)?;
         let new_row = self.grid.get(row_num).unwrap().clone();
         self.grid.insert(row_num, new_row);
         self.m += 1;
+        Ok(())
     }
 
-    pub fn duplicate_column(&mut self, col_num: usize) {
+    pub fn duplicate_column(&mut self, col_num: usize) -> Result<()> {
+        self.check_col_bounds(col_num)?;
         for row in self.grid.iter_mut() {
             let new_value = row.get(col_num).unwrap().clone();
             row.insert(col_num, new_value);
         }
         self.n += 1;
+        Ok(())
     }
 
-    pub fn delete_row(&mut self, row_num: usize) {
+    pub fn delete_row(&mut self, row_num: usize) -> Result<()> {
+        self.check_row_bounds(row_num)?;
         self.grid.remove(row_num);
         self.m -= 1;
+        Ok(())
     }
 
-    pub fn delete_col(&mut self, col_num: usize) {
+    pub fn delete_col(&mut self, col_num: usize) -> Result<()> {
+        self.check_col_bounds(col_num)?;
         for row in self.grid.iter_mut() {
             row.remove(col_num);
         }
         self.n -= 1;
+        Ok(())
     }
 
     pub fn bfs(&self, from: &Coord) -> BfsResult {

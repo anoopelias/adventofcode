@@ -99,6 +99,11 @@ impl<T: Clone> Grid<T> {
         Ok(self.grid[coord.p][coord.p].as_ref())
     }
 
+    pub fn get_mut(&mut self, coord: &Coord) -> Result<Option<&mut T>> {
+        self.check_bounds(coord)?;
+        Ok(self.grid[coord.p][coord.p].as_mut())
+    }
+
     pub fn set(&mut self, coord: &Coord, val: Option<T>) -> Result<()> {
         self.check_bounds(coord)?;
         self.grid[coord.p][coord.q] = val;

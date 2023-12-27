@@ -52,7 +52,7 @@ fn duplicate_row(grid: &mut Grid<char>) {
     for p in 0..grid.m {
         let hash_count = all
             .iter()
-            .filter(|cell| cell.coord.p == p && *cell.val.unwrap() == '#')
+            .filter(|cell| cell.coord.p == p && cell.val.unwrap() == &'#')
             .collect::<Vec<_>>()
             .len();
 
@@ -86,13 +86,13 @@ fn duplicate_column(grid: &mut Grid<char>) {
 }
 
 fn empty_rows(grid: &Grid<Value>) -> Vec<usize> {
-    let all = grid.all();
-
     (0..grid.m)
         .into_iter()
         .filter(|p| {
-            all.iter()
-                .filter(|cell| cell.coord.p == *p && cell.val.as_ref().unwrap().ch == '#')
+            grid.row(*p)
+                .unwrap()
+                .into_iter()
+                .filter(|cell| cell.val.unwrap().ch == '#')
                 .collect::<Vec<_>>()
                 .len()
                 == 0
@@ -101,13 +101,13 @@ fn empty_rows(grid: &Grid<Value>) -> Vec<usize> {
 }
 
 fn empty_cols(grid: &Grid<Value>) -> Vec<usize> {
-    let all = grid.all();
-
     (0..grid.n)
         .into_iter()
         .filter(|q| {
-            all.iter()
-                .filter(|cell| cell.coord.q == *q && cell.val.as_ref().unwrap().ch == '#')
+            grid.col(*q)
+                .unwrap()
+                .into_iter()
+                .filter(|cell| cell.val.unwrap().ch == '#')
                 .collect::<Vec<_>>()
                 .len()
                 == 0
@@ -195,8 +195,8 @@ mod tests {
     #[test]
     fn test_part1_input() {
         // Too slow to test
-        // let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        // assert_eq!("9648398", part1(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        assert_eq!("9648398", part1(&lines))
     }
 
     #[test]

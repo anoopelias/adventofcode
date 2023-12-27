@@ -1,7 +1,7 @@
 #![allow(unused)]
 use std::{collections::HashMap, io::SeekFrom};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use num::{complex::ComplexFloat, Float};
 
 #[derive(PartialEq, Debug, Clone)]
@@ -96,12 +96,12 @@ impl<T: Clone> Grid<T> {
 
     pub fn get(&self, coord: &Coord) -> Result<Option<&T>> {
         self.check_bounds(coord)?;
-        Ok(self.grid[coord.p][coord.p].as_ref())
+        Ok(self.grid[coord.p][coord.q].as_ref())
     }
 
     pub fn get_mut(&mut self, coord: &Coord) -> Result<Option<&mut T>> {
         self.check_bounds(coord)?;
-        Ok(self.grid[coord.p][coord.p].as_mut())
+        Ok(self.grid[coord.p][coord.q].as_mut())
     }
 
     pub fn set(&mut self, coord: &Coord, val: Option<T>) -> Result<()> {
@@ -114,17 +114,49 @@ impl<T: Clone> Grid<T> {
         let mut all = vec![];
         for p in 0..self.m {
             for q in 0..self.n {
-                let val = self.grid.get(p).unwrap().get(q).unwrap();
+                let coord = Coord { p, q };
                 all.push(GridCell {
-                    val: val.as_ref(),
-                    coord: Coord { p, q },
-                })
+                    val: self.get(&coord).unwrap(),
+                    coord: coord,
+                });
             }
         }
         all
     }
 
-    //pub fn row(&self, p: usize) -> Vec<GridCell<T>> {}
+    pub fn row(&self, p: usize) -> Result<Vec<GridCell<&T>>> {
+        if p >= self.m {
+            return Err(anyhow!("Index out of bounds"));
+        }
+
+        let mut row = vec![];
+        for q in 0..self.n {
+            let coord = Coord { p, q };
+            row.push(GridCell {
+                val: self.get(&coord).unwrap(),
+                coord: coord,
+            });
+        }
+
+        Ok(row)
+    }
+
+    pub fn col(&self, q: usize) -> Result<Vec<GridCell<&T>>> {
+        if q >= self.n {
+            return Err(anyhow!("Index out of bounds"));
+        }
+
+        let mut col = vec![];
+        for p in 0..self.m {
+            let coord = Coord { p, q };
+            col.push(GridCell {
+                val: self.get(&coord).unwrap(),
+                coord: coord,
+            });
+        }
+
+        Ok(col)
+    }
 
     pub fn fill(&mut self, val: T)
     where

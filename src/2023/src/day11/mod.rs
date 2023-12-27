@@ -83,6 +83,21 @@ fn duplicate_column(grid: &mut Grid<char>) {
     indices.iter().for_each(|q| grid.duplicate_column(*q));
 }
 
+fn empty_rows(grid: &Grid<Value>) -> Vec<usize> {
+    let all = grid.all();
+
+    (0..grid.m)
+        .into_iter()
+        .filter(|p| {
+            all.iter()
+                .filter(|cell| cell.coord.p == *p && cell.val.as_ref().unwrap().ch == '#')
+                .collect::<Vec<_>>()
+                .len()
+                == 0
+        })
+        .collect()
+}
+
 fn parse_lines_part2(grid: &mut Grid<Value>, lines: &Vec<String>) {
     for (p, line) in lines.iter().enumerate() {
         for (q, ch) in line.chars().enumerate() {
@@ -95,6 +110,11 @@ fn part2(lines: &Vec<String>) -> String {
     let (m, n) = (lines.len(), lines.get(0).unwrap().len());
     let mut grid: Grid<Value> = Grid::new(m, n);
     parse_lines_part2(&mut grid, lines);
+    empty_rows(&grid).iter().for_each(|&p| {
+        for q in 0..grid.n {
+            let cell = grid.get(&Coord { p, q }).unwrap().unwrap();
+        }
+    });
 
     "".to_string()
 }

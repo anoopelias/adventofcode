@@ -29,7 +29,7 @@ pub struct Coord {
 }
 
 impl Coord {
-    fn new(p: usize, q: usize) -> Coord {
+    pub fn new(p: usize, q: usize) -> Coord {
         Coord { p, q }
     }
 }
@@ -110,19 +110,21 @@ impl<T: Clone> Grid<T> {
         Ok(())
     }
 
-    pub fn all(&self) -> Vec<GridCell<T>> {
+    pub fn all(&self) -> Vec<GridCell<&T>> {
         let mut all = vec![];
         for p in 0..self.m {
             for q in 0..self.n {
-                let val = self.grid.get(p).unwrap().get(q).unwrap().clone();
+                let val = self.grid.get(p).unwrap().get(q).unwrap();
                 all.push(GridCell {
-                    val,
+                    val: val.as_ref(),
                     coord: Coord { p, q },
                 })
             }
         }
         all
     }
+
+    //pub fn row(&self, p: usize) -> Vec<GridCell<T>> {}
 
     pub fn fill(&mut self, val: T)
     where
@@ -243,6 +245,18 @@ impl<T: Clone> Grid<T> {
             row.insert(col_num, new_value);
         }
         self.n += 1;
+    }
+
+    pub fn delete_row(&mut self, row_num: usize) {
+        self.grid.remove(row_num);
+        self.m -= 1;
+    }
+
+    pub fn delete_col(&mut self, col_num: usize) {
+        for row in self.grid.iter_mut() {
+            row.remove(col_num);
+        }
+        self.n -= 1;
     }
 
     pub fn bfs(&self, from: &Coord) -> BfsResult {

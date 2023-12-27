@@ -28,8 +28,10 @@ fn part1(lines: &Vec<String>) -> String {
     duplicate_column(&mut grid);
     let all = grid.all();
 
-    let all_hash: Vec<&GridCell<char>> =
-        all.iter().filter(|cell| cell.val.unwrap() == '#').collect();
+    let all_hash: Vec<&GridCell<&char>> = all
+        .iter()
+        .filter(|cell| *cell.val.unwrap() == '#')
+        .collect();
 
     let mut sum = 0;
     for p in 0..all_hash.len() {
@@ -50,8 +52,8 @@ fn duplicate_row(grid: &mut Grid<char>) {
     for p in 0..grid.m {
         let hash_count = all
             .iter()
-            .filter(|cell| cell.coord.p == p && cell.val.unwrap() == '#')
-            .collect::<Vec<&GridCell<char>>>()
+            .filter(|cell| cell.coord.p == p && *cell.val.unwrap() == '#')
+            .collect::<Vec<_>>()
             .len();
 
         if hash_count == 0 {
@@ -70,8 +72,8 @@ fn duplicate_column(grid: &mut Grid<char>) {
     for q in 0..grid.n {
         let hash_count = all
             .iter()
-            .filter(|cell| cell.coord.q == q && cell.val.unwrap() == '#')
-            .collect::<Vec<&GridCell<char>>>()
+            .filter(|cell| cell.coord.q == q && *cell.val.unwrap() == '#')
+            .collect::<Vec<_>>()
             .len();
 
         if hash_count == 0 {
@@ -98,6 +100,21 @@ fn empty_rows(grid: &Grid<Value>) -> Vec<usize> {
         .collect()
 }
 
+fn empty_cols(grid: &Grid<Value>) -> Vec<usize> {
+    let all = grid.all();
+
+    (0..grid.n)
+        .into_iter()
+        .filter(|q| {
+            all.iter()
+                .filter(|cell| cell.coord.q == *q && cell.val.as_ref().unwrap().ch == '#')
+                .collect::<Vec<_>>()
+                .len()
+                == 0
+        })
+        .collect()
+}
+
 fn parse_lines_part2(grid: &mut Grid<Value>, lines: &Vec<String>) {
     for (p, line) in lines.iter().enumerate() {
         for (q, ch) in line.chars().enumerate() {
@@ -106,16 +123,27 @@ fn parse_lines_part2(grid: &mut Grid<Value>, lines: &Vec<String>) {
     }
 }
 
+const DUPLICATES: usize = 2;
 fn part2(lines: &Vec<String>) -> String {
     let (m, n) = (lines.len(), lines.get(0).unwrap().len());
     let mut grid: Grid<Value> = Grid::new(m, n);
     parse_lines_part2(&mut grid, lines);
-    empty_rows(&grid).iter().for_each(|&p| {
-        for q in 0..grid.n {
-            let cell = grid.get(&Coord { p, q }).unwrap().unwrap();
+    let empty_rows = empty_rows(&grid);
+    empty_rows.iter().for_each(|&p| {
+        if p > 0 {
+            for q in 0..grid.n {
+                let value = grid.get_mut(&Coord::new(p - 1, q)).unwrap().unwrap();
+                value.distance.bottom = DUPLICATES;
+            }
+        }
+        if p < grid.m - 1 {
+            for q in 0..grid.n {
+                let value = grid.get_mut(&Coord::new(p + 1, q)).unwrap().unwrap();
+                value.distance.bottom = DUPLICATES;
+            }
         }
     });
-
+    empty_rows.iter().rev().for_each(|&p| grid.delete_row(p));
     "".to_string()
 }
 

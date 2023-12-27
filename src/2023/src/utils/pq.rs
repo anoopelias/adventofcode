@@ -1,20 +1,20 @@
 use std::cmp::Ordering;
 
-pub enum PqStrategy {
+pub enum PqType {
     Min,
     Max,
 }
 
 pub struct Pq<T: Ord> {
     values: Vec<T>,
-    strategy: PqStrategy,
+    ty: PqType,
 }
 
 impl<T: Ord> Pq<T> {
-    pub fn new(strategy: PqStrategy) -> Pq<T> {
+    pub fn new(strategy: PqType) -> Pq<T> {
         Pq {
             values: Vec::new(),
-            strategy,
+            ty: strategy,
         }
     }
 
@@ -57,9 +57,9 @@ impl<T: Ord> Pq<T> {
     }
 
     fn less(&self, a: &T, b: &T) -> bool {
-        match self.strategy {
-            PqStrategy::Min => a.cmp(b) == Ordering::Less,
-            PqStrategy::Max => b.cmp(a) == Ordering::Less,
+        match self.ty {
+            PqType::Min => a.cmp(b) == Ordering::Less,
+            PqType::Max => b.cmp(a) == Ordering::Less,
         }
     }
 
@@ -89,18 +89,18 @@ impl<T: Ord> Pq<T> {
 #[cfg(test)]
 mod tests {
     use super::Pq;
-    use super::PqStrategy;
+    use super::PqType;
 
     #[test]
     fn insert_remove() {
-        let mut pq = Pq::new(PqStrategy::Min);
+        let mut pq = Pq::new(PqType::Min);
         pq.insert(10);
         assert_eq!(Some(10), pq.remove());
     }
 
     #[test]
     fn insert_remove_min_in_order() {
-        let mut pq = Pq::new(PqStrategy::Min);
+        let mut pq = Pq::new(PqType::Min);
         pq.insert(12);
         pq.insert(10);
         assert_eq!(Some(10), pq.remove());
@@ -108,7 +108,7 @@ mod tests {
 
     #[test]
     fn insert_remove_min_out_of_order() {
-        let mut pq = Pq::new(PqStrategy::Min);
+        let mut pq = Pq::new(PqType::Min);
         pq.insert(10);
         pq.insert(12);
         assert_eq!(Some(10), pq.remove());
@@ -116,7 +116,7 @@ mod tests {
 
     #[test]
     fn insert_remove_max_in_order() {
-        let mut pq = Pq::new(PqStrategy::Max);
+        let mut pq = Pq::new(PqType::Max);
         pq.insert(10);
         pq.insert(12);
         assert_eq!(Some(12), pq.remove());
@@ -124,7 +124,7 @@ mod tests {
 
     #[test]
     fn insert_remove_max_out_of_order() {
-        let mut pq = Pq::new(PqStrategy::Max);
+        let mut pq = Pq::new(PqType::Max);
         pq.insert(12);
         pq.insert(10);
         assert_eq!(Some(12), pq.remove());
@@ -132,7 +132,7 @@ mod tests {
 
     #[test]
     fn insert_remove_min_many() {
-        let mut pq = Pq::new(PqStrategy::Max);
+        let mut pq = Pq::new(PqType::Max);
         pq.insert(12);
         pq.insert(10);
         pq.insert(9);

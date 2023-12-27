@@ -6,18 +6,18 @@ use num::{complex::ComplexFloat, Float};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct GridCell<T> {
-    pub val: Option<T>,
+    pub val: T,
     pub coord: Coord,
 }
 
 impl<T> GridCell<T> {
-    fn new(coord: Coord, val: Option<T>) -> GridCell<T> {
+    fn new(coord: Coord, val: T) -> GridCell<T> {
         GridCell { val, coord }
     }
 }
 
 pub struct Grid<T: Clone = ()> {
-    grid: Vec<Vec<Option<T>>>,
+    grid: Vec<Vec<T>>,
     pub m: usize,
     pub n: usize,
 }
@@ -84,27 +84,37 @@ impl BfsResult {
     }
 }
 
-impl<T: Clone> Grid<T> {
-    pub fn new(m: usize, n: usize) -> Grid<T> {
+impl Grid<()> {
+    pub fn new(m: usize, n: usize) -> Self {
         let grid = (0..m)
             .into_iter()
-            .map(|_| (0..n).into_iter().map(|_| None).collect())
+            .map(|_| (0..n).into_iter().map(|_| ()).collect())
+            .collect();
+        Grid { grid, m, n }
+    }
+}
+
+impl<T: Clone> Grid<T> {
+    pub fn new_fill(m: usize, n: usize, fill: &T) -> Grid<T> {
+        let grid = (0..m)
+            .into_iter()
+            .map(|_| (0..n).into_iter().map(|_| fill.clone()).collect())
             .collect();
 
         Grid { grid, m, n }
     }
 
-    pub fn get(&self, coord: &Coord) -> Result<Option<&T>> {
+    pub fn get(&self, coord: &Coord) -> Result<&T> {
         self.check_bounds(coord)?;
-        Ok(self.grid[coord.p][coord.q].as_ref())
+        Ok(&self.grid[coord.p][coord.q])
     }
 
-    pub fn get_mut(&mut self, coord: &Coord) -> Result<Option<&mut T>> {
+    pub fn get_mut(&mut self, coord: &Coord) -> Result<&mut T> {
         self.check_bounds(coord)?;
-        Ok(self.grid[coord.p][coord.q].as_mut())
+        Ok(&mut self.grid[coord.p][coord.q])
     }
 
-    pub fn set(&mut self, coord: &Coord, val: Option<T>) -> Result<()> {
+    pub fn set(&mut self, coord: &Coord, val: T) -> Result<()> {
         self.check_bounds(coord)?;
         self.grid[coord.p][coord.q] = val;
         Ok(())
@@ -163,7 +173,7 @@ impl<T: Clone> Grid<T> {
                     .unwrap()
                     .iter()
                     .enumerate()
-                    .map(|(q, val)| GridCell::new(Coord::new(p, q), val.as_ref()))
+                    .map(|(q, val)| GridCell::new(Coord::new(p, q), val))
                     .collect::<Vec<GridCell<&T>>>()
             })
             .collect()
@@ -182,37 +192,31 @@ impl<T: Clone> Grid<T> {
     {
         for p in (0..self.m) {
             for q in (0..self.n) {
-                self.grid[p][q] = Some(val.clone());
+                self.grid[p][q] = val.clone();
             }
         }
     }
 
-    pub fn find(&self, v: T) -> Coord
+    pub fn find(&self, v: T) -> Option<Coord>
     where
         T: Sized + PartialEq,
     {
         for (p, row) in self.grid.iter().enumerate() {
             for (q, cell) in row.iter().enumerate() {
-                if let Some(value) = cell {
-                    if *value == v {
-                        return Coord { p, q };
-                    }
+                if *cell == v {
+                    return Some(Coord { p, q });
                 }
             }
         }
-        // TODO: Throw error
-        Coord {
-            p: usize::MAX,
-            q: usize::MAX,
-        }
+        None
     }
 
-    pub fn top(&self, coord: &Coord) -> Result<Option<&T>> {
+    pub fn top(&self, coord: &Coord) -> Result<&T> {
         self.check_bounds(coord)?;
         if coord.p == 0 {
             return Err(anyhow::anyhow!("No top element"));
         }
-        Ok(self.grid[coord.p - 1][coord.q].as_ref())
+        Ok(&self.grid[coord.p - 1][coord.q])
     }
 
     pub fn top_cell(&self, coord: &Coord) -> Result<GridCell<&T>> {
@@ -220,12 +224,12 @@ impl<T: Clone> Grid<T> {
         Ok(GridCell::new(Coord::new(coord.p - 1, coord.q), top))
     }
 
-    pub fn bottom(&self, coord: &Coord) -> Result<Option<&T>> {
+    pub fn bottom(&self, coord: &Coord) -> Result<&T> {
         self.check_bounds(coord)?;
         if coord.p == self.m - 1 {
             return Err(anyhow::anyhow!("No bottom element"));
         }
-        Ok(self.grid[coord.p + 1][coord.q].as_ref())
+        Ok(&self.grid[coord.p + 1][coord.q])
     }
 
     pub fn bottom_cell(&self, coord: &Coord) -> Result<GridCell<&T>> {
@@ -233,12 +237,12 @@ impl<T: Clone> Grid<T> {
         Ok(GridCell::new(Coord::new(coord.p + 1, coord.q), bottom))
     }
 
-    pub fn left(&self, coord: &Coord) -> Result<Option<&T>> {
+    pub fn left(&self, coord: &Coord) -> Result<&T> {
         self.check_bounds(coord)?;
         if coord.q == 0 {
             return Err(anyhow::anyhow!("No left element"));
         }
-        Ok(self.grid[coord.p][coord.q - 1].as_ref())
+        Ok(&self.grid[coord.p][coord.q - 1])
     }
 
     pub fn left_cell(&self, coord: &Coord) -> Result<GridCell<&T>> {
@@ -246,12 +250,12 @@ impl<T: Clone> Grid<T> {
         Ok(GridCell::new(Coord::new(coord.p, coord.q - 1), left))
     }
 
-    pub fn right(&self, coord: &Coord) -> Result<Option<&T>> {
+    pub fn right(&self, coord: &Coord) -> Result<&T> {
         self.check_bounds(coord)?;
         if coord.q == self.n - 1 {
             return Err(anyhow::anyhow!("No right element"));
         }
-        Ok(self.grid[coord.p][coord.q + 1].as_ref())
+        Ok(&self.grid[coord.p][coord.q + 1])
     }
 
     pub fn right_cell(&self, coord: &Coord) -> Result<GridCell<&T>> {

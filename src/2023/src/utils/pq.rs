@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 
 pub enum PqType {
     Min,
+    #[allow(unused)]
     Max,
 }
 
@@ -18,12 +19,12 @@ impl<T: Ord> Pq<T> {
         }
     }
 
-    pub fn insert(&mut self, value: T) {
+    pub fn push(&mut self, value: T) {
         self.values.push(value);
         self.swim(self.values.len() - 1);
     }
 
-    pub fn remove(&mut self) -> Option<T> {
+    pub fn pop(&mut self) -> Option<T> {
         if self.values.is_empty() {
             None
         } else {
@@ -98,53 +99,53 @@ mod tests {
     #[test]
     fn insert_remove() {
         let mut pq = Pq::new(PqType::Min);
-        pq.insert(10);
-        assert_eq!(Some(10), pq.remove());
+        pq.push(10);
+        assert_eq!(Some(10), pq.pop());
     }
 
     #[test]
     fn insert_remove_min_in_order() {
         let mut pq = Pq::new(PqType::Min);
-        pq.insert(12);
-        pq.insert(10);
-        assert_eq!(Some(10), pq.remove());
+        pq.push(12);
+        pq.push(10);
+        assert_eq!(Some(10), pq.pop());
     }
 
     #[test]
     fn insert_remove_min_out_of_order() {
         let mut pq = Pq::new(PqType::Min);
-        pq.insert(10);
-        pq.insert(12);
-        assert_eq!(Some(10), pq.remove());
+        pq.push(10);
+        pq.push(12);
+        assert_eq!(Some(10), pq.pop());
     }
 
     #[test]
     fn insert_remove_max_in_order() {
         let mut pq = Pq::new(PqType::Max);
-        pq.insert(10);
-        pq.insert(12);
-        assert_eq!(Some(12), pq.remove());
+        pq.push(10);
+        pq.push(12);
+        assert_eq!(Some(12), pq.pop());
     }
 
     #[test]
     fn insert_remove_max_out_of_order() {
         let mut pq = Pq::new(PqType::Max);
-        pq.insert(12);
-        pq.insert(10);
-        assert_eq!(Some(12), pq.remove());
+        pq.push(12);
+        pq.push(10);
+        assert_eq!(Some(12), pq.pop());
     }
 
     #[test]
     fn insert_remove_min_many() {
         let mut pq = Pq::new(PqType::Max);
-        pq.insert(12);
-        pq.insert(10);
-        pq.insert(9);
-        pq.insert(11);
-        assert_eq!(Some(12), pq.remove());
-        assert_eq!(Some(11), pq.remove());
-        assert_eq!(Some(10), pq.remove());
-        assert_eq!(Some(9), pq.remove());
-        assert_eq!(None, pq.remove());
+        pq.push(12);
+        pq.push(10);
+        pq.push(9);
+        pq.push(11);
+        assert_eq!(Some(12), pq.pop());
+        assert_eq!(Some(11), pq.pop());
+        assert_eq!(Some(10), pq.pop());
+        assert_eq!(Some(9), pq.pop());
+        assert_eq!(None, pq.pop());
     }
 }

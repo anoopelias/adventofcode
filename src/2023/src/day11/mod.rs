@@ -1,6 +1,6 @@
 const DAY: &str = "day11";
 
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Instant};
 
 use crate::utils::{
     grid::{Coord, Direction, Grid},
@@ -11,7 +11,17 @@ use crate::utils::{
 #[allow(unused)]
 pub(crate) fn solve() -> String {
     let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-    return format!("result1: {}\nresult2: {}", part1(&lines), part2(&lines));
+    let time = Instant::now();
+    let part1 = part1(&lines);
+    let elapsed1 = time.elapsed();
+
+    let time = Instant::now();
+    let part2 = part2(&lines);
+    let elapsed2 = time.elapsed();
+    return format!(
+        "result1: {} in {:?} \nresult2: {} in {:?}",
+        part1, elapsed1, part2, elapsed2,
+    );
 }
 
 struct PqItem<T> {
@@ -169,10 +179,11 @@ fn sum_of_distances(grid: &Grid<Value>) -> usize {
         let mut dist_map: HashMap<Coord, usize> = HashMap::new();
 
         dist_map.insert(start.cell.coord.clone(), 0);
-        pq.insert(start);
+        pq.push(start);
 
+        // Djikstra's shortest path algo
         while !pq.is_empty() {
-            let curr = pq.remove().unwrap();
+            let curr = pq.pop().unwrap();
             let neighbors = grid.neighbors(&curr.cell.coord);
             let curr_dist = *dist_map.get(&curr.cell.coord).unwrap();
 
@@ -181,7 +192,7 @@ fn sum_of_distances(grid: &Grid<Value>) -> usize {
                 let distance = curr_dist + dist_in(neighbor.dir, &curr.cell.val.distance);
                 if !dist_map.contains_key(ncoord) || *dist_map.get(ncoord).unwrap() > distance {
                     dist_map.insert(neighbor.cell.coord, distance);
-                    pq.insert(PqItem::new(neighbor.cell.clone(), distance));
+                    pq.push(PqItem::new(neighbor.cell.clone(), distance));
                 }
             }
         }

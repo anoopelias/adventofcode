@@ -1,7 +1,9 @@
 const DAY: &str = "day11";
 
+use std::collections::HashMap;
+
 use crate::utils::{
-    grid::{Coord, Grid, GridCell},
+    grid::{Coord, Direction, Grid},
     pq::{Pq, PqType},
     util,
 };
@@ -32,7 +34,7 @@ fn part1(lines: &Vec<String>) -> String {
     let mut sum = 0;
     for p in 0..all_hash.len() {
         let bfs_result = grid.bfs(&all_hash[p].coord);
-        for q in p..all_hash.len() {
+        for q in p + 1..all_hash.len() {
             sum += bfs_result.dist_map.get(&all_hash[q].coord).unwrap();
         }
     }
@@ -68,14 +70,14 @@ fn duplicate_column(grid: &mut Grid<char>) {
         .for_each(|q| grid.duplicate_column(*q).unwrap());
 }
 
-const DUPLICATES: usize = 2;
+const DUPLICATES: usize = 1000000;
 struct PqItem<T> {
-    cell: GridCell<T>,
+    cell: T,
     distance: usize,
 }
 
 impl<T> PqItem<T> {
-    fn new(cell: GridCell<T>, distance: usize) -> PqItem<T> {
+    fn new(cell: T, distance: usize) -> PqItem<T> {
         PqItem { cell, distance }
     }
 }
@@ -171,45 +173,45 @@ fn parse_lines_part2(grid: &mut Grid<Value>, lines: &Vec<String>) {
 fn set_row_distance(grid: &mut Grid<Value>) {
     let empty_rows = empty_rows(&grid);
     empty_rows.iter().for_each(|&p| {
+        let row = grid.delete_row(p).unwrap();
         if p > 0 {
             grid.row_mut(p - 1)
                 .unwrap()
                 .iter_mut()
-                .for_each(|cell| cell.val.distance.bottom = DUPLICATES);
+                .enumerate()
+                .for_each(|(q, cell)| {
+                    cell.val.distance.bottom = DUPLICATES + row.get(q).unwrap().distance.bottom
+                });
         }
-        if p < grid.m - 1 {
-            grid.row_mut(p + 1)
+        if p < grid.m {
+            grid.row_mut(p)
                 .unwrap()
                 .iter_mut()
-                .for_each(|cell| cell.val.distance.top = DUPLICATES);
+                .for_each(|cell| cell.val.distance.top += DUPLICATES);
         }
     });
-    empty_rows
-        .iter()
-        .rev()
-        .for_each(|&p| grid.delete_row(p).unwrap());
 }
 
 fn set_col_distance(grid: &mut Grid<Value>) {
     let empty_cols = empty_cols(&grid);
     empty_cols.iter().for_each(|&q| {
+        let col = grid.delete_col(q).unwrap();
         if q > 0 {
             grid.col_mut(q - 1)
                 .unwrap()
                 .iter_mut()
-                .for_each(|cell| cell.val.distance.right = DUPLICATES)
+                .enumerate()
+                .for_each(|(p, cell)| {
+                    cell.val.distance.right = DUPLICATES + col.get(p).unwrap().distance.right
+                })
         }
-        if q < grid.n - 1 {
-            grid.col_mut(q + 1)
+        if q < grid.n {
+            grid.col_mut(q)
                 .unwrap()
                 .iter_mut()
-                .for_each(|cell| cell.val.distance.left = DUPLICATES)
+                .for_each(|cell| cell.val.distance.left += DUPLICATES)
         }
     });
-    empty_cols
-        .iter()
-        .rev()
-        .for_each(|&q| grid.delete_col(q).unwrap());
 }
 
 fn part2(lines: &Vec<String>) -> String {
@@ -219,15 +221,49 @@ fn part2(lines: &Vec<String>) -> String {
     set_row_distance(&mut grid);
     set_col_distance(&mut grid);
 
-    let hashes = grid.find_all(&Value::new('#'));
+    let all_hash = grid.find_all(&Value::new('#'));
+    let mut sum = 0;
 
-    for hash in hashes {
+    for p in 0..all_hash.len() {
+        let hash = all_hash.get(p).unwrap();
+        let start = PqItem::new(hash.clone(), 0);
         let mut pq = Pq::new(PqType::Min);
-        let start = PqItem::new(hash, 0);
+        let mut dist_map: HashMap<Coord, usize> = HashMap::new();
+
+        dist_map.insert(start.cell.coord.clone(), 0);
         pq.insert(start);
+
+        while !pq.is_empty() {
+            let curr = pq.remove().unwrap();
+            let neighbors = grid.neighbors(&curr.cell.coord);
+            let curr_dist = *dist_map.get(&curr.cell.coord).unwrap();
+
+            for neighbor in neighbors {
+                let ncoord = &neighbor.cell.coord;
+                let distance = curr_dist + dist_in(neighbor.dir, &curr.cell.val.distance);
+                if !dist_map.contains_key(ncoord) || *dist_map.get(ncoord).unwrap() > distance {
+                    dist_map.insert(neighbor.cell.coord, distance);
+                    pq.insert(PqItem::new(neighbor.cell.clone(), distance));
+                }
+            }
+        }
+
+        for q in p + 1..all_hash.len() {
+            let other = all_hash.get(q).unwrap();
+            sum += dist_map.get(&other.coord).unwrap();
+        }
     }
 
-    "".to_string()
+    sum.to_string()
+}
+
+fn dist_in(dir: Direction, dist: &Distance) -> usize {
+    match dir {
+        Direction::Top => dist.top,
+        Direction::Bottom => dist.bottom,
+        Direction::Left => dist.left,
+        Direction::Right => dist.right,
+    }
 }
 
 #[cfg(test)]
@@ -250,13 +286,14 @@ mod tests {
 
     #[test]
     fn test_part2_sample() {
-        // let lines = util::lines_in(&format!("./src/{}/input", DAY));
-        // assert_eq!("4", part2(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input", DAY));
+        assert_eq!("82000210", part2(&lines))
     }
 
     #[test]
     fn test_part2_input() {
+        // Too slow to test
         // let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        // assert_eq!("527", part2(&lines))
+        // assert_eq!("618800410814", part2(&lines))
     }
 }

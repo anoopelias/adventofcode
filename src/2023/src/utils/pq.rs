@@ -33,6 +33,10 @@ impl<T: Ord> Pq<T> {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.values.len() == 0
+    }
+
     fn swim(&mut self, n: usize) {
         if n == 0 {
             return;

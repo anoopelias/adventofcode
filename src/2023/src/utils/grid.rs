@@ -22,7 +22,7 @@ pub struct Grid<T: Clone + PartialEq = ()> {
     pub n: usize,
 }
 
-#[derive(Clone, PartialEq, Debug, Hash, Eq)]
+#[derive(Clone, PartialEq, Debug, Hash, Eq, Copy)]
 pub struct Coord {
     pub p: usize,
     pub q: usize,
@@ -323,20 +323,20 @@ impl<T: Clone + PartialEq> Grid<T> {
         Ok(())
     }
 
-    pub fn delete_row(&mut self, row_num: usize) -> Result<()> {
-        self.check_row_bounds(row_num)?;
-        self.grid.remove(row_num);
+    pub fn delete_row(&mut self, p: usize) -> Result<Vec<T>> {
+        self.check_row_bounds(p)?;
         self.m -= 1;
-        Ok(())
+        Ok(self.grid.remove(p))
     }
 
-    pub fn delete_col(&mut self, col_num: usize) -> Result<()> {
-        self.check_col_bounds(col_num)?;
+    pub fn delete_col(&mut self, q: usize) -> Result<Vec<T>> {
+        self.check_col_bounds(q)?;
+        let mut col = vec![];
         for row in self.grid.iter_mut() {
-            row.remove(col_num);
+            col.push(row.remove(q));
         }
         self.n -= 1;
-        Ok(())
+        Ok(col)
     }
 
     pub fn bfs(&self, from: &Coord) -> BfsResult {

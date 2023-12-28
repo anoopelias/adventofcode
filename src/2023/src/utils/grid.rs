@@ -227,16 +227,12 @@ impl<T: Clone + PartialEq> Grid<T> {
         None
     }
 
-    pub fn top(&self, coord: &Coord) -> Result<&T> {
+    pub fn top(&self, coord: &Coord) -> Result<GridCell<&T>> {
         self.check_bounds(coord)?;
         if coord.p == 0 {
             return Err(anyhow::anyhow!("No top element"));
         }
-        Ok(&self.grid[coord.p - 1][coord.q])
-    }
-
-    pub fn top_cell(&self, coord: &Coord) -> Result<GridCell<&T>> {
-        let top = self.top(coord)?;
+        let top = &self.grid[coord.p - 1][coord.q];
         Ok(GridCell::new(Coord::new(coord.p - 1, coord.q), top))
     }
 
@@ -306,7 +302,7 @@ impl<T: Clone + PartialEq> Grid<T> {
                 .map(|cell| Neighbor::new(cell, Direction::Left)),
             self.right_cell(coord)
                 .map(|cell| Neighbor::new(cell, Direction::Right)),
-            self.top_cell(coord)
+            self.top(coord)
                 .map(|cell| Neighbor::new(cell, Direction::Top)),
             self.bottom_cell(coord)
                 .map(|cell| Neighbor::new(cell, Direction::Bottom)),

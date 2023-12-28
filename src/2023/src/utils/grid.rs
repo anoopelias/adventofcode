@@ -190,13 +190,7 @@ impl<T: Clone + PartialEq> Grid<T> {
         (0..self.m)
             .into_iter()
             .map(|p| {
-                self.grid
-                    .get(p)
-                    .unwrap()
-                    .iter()
-                    .enumerate()
-                    .map(|(q, val)| GridCell::new(Coord::new(p, q), val))
-                    .collect::<Vec<GridCell<&T>>>()
+                self.row(p).unwrap()
             })
             .collect()
     }

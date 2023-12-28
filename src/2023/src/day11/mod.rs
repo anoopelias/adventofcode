@@ -14,63 +14,6 @@ pub(crate) fn solve() -> String {
     return format!("result1: {}\nresult2: {}", part1(&lines), part2(&lines));
 }
 
-fn parse_lines(grid: &mut Grid<char>, lines: &Vec<String>) {
-    for (p, line) in lines.iter().enumerate() {
-        for (q, ch) in line.chars().enumerate() {
-            grid.set(&Coord { p, q }, ch).unwrap();
-        }
-    }
-}
-
-fn part1(lines: &Vec<String>) -> String {
-    let (m, n) = (lines.len(), lines.get(0).unwrap().len());
-    let mut grid: Grid<char> = Grid::new_fill(m, n, &'.');
-    parse_lines(&mut grid, lines);
-
-    duplicate_row(&mut grid);
-    duplicate_column(&mut grid);
-    let all_hash = grid.find_all(&'#');
-
-    let mut sum = 0;
-    for p in 0..all_hash.len() {
-        let bfs_result = grid.bfs(&all_hash[p].coord);
-        for q in p + 1..all_hash.len() {
-            sum += bfs_result.dist_map.get(&all_hash[q].coord).unwrap();
-        }
-    }
-
-    sum.to_string()
-}
-
-fn duplicate_row(grid: &mut Grid<char>) {
-    let indices = grid
-        .rows()
-        .iter()
-        .enumerate()
-        .filter(|(_, row)| row.iter().all(|cell| cell.val == &'.'))
-        .map(|(p, _)| p)
-        .rev()
-        .collect::<Vec<usize>>();
-    indices
-        .into_iter()
-        .for_each(|q| grid.duplicate_row(q).unwrap());
-}
-
-fn duplicate_column(grid: &mut Grid<char>) {
-    let indices = grid
-        .cols()
-        .iter()
-        .enumerate()
-        .filter(|(_, col)| col.iter().all(|cell| cell.val == &'.'))
-        .map(|(q, _)| q)
-        .rev()
-        .collect::<Vec<usize>>();
-    indices
-        .iter()
-        .for_each(|q| grid.duplicate_column(*q).unwrap());
-}
-
-const DUPLICATES: usize = 1000000;
 struct PqItem<T> {
     cell: T,
     distance: usize,
@@ -170,7 +113,7 @@ fn parse_lines_part2(grid: &mut Grid<Value>, lines: &Vec<String>) {
     }
 }
 
-fn set_row_distance(grid: &mut Grid<Value>) {
+fn set_row_distance(grid: &mut Grid<Value>, no_of_duplicates: usize) {
     let empty_rows = empty_rows(&grid);
     empty_rows.iter().for_each(|&p| {
         let row = grid.delete_row(p).unwrap();
@@ -180,19 +123,20 @@ fn set_row_distance(grid: &mut Grid<Value>) {
                 .iter_mut()
                 .enumerate()
                 .for_each(|(q, cell)| {
-                    cell.val.distance.bottom = DUPLICATES + row.get(q).unwrap().distance.bottom
+                    cell.val.distance.bottom =
+                        no_of_duplicates + row.get(q).unwrap().distance.bottom
                 });
         }
         if p < grid.m {
             grid.row_mut(p)
                 .unwrap()
                 .iter_mut()
-                .for_each(|cell| cell.val.distance.top += DUPLICATES);
+                .for_each(|cell| cell.val.distance.top += no_of_duplicates);
         }
     });
 }
 
-fn set_col_distance(grid: &mut Grid<Value>) {
+fn set_col_distance(grid: &mut Grid<Value>, no_of_duplicates: usize) {
     let empty_cols = empty_cols(&grid);
     empty_cols.iter().for_each(|&q| {
         let col = grid.delete_col(q).unwrap();
@@ -202,25 +146,19 @@ fn set_col_distance(grid: &mut Grid<Value>) {
                 .iter_mut()
                 .enumerate()
                 .for_each(|(p, cell)| {
-                    cell.val.distance.right = DUPLICATES + col.get(p).unwrap().distance.right
+                    cell.val.distance.right = no_of_duplicates + col.get(p).unwrap().distance.right
                 })
         }
         if q < grid.n {
             grid.col_mut(q)
                 .unwrap()
                 .iter_mut()
-                .for_each(|cell| cell.val.distance.left += DUPLICATES)
+                .for_each(|cell| cell.val.distance.left += no_of_duplicates)
         }
     });
 }
 
-fn part2(lines: &Vec<String>) -> String {
-    let (m, n) = (lines.len(), lines.get(0).unwrap().len());
-    let mut grid: Grid<Value> = Grid::new_fill(m, n, &Value::new('.'));
-    parse_lines_part2(&mut grid, lines);
-    set_row_distance(&mut grid);
-    set_col_distance(&mut grid);
-
+fn sum_of_distances(grid: &Grid<Value>) -> usize {
     let all_hash = grid.find_all(&Value::new('#'));
     let mut sum = 0;
 
@@ -253,8 +191,27 @@ fn part2(lines: &Vec<String>) -> String {
             sum += dist_map.get(&other.coord).unwrap();
         }
     }
+    sum
+}
 
-    sum.to_string()
+fn part1(lines: &Vec<String>) -> String {
+    let (m, n) = (lines.len(), lines.get(0).unwrap().len());
+    let mut grid: Grid<Value> = Grid::new_fill(m, n, &Value::new('.'));
+    parse_lines_part2(&mut grid, lines);
+    set_row_distance(&mut grid, 2);
+    set_col_distance(&mut grid, 2);
+
+    sum_of_distances(&grid).to_string()
+}
+
+fn part2(lines: &Vec<String>) -> String {
+    let (m, n) = (lines.len(), lines.get(0).unwrap().len());
+    let mut grid: Grid<Value> = Grid::new_fill(m, n, &Value::new('.'));
+    parse_lines_part2(&mut grid, lines);
+    set_row_distance(&mut grid, 1000000);
+    set_col_distance(&mut grid, 1000000);
+
+    sum_of_distances(&grid).to_string()
 }
 
 fn dist_in(dir: Direction, dist: &Distance) -> usize {

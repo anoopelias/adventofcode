@@ -189,9 +189,7 @@ impl<T: Clone + PartialEq> Grid<T> {
     pub fn rows(&self) -> Vec<Vec<GridCell<&T>>> {
         (0..self.m)
             .into_iter()
-            .map(|p| {
-                self.row(p).unwrap()
-            })
+            .map(|p| self.row(p).unwrap())
             .collect()
     }
 
@@ -245,16 +243,12 @@ impl<T: Clone + PartialEq> Grid<T> {
         Ok(GridCell::new(Coord::new(coord.p + 1, coord.q), bottom))
     }
 
-    pub fn left(&self, coord: &Coord) -> Result<&T> {
+    pub fn left(&self, coord: &Coord) -> Result<GridCell<&T>> {
         self.check_bounds(coord)?;
         if coord.q == 0 {
             return Err(anyhow::anyhow!("No left element"));
         }
-        Ok(&self.grid[coord.p][coord.q - 1])
-    }
-
-    pub fn left_cell(&self, coord: &Coord) -> Result<GridCell<&T>> {
-        let left = self.left(coord)?;
+        let left = &self.grid[coord.p][coord.q - 1];
         Ok(GridCell::new(Coord::new(coord.p, coord.q - 1), left))
     }
 
@@ -290,7 +284,7 @@ impl<T: Clone + PartialEq> Grid<T> {
 
     pub fn neighbors(&self, coord: &Coord) -> Vec<Neighbor<&T>> {
         vec![
-            self.left_cell(coord)
+            self.left(coord)
                 .map(|cell| Neighbor::new(cell, Direction::Left)),
             self.right(coord)
                 .map(|cell| Neighbor::new(cell, Direction::Right)),

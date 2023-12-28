@@ -258,16 +258,12 @@ impl<T: Clone + PartialEq> Grid<T> {
         Ok(GridCell::new(Coord::new(coord.p, coord.q - 1), left))
     }
 
-    pub fn right(&self, coord: &Coord) -> Result<&T> {
+    pub fn right(&self, coord: &Coord) -> Result<GridCell<&T>> {
         self.check_bounds(coord)?;
         if coord.q == self.n - 1 {
             return Err(anyhow::anyhow!("No right element"));
         }
-        Ok(&self.grid[coord.p][coord.q + 1])
-    }
-
-    pub fn right_cell(&self, coord: &Coord) -> Result<GridCell<&T>> {
-        let right = self.right(coord)?;
+        let right = &self.grid[coord.p][coord.q + 1];
         Ok(GridCell::new(Coord::new(coord.p, coord.q + 1), right))
     }
 
@@ -296,7 +292,7 @@ impl<T: Clone + PartialEq> Grid<T> {
         vec![
             self.left_cell(coord)
                 .map(|cell| Neighbor::new(cell, Direction::Left)),
-            self.right_cell(coord)
+            self.right(coord)
                 .map(|cell| Neighbor::new(cell, Direction::Right)),
             self.top(coord)
                 .map(|cell| Neighbor::new(cell, Direction::Top)),

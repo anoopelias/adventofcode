@@ -35,7 +35,17 @@ fn part1(lines: &Vec<String>) -> String {
 }
 
 fn part2(lines: &Vec<String>) -> String {
-    "".to_string()
+    lines
+        .iter()
+        .map(|line| {
+            let (springs, groups) = line.split_in_two(" ");
+            count(
+                five_times(springs, "?"),
+                five_times(groups, ",").parse_usize(","),
+            )
+        })
+        .sum::<usize>()
+        .to_string()
 }
 
 struct Transition {
@@ -125,6 +135,10 @@ fn build_state_machine(groups: Vec<usize>, yes: usize, no: usize) -> Vec<Transit
     transitions
 }
 
+fn five_times(st: &str, sep: &str) -> String {
+    vec![st, st, st, st, st].join(sep)
+}
+
 #[cfg(test)]
 mod tests {
     use super::{count, part1, part2, DAY};
@@ -151,13 +165,13 @@ mod tests {
 
     #[test]
     fn test_part2_sample() {
-        // let lines = util::lines_in(&format!("./src/{}/input", DAY));
-        // assert_eq!("82000210", part2(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input", DAY));
+        assert_eq!("525152", part2(&lines))
     }
 
     #[test]
     fn test_part2_input() {
-        // let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        // assert_eq!("618800410814", part2(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        assert_eq!("618800410814", part2(&lines))
     }
 }

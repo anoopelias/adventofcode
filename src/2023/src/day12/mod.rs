@@ -24,18 +24,14 @@ pub(crate) fn solve() -> String {
 }
 
 fn part1(lines: &Vec<String>) -> String {
-    let mut conditions: Vec<Condition> = vec![];
-    for line in lines {
-        let (springs, groups) = line.split_in_two(" ");
-        conditions.push(Condition::new(springs.to_string(), groups.parse_usize(",")))
-    }
-
-    let sum: usize = conditions
-        .iter_mut()
-        .map(|condition| condition.count())
-        .sum();
-
-    sum.to_string()
+    lines
+        .iter()
+        .map(|line| {
+            let (springs, groups) = line.split_in_two(" ");
+            count(springs.to_string(), groups.parse_usize(","))
+        })
+        .sum::<usize>()
+        .to_string()
 }
 
 fn part2(lines: &Vec<String>) -> String {
@@ -54,88 +50,84 @@ impl Transition {
     }
 }
 
-struct Condition {
-    springs: String,
-    groups: Vec<usize>,
+fn count(springs: String, groups: Vec<usize>) -> usize {
+    // 1, 1, 3
+    // 0 1 2 3 4 5 6 7
+    //   # . # . # # #
+
+    // State machine:
+    // st dot ha end
+    // 0  0   1  9
+    // 1  2   9  9
+    // 2  2   3  9
+    // 3  4   9  9
+    // 4  4   5  9
+    // 5  9   6  9
+    // 6  9   7  9
+    // 7  7   9  8
+    // 8
+    // 9
+
+    // Execution
+    // ? 0,    1
+    // ? 0, 1, 2
+
+    let yes = groups.iter().sum::<usize>() + groups.len();
+    let no = yes + 1;
+    let machine = build_state_machine(groups, yes, no);
+
+    let mut states = vec![0];
+
+    for ch in springs.chars() {
+        states = states
+            .iter()
+            .flat_map(|&state| match ch {
+                '.' => vec![machine[state].dot],
+                '#' => vec![machine[state].hash],
+                _ => vec![machine[state].dot, machine[state].hash],
+            })
+            .into_iter()
+            .filter(|&state| state != no)
+            .collect();
+    }
+
+    states
+        .iter()
+        .map(|&state| machine[state].end)
+        .filter(|&state| state == yes)
+        .collect::<Vec<usize>>()
+        .len()
 }
 
-impl Condition {
-    fn new(springs: String, groups: Vec<usize>) -> Condition {
-        // 1, 1, 3
-        // 0 1 2 3 4 5 6 7
-        //   # . # . # # #
+fn build_state_machine(groups: Vec<usize>, yes: usize, no: usize) -> Vec<Transition> {
+    let mut transitions = vec![];
+    transitions.push(Transition::new(0, 1, no));
+    let mut state = 1;
 
-        // State machine ::
-        // st dot ha end
-        // 0  0   1  9
-        // 1  2   9  9
-        // 2  2   3  9
-        // 3  4   n  9
-        // 4  4   5  9
-        // 5  9   6  9
-        // 6  9   7  9
-        // 7  7   n  8
-        // 8
-        // 9
-        // ? 0,    1
-        // ? 0, 1, 2
-
-        let yes = groups.iter().sum::<usize>() + groups.len();
-        let no = yes + 1;
-
-        let mut transitions = vec![];
-        transitions.push(Transition::new(0, 1, no));
-
-        Condition { springs, groups }
-    }
-
-    fn next(&self) -> Option<usize> {
-        self.springs.find("?")
-    }
-
-    fn is_valid(&self) -> bool {
-        let groups: Vec<usize> = self
-            .springs
-            .parse_separator(".")
-            .iter()
-            .map(|hs| hs.len())
-            .collect();
-        if groups.len() != self.groups.len() {
-            return false;
+    for group in groups {
+        for i in 0..group - 1 {
+            transitions.push(Transition::new(no, state + 1, no));
+            state += 1;
         }
+        transitions.push(Transition::new(state + 1, no, no));
+        state += 1;
 
-        for (i, val) in groups.iter().enumerate() {
-            if self.groups[i] != *val {
-                return false;
-            }
-        }
-        true
+        transitions.push(Transition::new(state, state + 1, no));
+        state += 1;
     }
 
-    fn count(&mut self) -> usize {
-        match self.next() {
-            Some(pos) => {
-                self.springs.replace_range(pos..pos + 1, ".");
-                let count_dot = self.count();
-                self.springs.replace_range(pos..pos + 1, "#");
-                let count_hash = self.count();
-                self.springs.replace_range(pos..pos + 1, "?");
-                count_dot + count_hash
-            }
-            None => {
-                if self.is_valid() {
-                    1
-                } else {
-                    0
-                }
-            }
-        }
-    }
+    transitions.pop();
+    transitions.pop();
+
+    state -= 2;
+
+    transitions.push(Transition::new(state, no, yes));
+    transitions
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{part1, part2, DAY};
+    use super::{count, part1, part2, DAY};
     use crate::utils::util;
 
     #[test]
@@ -148,6 +140,13 @@ mod tests {
     fn test_part1_input() {
         let lines = util::lines_in(&format!("./src/{}/input1", DAY));
         assert_eq!("6827", part1(&lines))
+    }
+
+    #[test]
+    fn test_state_machine() {
+        assert_eq!(1, count("???.###".to_string(), vec![1, 1, 3]));
+        assert_eq!(4, count("????.######..#####.".to_string(), vec![1, 6, 5]));
+        assert_eq!(10, count("?###????????".to_string(), vec![3, 2, 1]));
     }
 
     #[test]

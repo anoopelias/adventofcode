@@ -86,27 +86,36 @@ fn count(springs: String, groups: Vec<usize>) -> usize {
     let no = yes + 1;
     let machine = build_state_machine(groups, yes, no);
 
-    let mut states = vec![0];
+    // Optimize by not doing same state multiple times.
+    let mut state_count = vec![0usize; machine.len()];
+    state_count[0] = 1;
 
     for ch in springs.chars() {
-        states = states
-            .iter()
-            .flat_map(|&state| match ch {
-                '.' => vec![machine[state].dot],
-                '#' => vec![machine[state].hash],
-                _ => vec![machine[state].dot, machine[state].hash],
-            })
+        let new_states: Vec<(usize, usize)> = state_count
             .into_iter()
-            .filter(|&state| state != no)
+            .enumerate()
+            .filter(|&(state, count)| state != no && count != 0)
+            .flat_map(|(state, count)| match ch {
+                '.' => vec![(machine[state].dot, count)],
+                '#' => vec![(machine[state].hash, count)],
+                _ => vec![(machine[state].dot, count), (machine[state].hash, count)],
+            })
             .collect();
+
+        state_count = vec![0usize; machine.len()];
+        for (state, count) in new_states {
+            state_count[state] += count;
+        }
     }
 
-    states
-        .iter()
-        .map(|&state| machine[state].end)
-        .filter(|&state| state == yes)
-        .collect::<Vec<usize>>()
-        .len()
+    state_count
+        .into_iter()
+        .enumerate()
+        .filter(|&(state, count)| state != no && count != 0)
+        .map(|(state, count)| (machine[state].end, count))
+        .filter(|&(state, count)| state == yes)
+        .map(|(_, count)| count)
+        .sum()
 }
 
 fn build_state_machine(groups: Vec<usize>, yes: usize, no: usize) -> Vec<Transition> {
@@ -132,6 +141,14 @@ fn build_state_machine(groups: Vec<usize>, yes: usize, no: usize) -> Vec<Transit
     state -= 2;
 
     transitions.push(Transition::new(state, no, yes));
+    state += 1;
+
+    // Yes
+    transitions.push(Transition::new(state, no, no));
+    state += 1;
+
+    // No
+    transitions.push(Transition::new(state, no, no));
     transitions
 }
 
@@ -172,6 +189,6 @@ mod tests {
     #[test]
     fn test_part2_input() {
         let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        assert_eq!("618800410814", part2(&lines))
+        assert_eq!("1537505634471", part2(&lines))
     }
 }

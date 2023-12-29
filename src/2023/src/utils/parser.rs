@@ -6,6 +6,10 @@ pub trait I64Parser {
     fn parse_i64(self) -> Vec<i64>;
 }
 
+pub trait UsizeParser {
+    fn parse_usize(self, separator: &str) -> Vec<usize>;
+}
+
 pub trait SeparatorParser {
     fn parse_separator(self, sep: Self) -> Vec<Self>
     where
@@ -26,6 +30,15 @@ impl I64Parser for &str {
         self.parse_separator(" ")
             .iter()
             .map(|s| s.parse::<i64>().unwrap())
+            .collect()
+    }
+}
+
+impl UsizeParser for &str {
+    fn parse_usize(self, separator: &str) -> Vec<usize> {
+        self.parse_separator(separator)
+            .iter()
+            .map(|s| s.parse::<usize>().unwrap())
             .collect()
     }
 }

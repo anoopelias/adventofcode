@@ -46,9 +46,9 @@ fn part1(lines: &Vec<String>) -> String {
             });
             grid
         })
-        .map(|grid| match mirrors_for(&grid.cols()) {
+        .map(|grid| match mirror_for(&grid.cols()) {
             Some(row_num) => row_num * 100,
-            None => match mirrors_for(&grid.rows()) {
+            None => match mirror_for(&grid.rows()) {
                 Some(col_num) => col_num,
                 None => unreachable!(),
             },
@@ -68,11 +68,12 @@ fn is_mirror_at(row: &Vec<GridCell<&char>>, q: usize) -> bool {
         == 0
 }
 
-fn mirrors_for(rows: &Vec<Vec<GridCell<&char>>>) -> Option<usize> {
-    rows.iter()
-        .map(|row| {
-            (1..row.len())
-                .filter(|&q| is_mirror_at(row, q))
+fn mirror_for(lines: &Vec<Vec<GridCell<&char>>>) -> Option<usize> {
+    lines
+        .iter()
+        .map(|line| {
+            (1..line.len())
+                .filter(|&q| is_mirror_at(line, q))
                 .collect::<Vec<usize>>()
         })
         .reduce(|mut acc, mirrors| {

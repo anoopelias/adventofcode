@@ -5,7 +5,7 @@ use std::{time::Instant, usize};
 use itertools::Itertools;
 
 use crate::utils::{
-    grid::{Coord, Grid, GridCell},
+    grid::{Coord, Grid},
     util,
 };
 
@@ -65,17 +65,17 @@ fn grids_for(lines: &Vec<String>) -> Vec<Grid<char>> {
         .collect()
 }
 
-fn smudges_at(cells: &Vec<GridCell<&char>>, i: usize) -> usize {
+fn smudges_at(cells: &Vec<&char>, i: usize) -> usize {
     cells[0..i]
         .iter()
         .rev()
         .zip(cells[i..cells.len()].iter())
-        .filter(|(a, b)| a.val != b.val)
+        .filter(|(a, b)| a != b)
         .collect::<Vec<_>>()
         .len()
 }
 
-fn mirror_for(lines: &Vec<Vec<GridCell<&char>>>, allowed_smudges: usize) -> Option<usize> {
+fn mirror_for(lines: &Vec<Vec<&char>>, allowed_smudges: usize) -> Option<usize> {
     let v = lines.get(0).unwrap().len();
     (1..v)
         .filter(|&i| {

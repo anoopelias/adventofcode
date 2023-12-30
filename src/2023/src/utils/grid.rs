@@ -1,5 +1,5 @@
 #![allow(unused)]
-use std::{collections::HashMap, fmt::Debug, io::SeekFrom};
+use std::{arch::aarch64::vaba_s16, collections::HashMap, fmt::Debug, io::SeekFrom};
 
 use anyhow::{anyhow, Result};
 use num::{complex::ComplexFloat, Float};
@@ -141,16 +141,9 @@ impl<T: Clone + PartialEq> Grid<T> {
             .collect()
     }
 
-    pub fn row(&self, p: usize) -> Result<Vec<GridCell<&T>>> {
+    pub fn row(&self, p: usize) -> Result<Vec<&T>> {
         self.check_row_bounds(p)?;
-        Ok(self
-            .grid
-            .get(p)
-            .unwrap()
-            .iter()
-            .enumerate()
-            .map(|(q, val)| GridCell::new(Coord::new(p, q), val))
-            .collect())
+        Ok(self.grid.get(p).unwrap().iter().map(|t| t).collect())
     }
 
     pub fn row_mut(&mut self, p: usize) -> Result<Vec<GridCell<&mut T>>> {
@@ -166,14 +159,9 @@ impl<T: Clone + PartialEq> Grid<T> {
             .collect())
     }
 
-    pub fn col(&self, q: usize) -> Result<Vec<GridCell<&T>>> {
+    pub fn col(&self, q: usize) -> Result<Vec<&T>> {
         self.check_col_bounds(q)?;
-        Ok(self
-            .grid
-            .iter()
-            .enumerate()
-            .map(|(p, row)| GridCell::new(Coord::new(p, q), row.get(q).unwrap()))
-            .collect())
+        Ok(self.grid.iter().map(|row| row.get(q).unwrap()).collect())
     }
 
     pub fn col_mut(&mut self, q: usize) -> Result<Vec<GridCell<&mut T>>> {
@@ -186,14 +174,14 @@ impl<T: Clone + PartialEq> Grid<T> {
             .collect())
     }
 
-    pub fn rows(&self) -> Vec<Vec<GridCell<&T>>> {
+    pub fn rows(&self) -> Vec<Vec<&T>> {
         (0..self.m)
             .into_iter()
             .map(|p| self.row(p).unwrap())
             .collect()
     }
 
-    pub fn cols(&self) -> Vec<Vec<GridCell<&T>>> {
+    pub fn cols(&self) -> Vec<Vec<&T>> {
         (0..self.n)
             .into_iter()
             .map(|q| self.col(q).unwrap())

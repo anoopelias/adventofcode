@@ -1,4 +1,3 @@
-#![allow(unused)]
 const DAY: &str = "day13";
 
 use std::{time::Instant, usize};
@@ -7,10 +6,10 @@ use itertools::Itertools;
 
 use crate::utils::{
     grid::{Coord, Grid, GridCell},
-    parser::{I32Parser, SeparatorParser, TwoSplitter, UsizeParser},
     util,
 };
 
+#[allow(unused)]
 pub(crate) fn solve() -> String {
     let lines = util::lines_in(&format!("./src/{}/input1", DAY));
     let time = Instant::now();
@@ -47,7 +46,7 @@ fn grids_for(lines: &Vec<String>) -> Vec<Grid<char>> {
     let line_group = lines.iter().group_by(|s| s.len() == 0);
     let groups: Vec<_> = line_group
         .into_iter()
-        .map(|(key, group)| group.collect::<Vec<&String>>())
+        .map(|(_, group)| group.collect::<Vec<&String>>())
         .filter(|group| group.len() != 1)
         .collect();
 

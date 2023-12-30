@@ -46,9 +46,9 @@ fn part1(lines: &Vec<String>) -> String {
             });
             grid
         })
-        .map(|grid| match mirror_for(&grid.cols()) {
+        .map(|grid| match mirror_for(&grid.cols(), 0) {
             Some(row_num) => row_num * 100,
-            None => match mirror_for(&grid.rows()) {
+            None => match mirror_for(&grid.rows(), 0) {
                 Some(col_num) => col_num,
                 None => unreachable!(),
             },
@@ -57,30 +57,27 @@ fn part1(lines: &Vec<String>) -> String {
         .to_string()
 }
 
-fn is_mirror_at(row: &Vec<GridCell<&char>>, q: usize) -> bool {
-    row[0..q]
+fn smudges_at(cells: &Vec<GridCell<&char>>, i: usize) -> usize {
+    cells[0..i]
         .iter()
         .rev()
-        .zip(row[q..row.len()].iter())
+        .zip(cells[i..cells.len()].iter())
         .filter(|(a, b)| a.val != b.val)
         .collect::<Vec<_>>()
         .len()
-        == 0
 }
 
-fn mirror_for(lines: &Vec<Vec<GridCell<&char>>>) -> Option<usize> {
-    lines
-        .iter()
-        .map(|line| {
-            (1..line.len())
-                .filter(|&q| is_mirror_at(line, q))
-                .collect::<Vec<usize>>()
+fn mirror_for(lines: &Vec<Vec<GridCell<&char>>>, allowed_smudges: usize) -> Option<usize> {
+    let v = lines.get(0).unwrap().len();
+    (1..v)
+        .filter(|&i| {
+            lines
+                .iter()
+                .map(|cells| smudges_at(cells, i))
+                .sum::<usize>()
+                == allowed_smudges
         })
-        .reduce(|mut acc, mirrors| {
-            acc.retain(|p| mirrors.contains(p));
-            acc
-        })
-        .unwrap()
+        .collect::<Vec<_>>()
         .pop()
 }
 

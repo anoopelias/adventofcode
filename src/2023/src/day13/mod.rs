@@ -1,7 +1,7 @@
 #![allow(unused)]
 const DAY: &str = "day13";
 
-use std::time::Instant;
+use std::{time::Instant, usize};
 
 use itertools::Itertools;
 
@@ -27,6 +27,23 @@ pub(crate) fn solve() -> String {
 }
 
 fn part1(lines: &Vec<String>) -> String {
+    let grids = grids_for(lines);
+    grids
+        .iter()
+        .map(|grid| summary_for(mirror_for(&grid.cols(), 0), mirror_for(&grid.rows(), 0)))
+        .sum::<usize>()
+        .to_string()
+}
+
+fn summary_for(row_mirror: Option<usize>, col_mirror: Option<usize>) -> usize {
+    match (row_mirror, col_mirror) {
+        (Some(top_rows), None) => top_rows * 100,
+        (None, Some(left_cols)) => left_cols,
+        _ => unreachable!(),
+    }
+}
+
+fn grids_for(lines: &Vec<String>) -> Vec<Grid<char>> {
     let line_group = lines.iter().group_by(|s| s.len() == 0);
     let groups: Vec<_> = line_group
         .into_iter()
@@ -46,15 +63,7 @@ fn part1(lines: &Vec<String>) -> String {
             });
             grid
         })
-        .map(|grid| match mirror_for(&grid.cols(), 0) {
-            Some(row_num) => row_num * 100,
-            None => match mirror_for(&grid.rows(), 0) {
-                Some(col_num) => col_num,
-                None => unreachable!(),
-            },
-        })
-        .sum::<usize>()
-        .to_string()
+        .collect()
 }
 
 fn smudges_at(cells: &Vec<GridCell<&char>>, i: usize) -> usize {
@@ -82,7 +91,12 @@ fn mirror_for(lines: &Vec<Vec<GridCell<&char>>>, allowed_smudges: usize) -> Opti
 }
 
 fn part2(lines: &Vec<String>) -> String {
-    "".to_string()
+    let grids = grids_for(lines);
+    grids
+        .iter()
+        .map(|grid| summary_for(mirror_for(&grid.cols(), 1), mirror_for(&grid.rows(), 1)))
+        .sum::<usize>()
+        .to_string()
 }
 
 #[cfg(test)]
@@ -110,13 +124,13 @@ mod tests {
 
     #[test]
     fn test_part2_sample() {
-        // let lines = util::lines_in(&format!("./src/{}/input", DAY));
-        // assert_eq!("525152", part2(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input", DAY));
+        assert_eq!("400", part2(&lines))
     }
 
     #[test]
     fn test_part2_input() {
-        // let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        // assert_eq!("1537505634471", part2(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        assert_eq!("39359", part2(&lines))
     }
 }

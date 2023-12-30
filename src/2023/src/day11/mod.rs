@@ -133,14 +133,14 @@ fn set_row_distance(grid: &mut Grid<Value>, no_of_duplicates: usize) {
                 .iter_mut()
                 .enumerate()
                 .for_each(|(q, cell)| {
-                    cell.val.dist.bottom = no_of_duplicates + row.get(q).unwrap().dist.bottom
+                    cell.dist.bottom = no_of_duplicates + row.get(q).unwrap().dist.bottom
                 });
         }
         if p < grid.m {
             grid.row_mut(p)
                 .unwrap()
                 .iter_mut()
-                .for_each(|cell| cell.val.dist.top += no_of_duplicates);
+                .for_each(|cell| cell.dist.top += no_of_duplicates);
         }
     });
 }
@@ -155,14 +155,14 @@ fn set_col_distance(grid: &mut Grid<Value>, no_of_duplicates: usize) {
                 .iter_mut()
                 .enumerate()
                 .for_each(|(p, cell)| {
-                    cell.val.dist.right = no_of_duplicates + col.get(p).unwrap().dist.right
+                    cell.dist.right = no_of_duplicates + col.get(p).unwrap().dist.right
                 })
         }
         if q < grid.n {
             grid.col_mut(q)
                 .unwrap()
                 .iter_mut()
-                .for_each(|cell| cell.val.dist.left += no_of_duplicates)
+                .for_each(|cell| cell.dist.left += no_of_duplicates)
         }
     });
 }

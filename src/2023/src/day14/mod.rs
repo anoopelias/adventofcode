@@ -1,4 +1,4 @@
-const DAY: &str = "day13";
+const DAY: &str = "day14";
 
 use std::{time::Instant, usize};
 
@@ -27,10 +27,8 @@ pub(crate) fn solve() -> String {
 
 fn part1(lines: &Vec<String>) -> String {
     let mut grid = lines.to_grid();
-    let mut rows = grid.rows();
-    rows.reverse();
 
-    while rows.len() != 0 {}
+    for i in (0..grid.n) {}
 
     "".to_string()
 }

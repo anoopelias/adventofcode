@@ -5,6 +5,8 @@ use anyhow::{anyhow, Result};
 use itertools::{Itertools, MapInto};
 use num::{complex::ComplexFloat, Float};
 
+use super::util;
+
 #[derive(PartialEq, Debug, Clone)]
 pub struct GridCell<T> {
     pub val: T,
@@ -180,11 +182,22 @@ impl<T: Clone + PartialEq> Grid<T> {
             .collect()
     }
 
+    pub fn rows_mut(&mut self) -> Vec<Vec<&mut T>> {
+        self.grid
+            .iter_mut()
+            .map(|row| row.iter_mut().collect())
+            .collect()
+    }
+
     pub fn cols(&self) -> Vec<Vec<&T>> {
         (0..self.n)
             .into_iter()
             .map(|q| self.col(q).unwrap())
             .collect()
+    }
+
+    pub fn cols_mut(&mut self) -> Vec<Vec<&mut T>> {
+        util::transpose(self.rows_mut())
     }
 
     pub fn fill(&mut self, val: T)

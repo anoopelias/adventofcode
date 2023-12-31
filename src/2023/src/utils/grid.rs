@@ -1,5 +1,10 @@
 #![allow(unused)]
-use std::{arch::aarch64::vaba_s16, collections::HashMap, fmt::Debug, io::SeekFrom};
+use std::{
+    arch::aarch64::vaba_s16,
+    collections::HashMap,
+    fmt::{Debug, Display},
+    io::SeekFrom,
+};
 
 use anyhow::{anyhow, Result};
 use itertools::{Itertools, MapInto};
@@ -353,5 +358,19 @@ impl<T: Clone + PartialEq> Grid<T> {
         }
 
         bfs_result
+    }
+}
+
+impl<T: Clone + PartialEq + Display> Display for Grid<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.grid
+                .iter()
+                .map(|row| row.iter().map(|cell| cell.to_string()).join("").to_string())
+                .join("\n")
+                .to_string()
+        )
     }
 }

@@ -1,6 +1,6 @@
 const DAY: &str = "day14";
 
-use std::{time::Instant, usize};
+use std::{collections::HashMap, time::Instant, usize};
 
 use crate::utils::{
     grid::Grid,
@@ -50,15 +50,15 @@ fn tilt_north(grid: &mut Grid<char>) {
 }
 
 fn tilt_west(grid: &mut Grid<char>) {
-    tilt(grid.rows_mut().into_iter().rev().collect());
+    tilt(grid.rows_mut());
 }
 
 fn tilt_south(grid: &mut Grid<char>) {
-    tilt(grid.cols_mut().into_iter().rev().collect());
+    tilt(rev_line(grid.cols_mut()));
 }
 
 fn tilt_east(grid: &mut Grid<char>) {
-    tilt(grid.rows_mut());
+    tilt(rev_line(grid.rows_mut()));
 }
 
 fn tilt(lines: Vec<Vec<&mut char>>) {
@@ -88,6 +88,13 @@ fn tilt(lines: Vec<Vec<&mut char>>) {
     });
 }
 
+fn rev_line<T>(lines: Vec<Vec<T>>) -> Vec<Vec<T>> {
+    lines
+        .into_iter()
+        .map(|line| line.into_iter().rev().collect())
+        .collect()
+}
+
 fn next_free(col: &Vec<&mut char>, p: usize) -> usize {
     let mut curr = p;
     while curr < col.len() {
@@ -102,8 +109,24 @@ fn next_free(col: &Vec<&mut char>, p: usize) -> usize {
 
 fn part2(lines: &Vec<String>) -> String {
     let mut grid = lines.to_grid();
+    let mut cycles = HashMap::new();
+    let mut start = 0;
+    let mut repeat = 0;
 
-    for _ in 0..1000000000 {
+    for i in 0..1000 {
+        cycle(&mut grid);
+        let key = grid.to_string();
+        if !cycles.contains_key(&key) {
+            cycles.insert(grid.to_string(), i);
+        } else {
+            start = *cycles.get(&key).unwrap();
+            repeat = start - i;
+            break;
+        }
+    }
+
+    let remaining = (1000000000 - start) % repeat;
+    for _ in 0..remaining - 1 {
         cycle(&mut grid);
     }
 
@@ -137,12 +160,12 @@ mod tests {
     #[test]
     fn test_part2_sample() {
         let lines = util::lines_in(&format!("./src/{}/input", DAY));
-        assert_eq!("400", part2(&lines))
+        assert_eq!("64", part2(&lines))
     }
 
     #[test]
     fn test_part2_input() {
-        // let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        // assert_eq!("39359", part2(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        assert_eq!("108404", part2(&lines))
     }
 }

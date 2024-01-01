@@ -54,6 +54,8 @@ fn part2(lines: &Vec<String>) -> String {
         }
     });
 
+    keys.sort_by(|key1, key2| hash(key1).cmp(&hash(key2)));
+
     keys.iter()
         .group_by(|key| hash(key))
         .into_iter()
@@ -106,6 +108,6 @@ mod tests {
     #[test]
     fn test_part2_input() {
         let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        assert_eq!("177140", part2(&lines))
+        assert_eq!("259356", part2(&lines))
     }
 }

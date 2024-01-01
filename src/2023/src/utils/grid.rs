@@ -2,7 +2,7 @@
 use std::{
     arch::aarch64::vaba_s16,
     collections::HashMap,
-    fmt::{Debug, Display},
+    fmt::{write, Debug, Display},
     io::SeekFrom,
 };
 
@@ -36,13 +36,19 @@ pub struct Coord {
     pub q: usize,
 }
 
+impl Display for Coord {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Coord({}, {})", self.p, self.q)
+    }
+}
+
 impl Coord {
     pub fn new(p: usize, q: usize) -> Coord {
         Coord { p, q }
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Direction {
     Top,
     Bottom,
@@ -336,6 +342,16 @@ impl<T: Clone + PartialEq> Grid<T> {
         }
         self.n -= 1;
         Ok(col)
+    }
+
+    pub fn next(&self, coord: &Coord, dir: &Direction) -> Result<GridCell<&T>> {
+        self.check_bounds(coord)?;
+        match dir {
+            Direction::Top => self.top(coord),
+            Direction::Bottom => self.bottom(coord),
+            Direction::Left => self.left(coord),
+            Direction::Right => self.right(coord),
+        }
     }
 
     pub fn bfs(&self, from: &Coord) -> BfsResult {

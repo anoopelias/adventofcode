@@ -1,6 +1,7 @@
 const DAY: &str = "day16";
 
 use std::{
+    cmp,
     collections::{HashMap, HashSet},
     time::Instant,
 };
@@ -100,8 +101,40 @@ fn visit_next(
     }
 }
 
-fn part2(_lines: &Vec<String>) -> String {
-    "".to_string()
+fn part2(lines: &Vec<String>) -> String {
+    let grid = lines.to_grid();
+    let mut best = 0;
+
+    for p in 0..grid.m {
+        let mut visited = HashMap::new();
+        visit(&grid, &Coord::new(p, 0), Direction::Right, &mut visited);
+        best = cmp::max(best, visited.len());
+
+        let mut visited = HashMap::new();
+        visit(
+            &grid,
+            &Coord::new(p, grid.n - 1),
+            Direction::Left,
+            &mut visited,
+        );
+        best = cmp::max(best, visited.len());
+    }
+
+    for q in 0..grid.n {
+        let mut visited = HashMap::new();
+        visit(&grid, &Coord::new(0, q), Direction::Bottom, &mut visited);
+        best = cmp::max(best, visited.len());
+
+        let mut visited = HashMap::new();
+        visit(
+            &grid,
+            &Coord::new(grid.n - 1, q),
+            Direction::Bottom,
+            &mut visited,
+        );
+        best = cmp::max(best, visited.len());
+    }
+    best.to_string()
 }
 
 #[cfg(test)]
@@ -123,13 +156,13 @@ mod tests {
 
     #[test]
     fn test_part2_sample() {
-        // let lines = util::lines_in(&format!("./src/{}/input", DAY));
-        // assert_eq!("145", part2(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input", DAY));
+        assert_eq!("51", part2(&lines))
     }
 
     #[test]
     fn test_part2_input() {
-        // let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        // assert_eq!("259356", part2(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        assert_eq!("8444", part2(&lines))
     }
 }

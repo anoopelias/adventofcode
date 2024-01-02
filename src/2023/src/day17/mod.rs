@@ -8,7 +8,8 @@ use std::{
 
 use crate::utils::{
     grid::{Coord, Direction, Grid},
-    util::{self, ToGrid},
+    pq::{Pq, PqType},
+    util::{self, ToGrid, ToGridWith},
 };
 
 #[allow(unused)]
@@ -28,21 +29,94 @@ pub(crate) fn solve() -> String {
 }
 
 struct Node {
-    ch: char,
-    heat_loss: Option<usize>,
+    coord: Coord,
+    lr_loss: Option<usize>,
+    tb_loss: Option<usize>,
 }
 
 impl Node {
-    fn new(ch: char) -> Node {
+    fn new(coord: Coord) -> Node {
         Node {
-            ch,
-            heat_loss: None,
+            coord,
+            lr_loss: None,
+            tb_loss: None,
         }
     }
 }
 
+impl Node {
+    fn eq_lr_loss(&self, other: &Node) -> bool {
+        match (self.lr_loss, other.lr_loss) {
+            (Some(self_loss), Some(other_loss)) => self_loss == other_loss,
+            _ => false,
+        }
+    }
+    fn eq_tb_loss(&self, other: &Node) -> bool {
+        match (self.tb_loss, other.tb_loss) {
+            (Some(self_loss), Some(other_loss)) => self_loss == other_loss,
+            _ => false,
+        }
+    }
+}
+
+impl PartialEq for Node {
+    fn eq(&self, other: &Self) -> bool {
+        self.eq_lr_loss(other) && self.eq_tb_loss(other)
+    }
+}
+
+impl Eq for Node {}
+
+impl PartialOrd for Node {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Node {
+    fn cmp(&self, other: &Self) -> cmp::Ordering {
+        min_loss(self).cmp(&min_loss(other))
+    }
+}
+
+fn min_loss(node: &Node) -> usize {
+    match (node.lr_loss, node.tb_loss) {
+        (Some(lr_loss), Some(tb_loss)) => {
+            if lr_loss < tb_loss {
+                lr_loss
+            } else {
+                tb_loss
+            }
+        }
+        (Some(lr_loss), None) => lr_loss,
+        (None, Some(tb_loss)) => tb_loss,
+        _ => unreachable!(),
+    }
+}
+
 fn part1(lines: &Vec<String>) -> String {
-    let grid = lines.to_grid_with(|ch| Node::new(ch));
+    let grid = lines.to_grid_with(|ch| ch.to_digit(10));
+    let mut pq = Pq::new(PqType::Min);
+    pq.push(Node::new(Coord::new(0, 0)));
+
+    let mut heat_map = HashMap::new();
+    heat_map.insert(Coord::new(0, 0), 0);
+
+    while !pq.is_empty() {
+        let curr = pq.pop().unwrap();
+        heat_map.insert(curr.coord, min_loss(&curr));
+
+        let neighbors = grid.neighbors(&curr.coord);
+
+        for _neighbor in neighbors {
+            // let mut nnode =
+            // match neighbor.dir {
+            //     Direction::Left | Direction::Right =>
+
+            // }
+        }
+    }
+
     "".to_string()
 }
 

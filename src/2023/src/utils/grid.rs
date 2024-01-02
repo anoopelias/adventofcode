@@ -48,12 +48,23 @@ impl Coord {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Copy)]
 pub enum Direction {
     Top,
     Bottom,
     Left,
     Right,
+}
+
+impl Direction {
+    pub fn opposite(&self) -> Direction {
+        match self {
+            Direction::Top => Direction::Bottom,
+            Direction::Bottom => Direction::Top,
+            Direction::Left => Direction::Right,
+            Direction::Right => Direction::Left,
+        }
+    }
 }
 
 #[derive(Clone, PartialEq)]
@@ -115,6 +126,11 @@ impl<T: Clone + PartialEq> Grid<T> {
             .map(|_| (0..n).into_iter().map(|_| fill.clone()).collect())
             .collect();
 
+        Grid { grid, m, n }
+    }
+
+    pub fn with(grid: Vec<Vec<T>>) -> Grid<T> {
+        let (m, n) = (grid.len(), grid.get(0).unwrap().len());
         Grid { grid, m, n }
     }
 

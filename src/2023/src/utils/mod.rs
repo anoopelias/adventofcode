@@ -1,3 +1,4 @@
+pub(crate) mod adj;
 pub(crate) mod grid;
 pub(crate) mod iter;
 pub(crate) mod parser;

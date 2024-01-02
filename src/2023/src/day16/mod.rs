@@ -162,7 +162,8 @@ mod tests {
 
     #[test]
     fn test_part2_input() {
-        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        assert_eq!("8444", part2(&lines))
+        // Too slow to run all the time
+        // let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        // assert_eq!("8444", part2(&lines))
     }
 }

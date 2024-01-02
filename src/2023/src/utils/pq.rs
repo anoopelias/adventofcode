@@ -38,6 +38,39 @@ impl<T: Ord> Pq<T> {
         self.values.len() == 0
     }
 
+    pub fn remove_first(&mut self, f: impl Fn(&T) -> bool) -> Option<T> {
+        let value = self
+            .values
+            .iter()
+            .enumerate()
+            .filter(|(_, t)| f(t))
+            .collect::<Vec<_>>()
+            .pop();
+
+        if value.is_none() {
+            return None;
+        }
+
+        let (i, _) = value.unwrap();
+        let t = self.values.swap_remove(i);
+
+        // See `changeKey` here: https://algs4.cs.princeton.edu/24pq/IndexMinPQ.java.html
+        if i < self.values.len() {
+            self.swim(i);
+            self.sink(i);
+        }
+        Some(t)
+    }
+
+    pub fn has(&mut self, f: impl Fn(&T) -> bool) -> bool {
+        self.values
+            .iter()
+            .filter(|t| f(t))
+            .collect::<Vec<_>>()
+            .len()
+            != 0
+    }
+
     fn swim(&mut self, n: usize) {
         if n == 0 {
             return;
@@ -93,6 +126,9 @@ impl<T: Ord> Pq<T> {
 
 #[cfg(test)]
 mod tests {
+    use rand::seq::SliceRandom;
+    use rand::Rng;
+
     use super::Pq;
     use super::PqType;
 
@@ -136,7 +172,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_remove_min_many() {
+    fn insert_remove_max_many() {
         let mut pq = Pq::new(PqType::Max);
         pq.push(12);
         pq.push(10);
@@ -147,5 +183,43 @@ mod tests {
         assert_eq!(Some(10), pq.pop());
         assert_eq!(Some(9), pq.pop());
         assert_eq!(None, pq.pop());
+    }
+
+    #[test]
+    fn ten_thousand_random_numbers() {
+        let mut rng = rand::thread_rng();
+        let mut nums: Vec<usize> = vec![];
+
+        for _ in 0..100000 {
+            nums.push(rng.gen());
+        }
+
+        let mut pq = Pq::new(PqType::Max);
+        for num in nums.clone() {
+            pq.push(num);
+        }
+
+        // Remove a random 50 numbers
+        nums.shuffle(&mut rng);
+        for _ in 0..500 {
+            let n = nums.pop().unwrap();
+            pq.remove_first(|&num| num == n);
+        }
+
+        nums.sort();
+        for _ in 0..nums.len() {
+            assert_eq!(nums.pop(), pq.pop());
+        }
+
+        assert!(pq.is_empty());
+    }
+
+    #[test]
+    fn test_remove_last_element() {
+        let mut pq = Pq::new(PqType::Min);
+        pq.push(2);
+        pq.push(3);
+
+        assert_eq!(Some(3), pq.remove_first(|&n| n == 3));
     }
 }

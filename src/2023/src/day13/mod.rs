@@ -4,10 +4,7 @@ use std::{time::Instant, usize};
 
 use itertools::Itertools;
 
-use crate::utils::{
-    grid::{Coord, Grid},
-    util,
-};
+use crate::utils::{grid::Grid, util};
 
 #[allow(unused)]
 pub(crate) fn solve() -> String {
@@ -52,16 +49,7 @@ fn grids_for(lines: &Vec<String>) -> Vec<Grid<char>> {
 
     groups
         .iter()
-        .map(|group| {
-            let (m, n) = (group.len(), group.get(0).unwrap().len());
-            let mut grid = Grid::new_fill(m, n, &'.');
-            group.iter().enumerate().for_each(|(p, line)| {
-                line.chars()
-                    .enumerate()
-                    .for_each(|(q, ch)| grid.set(&Coord::new(p, q), ch).unwrap())
-            });
-            grid
-        })
+        .map(|group| Grid::with(group.iter().map(|line| line.chars().collect()).collect()))
         .collect()
 }
 

@@ -118,6 +118,11 @@ impl<T: Clone + PartialEq> Grid<T> {
         Grid { grid, m, n }
     }
 
+    pub fn with(grid: Vec<Vec<T>>) -> Grid<T> {
+        let (m, n) = (grid.len(), grid.get(0).unwrap().len());
+        Grid { grid, m, n }
+    }
+
     pub fn get(&self, coord: &Coord) -> Result<&T> {
         self.check_bounds(coord)?;
         Ok(&self.grid[coord.p][coord.q])

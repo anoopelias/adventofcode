@@ -93,6 +93,8 @@ impl<T: Ord> Pq<T> {
 
 #[cfg(test)]
 mod tests {
+    use rand::Rng;
+
     use super::Pq;
     use super::PqType;
 
@@ -147,5 +149,27 @@ mod tests {
         assert_eq!(Some(10), pq.pop());
         assert_eq!(Some(9), pq.pop());
         assert_eq!(None, pq.pop());
+    }
+
+    #[test]
+    fn thousand_random_numbers() {
+        let mut rng = rand::thread_rng();
+        let mut nums: Vec<usize> = vec![];
+
+        for _ in 0..10000 {
+            nums.push(rng.gen());
+        }
+
+        let mut pq = Pq::new(PqType::Max);
+        for num in nums.clone() {
+            pq.push(num);
+        }
+
+        nums.sort();
+        for _ in 0..nums.len() {
+            assert_eq!(nums.pop(), pq.pop());
+        }
+
+        assert!(pq.is_empty());
     }
 }

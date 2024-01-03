@@ -2,7 +2,7 @@ const DAY: &str = "day17";
 
 use std::{
     cmp,
-    collections::{HashMap, HashSet},
+    collections::{BinaryHeap, HashMap, HashSet},
     time::Instant,
 };
 
@@ -96,7 +96,7 @@ fn min_loss(node: &Node) -> usize {
 
 fn part1(lines: &Vec<String>) -> String {
     let grid = lines.to_grid_with(|ch| ch.to_digit(10));
-    let mut pq = Pq::new(PqType::Min);
+    let mut pq = BinaryHeap::new();
     pq.push(Node::new(Coord::new(0, 0)));
 
     let mut heat_map = HashMap::new();
@@ -108,7 +108,9 @@ fn part1(lines: &Vec<String>) -> String {
 
         let neighbors = grid.neighbors(&curr.coord);
 
-        for _neighbor in neighbors {
+        for neighbor in neighbors {
+            // pq.retain(f)
+
             // let mut nnode =
             // match neighbor.dir {
             //     Direction::Left | Direction::Right =>

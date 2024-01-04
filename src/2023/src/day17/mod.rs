@@ -30,13 +30,15 @@ pub(crate) fn solve() -> String {
 
 struct Node {
     coord: Coord,
+    from: Direction,
     lr_loss: Option<usize>,
     tb_loss: Option<usize>,
 }
 
 impl Node {
-    fn new(coord: Coord) -> Node {
+    fn new(coord: Coord, from: Direction) -> Node {
         Node {
+            from: from,
             coord,
             lr_loss: None,
             tb_loss: None,
@@ -97,7 +99,7 @@ fn min_loss(node: &Node) -> usize {
 fn part1(lines: &Vec<String>) -> String {
     let grid = lines.to_grid_with(|ch| ch.to_digit(10));
     let mut pq = BinaryHeap::new();
-    pq.push(Node::new(Coord::new(0, 0)));
+    pq.push(Node::new(Coord::new(0, 0), Direction::Left));
 
     let mut heat_map = HashMap::new();
     heat_map.insert(Coord::new(0, 0), 0);

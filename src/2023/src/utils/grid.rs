@@ -56,6 +56,17 @@ pub enum Direction {
     Right,
 }
 
+impl Direction {
+    pub fn opposite(&self) -> Direction {
+        match self {
+            Direction::Top => Direction::Bottom,
+            Direction::Bottom => Direction::Top,
+            Direction::Left => Direction::Right,
+            Direction::Right => Direction::Top,
+        }
+    }
+}
+
 #[derive(Clone, PartialEq)]
 pub struct Neighbor<T> {
     pub dir: Direction,

@@ -38,6 +38,28 @@ impl<T: Ord> Pq<T> {
         self.values.len() == 0
     }
 
+    pub fn remove_first(&mut self, f: impl Fn(&T) -> bool) -> Option<T> {
+        let value = self
+            .values
+            .iter()
+            .enumerate()
+            .filter(|(i, t)| f(t))
+            .collect::<Vec<_>>()
+            .pop();
+
+        if value.is_none() {
+            return None;
+        }
+
+        let (i, _) = value.unwrap();
+        let t = self.values.swap_remove(i);
+
+        // See `changeKey` here: https://algs4.cs.princeton.edu/24pq/IndexMinPQ.java.html
+        self.sink(i);
+        self.swim(i);
+        Some(t)
+    }
+
     fn swim(&mut self, n: usize) {
         if n == 0 {
             return;
@@ -93,6 +115,7 @@ impl<T: Ord> Pq<T> {
 
 #[cfg(test)]
 mod tests {
+    use rand::seq::SliceRandom;
     use rand::Rng;
 
     use super::Pq;
@@ -152,17 +175,24 @@ mod tests {
     }
 
     #[test]
-    fn thousand_random_numbers() {
+    fn ten_thousand_random_numbers() {
         let mut rng = rand::thread_rng();
         let mut nums: Vec<usize> = vec![];
 
-        for _ in 0..10000 {
+        for _ in 0..100000 {
             nums.push(rng.gen());
         }
 
         let mut pq = Pq::new(PqType::Max);
         for num in nums.clone() {
             pq.push(num);
+        }
+
+        // Remove a random 50 numbers
+        nums.shuffle(&mut rng);
+        for _ in 0..500 {
+            let n = nums.pop().unwrap();
+            pq.remove_first(|&num| num == n);
         }
 
         nums.sort();

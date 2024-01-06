@@ -43,7 +43,7 @@ impl<T: Ord> Pq<T> {
             .values
             .iter()
             .enumerate()
-            .filter(|(i, t)| f(t))
+            .filter(|(_, t)| f(t))
             .collect::<Vec<_>>()
             .pop();
 
@@ -58,6 +58,15 @@ impl<T: Ord> Pq<T> {
         self.sink(i);
         self.swim(i);
         Some(t)
+    }
+
+    pub fn has(&mut self, f: impl Fn(&T) -> bool) -> bool {
+        self.values
+            .iter()
+            .filter(|t| f(t))
+            .collect::<Vec<_>>()
+            .len()
+            != 0
     }
 
     fn swim(&mut self, n: usize) {

@@ -62,7 +62,7 @@ impl Direction {
             Direction::Top => Direction::Bottom,
             Direction::Bottom => Direction::Top,
             Direction::Left => Direction::Right,
-            Direction::Right => Direction::Top,
+            Direction::Right => Direction::Left,
         }
     }
 }

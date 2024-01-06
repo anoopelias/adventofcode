@@ -1,13 +1,13 @@
 const DAY: &str = "day17";
 
 use std::{
-    cmp,
-    collections::{BinaryHeap, HashMap, HashSet},
+    cmp::{self, Ordering},
+    collections::HashMap,
     time::Instant,
 };
 
 use crate::utils::{
-    grid::{Coord, Direction, Grid},
+    grid::{Coord, Direction, Grid, Neighbor},
     pq::{Pq, PqType},
     util::{self, ToGrid, ToGridWith},
 };
@@ -31,8 +31,7 @@ pub(crate) fn solve() -> String {
 struct Node {
     coord: Coord,
     from: Direction,
-    lr_loss: Option<usize>,
-    tb_loss: Option<usize>,
+    losses: HashMap<LossType, usize>,
 }
 
 impl Node {
@@ -40,88 +39,124 @@ impl Node {
         Node {
             from: from,
             coord,
-            lr_loss: None,
-            tb_loss: None,
+            losses: HashMap::new(),
         }
     }
 }
 
 impl Node {
-    fn eq_lr_loss(&self, other: &Node) -> bool {
-        match (self.lr_loss, other.lr_loss) {
-            (Some(self_loss), Some(other_loss)) => self_loss == other_loss,
-            _ => false,
+    fn min_loss(&self) -> usize {
+        *self.losses.iter().map(|(_, loss)| loss).min().unwrap()
+    }
+    fn update_loss(&mut self, incoming_dir: &Direction, loss: usize) {
+        let loss_type = LossType::from_dir(incoming_dir).opposite();
+        match self.losses.get(&loss_type) {
+            Some(&node_loss) => {
+                if loss < node_loss {
+                    self.losses.insert(loss_type, loss);
+                }
+            }
+            None => {
+                self.losses.insert(loss_type, loss);
+            }
         }
     }
-    fn eq_tb_loss(&self, other: &Node) -> bool {
-        match (self.tb_loss, other.tb_loss) {
-            (Some(self_loss), Some(other_loss)) => self_loss == other_loss,
-            _ => false,
+}
+
+#[derive(PartialEq, Eq, Hash)]
+enum LossType {
+    Vertical,
+    Horizontal,
+}
+
+impl LossType {
+    fn from_dir(dir: &Direction) -> LossType {
+        match dir {
+            Direction::Top => LossType::Vertical,
+            Direction::Bottom => LossType::Vertical,
+            Direction::Left => LossType::Horizontal,
+            Direction::Right => LossType::Horizontal,
+        }
+    }
+
+    fn opposite(&self) -> LossType {
+        match self {
+            LossType::Vertical => LossType::Horizontal,
+            LossType::Horizontal => LossType::Vertical,
         }
     }
 }
 
 impl PartialEq for Node {
     fn eq(&self, other: &Self) -> bool {
-        self.eq_lr_loss(other) && self.eq_tb_loss(other)
+        self.losses == other.losses
     }
 }
 
 impl Eq for Node {}
 
 impl PartialOrd for Node {
-    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
 impl Ord for Node {
     fn cmp(&self, other: &Self) -> cmp::Ordering {
-        min_loss(self).cmp(&min_loss(other))
-    }
-}
-
-fn min_loss(node: &Node) -> usize {
-    match (node.lr_loss, node.tb_loss) {
-        (Some(lr_loss), Some(tb_loss)) => {
-            if lr_loss < tb_loss {
-                lr_loss
-            } else {
-                tb_loss
-            }
-        }
-        (Some(lr_loss), None) => lr_loss,
-        (None, Some(tb_loss)) => tb_loss,
-        _ => unreachable!(),
+        self.min_loss().cmp(&other.min_loss())
     }
 }
 
 fn part1(lines: &Vec<String>) -> String {
-    let grid = lines.to_grid_with(|ch| ch.to_digit(10));
-    let mut pq = BinaryHeap::new();
-    pq.push(Node::new(Coord::new(0, 0), Direction::Left));
+    let grid = lines.to_grid_with(|ch| ch.to_digit(10).unwrap() as usize);
+    let mut pq = Pq::new(PqType::Min);
+    let mut start_node_left = Node::new(Coord::new(0, 0), Direction::Left);
+    let mut start_node_top = Node::new(Coord::new(0, 0), Direction::Top);
+
+    start_node_left.losses.insert(LossType::Vertical, 0);
+    start_node_left.losses.insert(LossType::Horizontal, 0);
+
+    start_node_top.losses.insert(LossType::Vertical, 0);
+    start_node_top.losses.insert(LossType::Horizontal, 0);
+
+    pq.push(start_node_left);
+    pq.push(start_node_top);
 
     let mut heat_map = HashMap::new();
     heat_map.insert(Coord::new(0, 0), 0);
 
     while !pq.is_empty() {
-        let curr = pq.pop().unwrap();
-        heat_map.insert(curr.coord, min_loss(&curr));
+        let node = pq.pop().unwrap();
+        let node_loss = grid.get(&node.coord).unwrap();
+        heat_map.insert(node.coord, node.min_loss() + node_loss);
 
-        let neighbors = grid.neighbors(&curr.coord);
-
+        let neighbors = grid.neighbors(&node.coord);
         for neighbor in neighbors {
-            // pq.retain(f)
-
-            // let mut nnode =
-            // match neighbor.dir {
-            //     Direction::Left | Direction::Right =>
-
-            // }
+            if !heat_map.contains_key(&neighbor.cell.coord) && neighbor.dir != node.from {
+                let mut nnode = get_or_create_node(&mut pq, &neighbor);
+                let loss_type = LossType::from_dir(&neighbor.dir).opposite();
+                match node.losses.get(&loss_type) {
+                    Some(dir_loss) => nnode.update_loss(&neighbor.dir, dir_loss + node_loss),
+                    None => {}
+                }
+                pq.push(nnode);
+            }
         }
     }
 
-    "".to_string()
+    heat_map
+        .get(&Coord::new(grid.m - 1, grid.n - 1))
+        .unwrap()
+        .to_string()
+}
+
+fn get_or_create_node(pq: &mut Pq<Node>, neighbor: &Neighbor<&usize>) -> Node {
+    match pq.remove_first(|node| {
+        node.coord == neighbor.cell.coord && node.from == neighbor.dir.opposite()
+    }) {
+        Some(node) => node,
+        None => Node::new(neighbor.cell.coord, neighbor.dir.opposite()),
+    }
 }
 
 fn part2(lines: &Vec<String>) -> String {

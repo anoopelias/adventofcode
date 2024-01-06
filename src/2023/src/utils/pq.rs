@@ -55,8 +55,10 @@ impl<T: Ord> Pq<T> {
         let t = self.values.swap_remove(i);
 
         // See `changeKey` here: https://algs4.cs.princeton.edu/24pq/IndexMinPQ.java.html
-        self.sink(i);
-        self.swim(i);
+        if i < self.values.len() {
+            self.swim(i);
+            self.sink(i);
+        }
         Some(t)
     }
 
@@ -170,7 +172,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_remove_min_many() {
+    fn insert_remove_max_many() {
         let mut pq = Pq::new(PqType::Max);
         pq.push(12);
         pq.push(10);
@@ -210,5 +212,14 @@ mod tests {
         }
 
         assert!(pq.is_empty());
+    }
+
+    #[test]
+    fn test_remove_last_element() {
+        let mut pq = Pq::new(PqType::Min);
+        pq.push(2);
+        pq.push(3);
+
+        assert_eq!(Some(3), pq.remove_first(|&n| n == 3));
     }
 }

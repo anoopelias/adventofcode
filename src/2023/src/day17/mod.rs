@@ -2,14 +2,14 @@ const DAY: &str = "day17";
 
 use std::{
     cmp::{self, Ordering},
-    collections::{HashMap, HashSet},
+    collections::HashSet,
     time::Instant,
 };
 
 use crate::utils::{
-    grid::{Coord, Direction, Grid, Neighbor},
+    grid::{Coord, Direction},
     pq::{Pq, PqType},
-    util::{self, ToGrid, ToGridWith},
+    util::{self, ToGridWith},
 };
 
 #[allow(unused)]

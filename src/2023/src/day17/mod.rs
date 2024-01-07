@@ -2,7 +2,7 @@ const DAY: &str = "day17";
 
 use std::{
     cmp::{self, Ordering},
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     time::Instant,
 };
 
@@ -29,67 +29,26 @@ pub(crate) fn solve() -> String {
 }
 
 struct Node {
+    loss: usize,
     coord: Coord,
-    from: Direction,
-    losses: HashMap<LossType, usize>,
+    facing: Direction,
+    num_steps: usize,
 }
 
 impl Node {
-    fn new(coord: Coord, from: Direction) -> Node {
+    fn new(loss: usize, coord: Coord, facing: Direction, num_steps: usize) -> Node {
         Node {
-            from: from,
+            loss,
             coord,
-            losses: HashMap::new(),
-        }
-    }
-}
-
-impl Node {
-    fn min_loss(&self) -> usize {
-        *self.losses.iter().map(|(_, loss)| loss).min().unwrap()
-    }
-    fn update_loss(&mut self, incoming_dir: &Direction, loss: usize) {
-        let loss_type = LossType::from_dir(incoming_dir);
-        match self.losses.get(&loss_type) {
-            Some(&node_loss) => {
-                if loss < node_loss {
-                    self.losses.insert(loss_type, loss);
-                }
-            }
-            None => {
-                self.losses.insert(loss_type, loss);
-            }
-        }
-    }
-}
-
-#[derive(PartialEq, Eq, Hash)]
-enum LossType {
-    Vertical,
-    Horizontal,
-}
-
-impl LossType {
-    fn from_dir(dir: &Direction) -> LossType {
-        match dir {
-            Direction::Top => LossType::Vertical,
-            Direction::Bottom => LossType::Vertical,
-            Direction::Left => LossType::Horizontal,
-            Direction::Right => LossType::Horizontal,
-        }
-    }
-
-    fn opposite(&self) -> LossType {
-        match self {
-            LossType::Vertical => LossType::Horizontal,
-            LossType::Horizontal => LossType::Vertical,
+            facing,
+            num_steps,
         }
     }
 }
 
 impl PartialEq for Node {
     fn eq(&self, other: &Self) -> bool {
-        self.losses == other.losses
+        self.loss == other.loss
     }
 }
 
@@ -103,63 +62,82 @@ impl PartialOrd for Node {
 
 impl Ord for Node {
     fn cmp(&self, other: &Self) -> cmp::Ordering {
-        self.min_loss().cmp(&other.min_loss())
+        self.loss.cmp(&other.loss)
     }
 }
 
-fn part1(lines: &Vec<String>) -> String {
+#[derive(Hash, Eq, PartialEq, Debug, Clone)]
+struct Visit {
+    coord: Coord,
+    facing: Direction,
+    num_steps: usize,
+}
+
+impl Visit {
+    fn new(coord: Coord, facing: Direction, num_steps: usize) -> Visit {
+        Visit {
+            coord,
+            facing,
+            num_steps,
+        }
+    }
+}
+
+fn least_heat_loss(lines: &Vec<String>, min_steps: usize, max_steps: usize) -> String {
     let grid = lines.to_grid_with(|ch| ch.to_digit(10).unwrap() as usize);
+
     let mut pq = Pq::new(PqType::Min);
-    let mut start_node_left = Node::new(Coord::new(0, 0), Direction::Left);
-    let mut start_node_top = Node::new(Coord::new(0, 0), Direction::Top);
+    pq.push(Node::new(0, Coord::new(0, 0), Direction::Right, 0));
+    pq.push(Node::new(0, Coord::new(0, 0), Direction::Bottom, 0));
 
-    start_node_left.losses.insert(LossType::Horizontal, 0);
-    start_node_top.losses.insert(LossType::Vertical, 0);
-
-    pq.push(start_node_top);
-    pq.push(start_node_left);
-
-    let mut heat_map = HashMap::new();
-    heat_map.insert(Coord::new(0, 0), 0);
-
+    let mut visits = HashSet::new();
     while !pq.is_empty() {
         let node = pq.pop().unwrap();
-        let node_loss = grid.get(&node.coord).unwrap();
-        heat_map.insert(node.coord, node.min_loss() + node_loss);
+
+        if node.coord == Coord::new(grid.m - 1, grid.n - 1) {
+            return node.loss.to_string();
+        }
+
+        if visits.contains(&Visit::new(node.coord, node.facing, node.num_steps)) {
+            continue;
+        }
+
+        visits.insert(Visit::new(node.coord, node.facing, node.num_steps));
 
         let neighbors = grid.neighbors(&node.coord);
         for neighbor in neighbors {
-            if !heat_map.contains_key(&neighbor.cell.coord) && neighbor.dir != node.from {
-                let loss_type = LossType::from_dir(&neighbor.dir).opposite();
-                match node.losses.get(&loss_type) {
-                    Some(dir_loss) => {
-                        let mut nnode = get_or_create_node(&mut pq, &neighbor);
-                        nnode.update_loss(&neighbor.dir, dir_loss + node_loss);
-                        pq.push(nnode);
-                    }
-                    None => {}
+            let neighbor_loss = node.loss + grid.get(&neighbor.cell.coord).unwrap();
+            if neighbor.dir == node.facing {
+                if node.num_steps < max_steps {
+                    pq.push(Node::new(
+                        neighbor_loss,
+                        neighbor.cell.coord,
+                        neighbor.dir,
+                        node.num_steps + 1,
+                    ));
+                }
+            } else if neighbor.dir != node.facing.opposite() {
+                if node.num_steps >= min_steps {
+                    pq.push(Node::new(
+                        neighbor_loss,
+                        neighbor.cell.coord,
+                        neighbor.dir,
+                        1,
+                    ));
                 }
             }
         }
     }
 
-    heat_map
-        .get(&Coord::new(grid.m - 1, grid.n - 1))
-        .unwrap()
-        .to_string()
+    "".to_string()
 }
 
-fn get_or_create_node(pq: &mut Pq<Node>, neighbor: &Neighbor<&usize>) -> Node {
-    match pq.remove_first(|node| {
-        node.coord == neighbor.cell.coord && node.from == neighbor.dir.opposite()
-    }) {
-        Some(node) => node,
-        None => Node::new(neighbor.cell.coord, neighbor.dir.opposite()),
-    }
+fn part1(lines: &Vec<String>) -> String {
+    least_heat_loss(lines, 0, 3)
 }
 
 fn part2(lines: &Vec<String>) -> String {
-    "".to_string()
+    least_heat_loss(lines, 4, 10)
 }
 
 #[cfg(test)]
@@ -169,25 +147,25 @@ mod tests {
 
     #[test]
     fn test_part1_sample() {
-        // let lines = util::lines_in(&format!("./src/{}/input", DAY));
-        // assert_eq!("46", part1(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input", DAY));
+        assert_eq!("102", part1(&lines))
     }
 
     #[test]
     fn test_part1_input() {
-        // let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        // assert_eq!("8249", part1(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        assert_eq!("817", part1(&lines))
     }
 
     #[test]
     fn test_part2_sample() {
-        // let lines = util::lines_in(&format!("./src/{}/input", DAY));
-        // assert_eq!("51", part2(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input", DAY));
+        assert_eq!("94", part2(&lines))
     }
 
     #[test]
     fn test_part2_input() {
-        // let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        // assert_eq!("8444", part2(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        assert_eq!("925", part2(&lines))
     }
 }

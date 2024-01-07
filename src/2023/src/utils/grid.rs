@@ -48,7 +48,7 @@ impl Coord {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Copy)]
 pub enum Direction {
     Top,
     Bottom,

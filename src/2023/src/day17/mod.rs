@@ -49,7 +49,7 @@ impl Node {
         *self.losses.iter().map(|(_, loss)| loss).min().unwrap()
     }
     fn update_loss(&mut self, incoming_dir: &Direction, loss: usize) {
-        let loss_type = LossType::from_dir(incoming_dir).opposite();
+        let loss_type = LossType::from_dir(incoming_dir);
         match self.losses.get(&loss_type) {
             Some(&node_loss) => {
                 if loss < node_loss {
@@ -113,14 +113,11 @@ fn part1(lines: &Vec<String>) -> String {
     let mut start_node_left = Node::new(Coord::new(0, 0), Direction::Left);
     let mut start_node_top = Node::new(Coord::new(0, 0), Direction::Top);
 
-    start_node_left.losses.insert(LossType::Vertical, 0);
     start_node_left.losses.insert(LossType::Horizontal, 0);
-
     start_node_top.losses.insert(LossType::Vertical, 0);
-    start_node_top.losses.insert(LossType::Horizontal, 0);
 
-    pq.push(start_node_left);
     pq.push(start_node_top);
+    pq.push(start_node_left);
 
     let mut heat_map = HashMap::new();
     heat_map.insert(Coord::new(0, 0), 0);
@@ -133,13 +130,15 @@ fn part1(lines: &Vec<String>) -> String {
         let neighbors = grid.neighbors(&node.coord);
         for neighbor in neighbors {
             if !heat_map.contains_key(&neighbor.cell.coord) && neighbor.dir != node.from {
-                let mut nnode = get_or_create_node(&mut pq, &neighbor);
                 let loss_type = LossType::from_dir(&neighbor.dir).opposite();
                 match node.losses.get(&loss_type) {
-                    Some(dir_loss) => nnode.update_loss(&neighbor.dir, dir_loss + node_loss),
+                    Some(dir_loss) => {
+                        let mut nnode = get_or_create_node(&mut pq, &neighbor);
+                        nnode.update_loss(&neighbor.dir, dir_loss + node_loss);
+                        pq.push(nnode);
+                    }
                     None => {}
                 }
-                pq.push(nnode);
             }
         }
     }

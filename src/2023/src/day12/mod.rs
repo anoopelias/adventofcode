@@ -4,7 +4,7 @@ const DAY: &str = "day12";
 use std::time::Instant;
 
 use crate::utils::{
-    parser::{I32Parser, SeparatorParser, TwoSplitter, UsizeParser},
+    parser::{I32Parser, SeparatorParser, UsizeParser},
     util,
 };
 
@@ -27,7 +27,7 @@ fn part1(lines: &Vec<String>) -> String {
     lines
         .iter()
         .map(|line| {
-            let (springs, groups) = line.split_in_two(" ");
+            let (springs, groups) = line.split_once(" ").unwrap();
             count(springs.to_string(), groups.parse_usize(","))
         })
         .sum::<usize>()
@@ -38,7 +38,7 @@ fn part2(lines: &Vec<String>) -> String {
     lines
         .iter()
         .map(|line| {
-            let (springs, groups) = line.split_in_two(" ");
+            let (springs, groups) = line.split_once(" ").unwrap();
             count(
                 five_times(springs, "?"),
                 five_times(groups, ",").parse_usize(","),

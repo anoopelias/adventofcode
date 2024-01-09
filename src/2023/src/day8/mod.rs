@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::utils::{parser::TwoSplitter, string::WrapperRemover, util};
+use crate::utils::{string::WrapperRemover, util};
 
 use self::{one::ProblemOne, two::ProblemTwo};
 
@@ -33,8 +33,13 @@ impl Problem {
     fn parse(&self) -> HashMap<&str, (&str, &str)> {
         let mut map: HashMap<&str, (&str, &str)> = HashMap::new();
         for line in self.lines.iter().skip(2) {
-            let (key, value) = line.split_in_two("=");
-            map.insert(key, value.remove_wrapping().split_in_two(", "));
+            let (key, value) = line
+                .as_str()
+                .trim()
+                .split_once("=")
+                .map(|(s1, s2)| (s1.trim(), s2.trim()))
+                .unwrap();
+            map.insert(key, value.remove_wrapping().split_once(", ").unwrap());
         }
         map
     }

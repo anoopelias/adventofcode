@@ -20,34 +20,41 @@ pub(crate) fn solve() -> String {
     );
 }
 
-fn part1(lines: &Vec<String>) -> String {
-    let mut curr_q = 0;
+fn volume_of(lines: &Vec<String>, f: impl Fn(&str) -> (char, i32)) -> i32 {
+    let mut q = 0;
     let mut area = 0;
     let mut perimeter = 0;
-
     for line in lines {
-        let mut splits = line.split(" ");
-        let dir = splits.next().unwrap();
-        let count = splits.next().unwrap().parse::<i32>().unwrap();
+        let (dir, count) = f(&line);
         perimeter += count;
         match dir {
-            "R" => {
-                curr_q += count;
+            'R' => {
+                q += count;
             }
-            "L" => {
-                curr_q -= count;
+            'L' => {
+                q -= count;
             }
-            "U" => {
-                area -= curr_q * count;
+            'U' => {
+                area -= q * count;
             }
-            "D" => {
-                area += curr_q * count;
+            'D' => {
+                area += q * count;
             }
             _ => panic!("Invalid direction"),
         };
     }
-    let volume = area + perimeter / 2 + 1;
-    volume.to_string()
+    area + perimeter / 2 + 1
+}
+
+fn line_to_instr(line: &str) -> (char, i32) {
+    let mut splits = line.split(" ");
+    let dir = splits.next().unwrap().chars().next().unwrap();
+    let count = splits.next().unwrap().parse::<i32>().unwrap();
+    (dir, count)
+}
+
+fn part1(lines: &Vec<String>) -> String {
+    volume_of(lines, line_to_instr).to_string()
 }
 
 fn part2(lines: &Vec<String>) -> String {

@@ -21,7 +21,7 @@ pub(crate) fn solve() -> String {
 }
 
 fn part1(lines: &Vec<String>) -> String {
-    let (mut curr_p, mut curr_q) = (0, 0);
+    let mut curr_q = 0;
     let mut area = 0;
     let mut perimeter = 0;
 
@@ -38,11 +38,9 @@ fn part1(lines: &Vec<String>) -> String {
                 curr_q -= count;
             }
             "U" => {
-                curr_p -= count;
                 area -= curr_q * count;
             }
             "D" => {
-                curr_p += count;
                 area += curr_q * count;
             }
             _ => panic!("Invalid direction"),

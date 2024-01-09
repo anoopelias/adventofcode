@@ -38,6 +38,7 @@ impl<T: Ord> Pq<T> {
         self.values.len() == 0
     }
 
+    #[allow(unused)]
     pub fn remove_first(&mut self, f: impl Fn(&T) -> bool) -> Option<T> {
         let value = self
             .values
@@ -62,6 +63,7 @@ impl<T: Ord> Pq<T> {
         Some(t)
     }
 
+    #[allow(unused)]
     pub fn has(&mut self, f: impl Fn(&T) -> bool) -> bool {
         self.values
             .iter()

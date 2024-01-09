@@ -23,10 +23,10 @@ pub(crate) fn solve() -> String {
     );
 }
 
-fn volume_of(lines: &Vec<String>, f: impl Fn(&str) -> (char, i32)) -> i32 {
-    let mut q = 0;
-    let mut area = 0;
-    let mut perimeter = 0;
+fn volume_of(lines: &Vec<String>, f: impl Fn(&str) -> (char, i64)) -> i64 {
+    let mut q = 0i64;
+    let mut area = 0i64;
+    let mut perimeter = 0i64;
     for line in lines {
         let (dir, count) = f(&line);
         perimeter += count;
@@ -49,14 +49,14 @@ fn volume_of(lines: &Vec<String>, f: impl Fn(&str) -> (char, i32)) -> i32 {
     area + perimeter / 2 + 1
 }
 
-fn line_to_instr_part1(line: &str) -> (char, i32) {
+fn line_to_instr_part1(line: &str) -> (char, i64) {
     let mut splits = line.split(" ");
     let dir = splits.next().unwrap().chars().next().unwrap();
-    let count = splits.next().unwrap().parse::<i32>().unwrap();
+    let count = splits.next().unwrap().parse::<i64>().unwrap();
     (dir, count)
 }
 
-fn line_to_instr_part2(line: &str) -> (char, i32) {
+fn line_to_instr_part2(line: &str) -> (char, i64) {
     let mut splits = line.split(" ");
     // ignore instruction parameters
     splits.next();
@@ -71,7 +71,7 @@ fn line_to_instr_part2(line: &str) -> (char, i32) {
         _ => panic!("Invalid color"),
     };
 
-    let count = i32::from_str_radix(&color[1..color.len() - 1], 16).unwrap();
+    let count = i64::from_str_radix(&color[1..color.len() - 1], 16).unwrap();
     (dir, count)
 }
 
@@ -108,13 +108,13 @@ mod tests {
 
     #[test]
     fn test_part2_sample() {
-        // let lines = util::lines_in(&format!("./src/{}/input", DAY));
-        // assert_eq!("94", part2(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input", DAY));
+        assert_eq!("952408144115", part2(&lines));
     }
 
     #[test]
     fn test_part2_input() {
-        // let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        // assert_eq!("925", part2(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        assert_eq!("66296566363189", part2(&lines));
     }
 }

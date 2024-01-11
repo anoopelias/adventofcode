@@ -36,7 +36,7 @@ fn summary_for(row_mirror: Option<usize>, col_mirror: Option<usize>) -> usize {
         (Some(top_rows), None) => top_rows * 100,
         (None, Some(left_cols)) => left_cols,
         _ => unreachable!(),
-    }
+    }  
 }
 
 fn grids_for(lines: &Vec<String>) -> Vec<Grid<char>> {

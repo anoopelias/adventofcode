@@ -305,47 +305,47 @@ impl PartRange {
         PartRange { category_range }
     }
 
-    fn spread(&self, category: Category, range: (i32, i32)) -> PartRange {
+    fn spread(&self, category: &Category, range: (i32, i32)) -> PartRange {
         let mut category_range = self.category_range.clone();
-        category_range.insert(category, range);
+        category_range.insert(category.clone(), range);
         PartRange { category_range }
     }
 
-    fn split_by_rule(&self, rule: &Rule) -> (Option<PartRange>, Option<PartRange>) {
+    fn split_by_rule(self, rule: &Rule) -> (Option<PartRange>, Option<PartRange>) {
         let (from, to) = self.category_range.get(&rule.category).unwrap();
         let rule_num = &rule.num;
         // split the range by rule_num
         match rule.op {
             Op::Lt => {
                 if to < rule_num {
-                    (Some(self.clone()), None)
+                    (Some(self), None)
                 } else if from < rule_num {
                     (
-                        Some(self.spread(rule.category.clone(), (*from, *rule_num - 1))),
-                        Some(self.spread(rule.category.clone(), (*rule_num, *to))),
+                        Some(self.spread(&rule.category, (*from, *rule_num - 1))),
+                        Some(self.spread(&rule.category, (*rule_num, *to))),
                     )
                 } else {
-                    (None, Some(self.clone()))
+                    (None, Some(self))
                 }
             }
             Op::Gt => {
                 if to <= rule_num {
-                    (None, Some(self.clone()))
+                    (None, Some(self))
                 } else if from <= rule_num {
                     (
-                        Some(self.spread(rule.category.clone(), (*rule_num + 1, *to))),
-                        Some(self.spread(rule.category.clone(), (*from, *rule_num))),
+                        Some(self.spread(&rule.category, (*rule_num + 1, *to))),
+                        Some(self.spread(&rule.category, (*from, *rule_num))),
                     )
                 } else {
-                    (Some(self.clone()), None)
+                    (Some(self), None)
                 }
             }
         }
     }
 
-    fn process_workflow(&self, worflow: &Workflow) -> Vec<(PartRange, Response)> {
+    fn process_workflow(self, worflow: &Workflow) -> Vec<(PartRange, Response)> {
         let mut part_ranges = vec![];
-        let mut processing = vec![self.clone()];
+        let mut processing = vec![self];
 
         for rule in worflow.rules.iter() {
             let mut new_processing = vec![];

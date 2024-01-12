@@ -65,24 +65,64 @@ fn part1(lines: &Vec<String>) -> String {
 }
 
 fn part2(lines: &Vec<String>) -> String {
-    "".to_string()
+    let mut groups = lines.group_lines();
+    groups.pop();
+    let workflows = groups
+        .pop()
+        .unwrap()
+        .iter()
+        .map(|workflow_string| Workflow::from(workflow_string))
+        .collect::<Vec<_>>();
+
+    let mut workflow_map = HashMap::new();
+    workflows.iter().for_each(|workflow| {
+        workflow_map.insert(workflow.name.clone(), workflow);
+    });
+
+    let mut pending = vec![(PartRange::new(), "in".to_string())];
+    let mut accepted = vec![];
+
+    while pending.len() != 0 {
+        let mut new_pending = vec![];
+
+        for (part_range, workflow_name) in pending {
+            let workflow = workflow_map.get(&workflow_name).unwrap();
+            let new_part_ranges = part_range.process_workflow(workflow);
+
+            for (new_part_range, response) in new_part_ranges {
+                match response.final_result {
+                    Some(FinalResult::A) => accepted.push(new_part_range),
+                    Some(FinalResult::R) => {}
+                    None => new_pending.push((new_part_range, response.next.unwrap())),
+                }
+            }
+        }
+
+        pending = new_pending;
+    }
+
+    accepted
+        .iter()
+        .map(|part_range| part_range.combinations())
+        .sum::<i64>()
+        .to_string()
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 enum Category {
-    x,
-    m,
-    a,
-    s,
+    X,
+    M,
+    A,
+    S,
 }
 
 impl Category {
     fn from(c: char) -> Category {
         match c {
-            'x' => Category::x,
-            'm' => Category::m,
-            'a' => Category::a,
-            's' => Category::s,
+            'x' => Category::X,
+            'm' => Category::M,
+            'a' => Category::A,
+            's' => Category::S,
             _ => panic!("Invalid category"),
         }
     }
@@ -90,21 +130,21 @@ impl Category {
 
 #[derive(Debug, PartialEq)]
 enum Op {
-    lt,
-    gt,
+    Lt,
+    Gt,
 }
 
 impl Op {
     fn from(c: char) -> Op {
         match c {
-            '<' => Op::lt,
-            '>' => Op::gt,
+            '<' => Op::Lt,
+            '>' => Op::Gt,
             _ => panic!("Invalid op"),
         }
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 enum FinalResult {
     A,
     R,
@@ -120,7 +160,7 @@ impl FinalResult {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 struct Response {
     final_result: Option<FinalResult>,
     next: Option<String>,
@@ -168,14 +208,14 @@ impl Rule {
     fn eval(&self, part: &Part) -> Option<&Response> {
         let val = part.cartegory_values.get(&self.category).unwrap();
         match self.op {
-            Op::lt => {
+            Op::Lt => {
                 if val < &self.num {
                     Some(&self.response)
                 } else {
                     None
                 }
             }
-            Op::gt => {
+            Op::Gt => {
                 if val > &self.num {
                     Some(&self.response)
                 } else {
@@ -249,6 +289,94 @@ impl Part {
     }
 }
 
+#[derive(Clone, Debug)]
+struct PartRange {
+    category_range: HashMap<Category, (i32, i32)>,
+}
+
+impl PartRange {
+    fn new() -> PartRange {
+        let mut category_range = HashMap::new();
+        category_range.insert(Category::X, (1, 4000));
+        category_range.insert(Category::M, (1, 4000));
+        category_range.insert(Category::A, (1, 4000));
+        category_range.insert(Category::S, (1, 4000));
+
+        PartRange { category_range }
+    }
+
+    fn spread(&self, category: Category, range: (i32, i32)) -> PartRange {
+        let mut category_range = self.category_range.clone();
+        category_range.insert(category, range);
+        PartRange { category_range }
+    }
+
+    fn split_by_rule(&self, rule: &Rule) -> (Option<PartRange>, Option<PartRange>) {
+        let (from, to) = self.category_range.get(&rule.category).unwrap();
+        let rule_num = &rule.num;
+        // split the range by rule_num
+        match rule.op {
+            Op::Lt => {
+                if to < rule_num {
+                    (Some(self.clone()), None)
+                } else if from < rule_num {
+                    (
+                        Some(self.spread(rule.category.clone(), (*from, *rule_num - 1))),
+                        Some(self.spread(rule.category.clone(), (*rule_num, *to))),
+                    )
+                } else {
+                    (None, Some(self.clone()))
+                }
+            }
+            Op::Gt => {
+                if to <= rule_num {
+                    (None, Some(self.clone()))
+                } else if from <= rule_num {
+                    (
+                        Some(self.spread(rule.category.clone(), (*rule_num + 1, *to))),
+                        Some(self.spread(rule.category.clone(), (*from, *rule_num))),
+                    )
+                } else {
+                    (Some(self.clone()), None)
+                }
+            }
+        }
+    }
+
+    fn process_workflow(&self, worflow: &Workflow) -> Vec<(PartRange, Response)> {
+        let mut part_ranges = vec![];
+        let mut processing = vec![self.clone()];
+
+        for rule in worflow.rules.iter() {
+            let mut new_processing = vec![];
+            for part_range in processing {
+                let (true_part, false_part) = part_range.split_by_rule(rule);
+
+                if let Some(part_range) = true_part {
+                    part_ranges.push((part_range, rule.response.clone()))
+                }
+
+                if let Some(part_range) = false_part {
+                    new_processing.push(part_range);
+                }
+            }
+            processing = new_processing;
+        }
+
+        for part_range in processing {
+            part_ranges.push((part_range, worflow.otherwise.clone()))
+        }
+
+        part_ranges
+    }
+
+    fn combinations(&self) -> i64 {
+        self.category_range
+            .iter()
+            .fold(1, |acc, (_, range)| acc * (range.1 - range.0 + 1) as i64)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{part1, part2, Category, FinalResult, Op, Response, Rule, Workflow, DAY};
@@ -260,8 +388,8 @@ mod tests {
             name: "px".to_string(),
             rules: vec![
                 Rule {
-                    category: Category::a,
-                    op: Op::lt,
+                    category: Category::A,
+                    op: Op::Lt,
                     num: 2006,
                     response: Response {
                         final_result: None,
@@ -269,8 +397,8 @@ mod tests {
                     },
                 },
                 Rule {
-                    category: Category::m,
-                    op: Op::gt,
+                    category: Category::M,
+                    op: Op::Gt,
                     num: 2090,
                     response: Response {
                         final_result: Some(FinalResult::A),
@@ -291,10 +419,10 @@ mod tests {
     fn test_parse_part() {
         let expected = Part {
             cartegory_values: vec![
-                (Category::x, 787),
-                (Category::m, 2655),
-                (Category::a, 1222),
-                (Category::s, 2876),
+                (Category::X, 787),
+                (Category::M, 2655),
+                (Category::A, 1222),
+                (Category::S, 2876),
             ]
             .into_iter()
             .collect(),
@@ -317,13 +445,13 @@ mod tests {
 
     #[test]
     fn test_part2_sample() {
-        // let lines = util::lines_in(&format!("./src/{}/input", DAY));
-        // assert_eq!("952408144115", part2(&lines));
+        let lines = util::lines_in(&format!("./src/{}/input", DAY));
+        assert_eq!("167409079868000", part2(&lines));
     }
 
     #[test]
     fn test_part2_input() {
-        // let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        // assert_eq!("66296566363189", part2(&lines));
+        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        assert_eq!("131029523269531", part2(&lines));
     }
 }

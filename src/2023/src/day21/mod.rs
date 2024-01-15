@@ -1,8 +1,11 @@
-const DAY: &str = "day20";
+const DAY: &str = "day21";
 
-use std::time::Instant;
+use std::{collections::HashSet, time::Instant};
 
-use crate::utils::util::{self};
+use crate::{
+    day3::grid::{self, Grid},
+    utils::util::{self, ToGrid},
+};
 
 #[allow(unused)]
 pub(crate) fn solve() -> String {
@@ -21,7 +24,25 @@ pub(crate) fn solve() -> String {
 }
 
 fn part1(lines: &Vec<String>) -> String {
-    "".to_string()
+    let grid = lines.to_grid();
+    let start_cell = grid.find('S').unwrap();
+    let mut tiles = HashSet::new();
+    tiles.insert(start_cell);
+
+    for _ in 0..64 {
+        tiles = tiles
+            .iter()
+            .flat_map(|tile| {
+                grid.neighbors(tile)
+                    .iter()
+                    .filter(|neighbor| neighbor.cell.val == &'.' || neighbor.cell.val == &'S')
+                    .map(|neighbor| neighbor.cell.coord)
+                    .collect::<Vec<_>>()
+            })
+            .collect::<HashSet<_>>()
+    }
+
+    tiles.len().to_string()
 }
 
 fn part2(lines: &Vec<String>) -> String {
@@ -35,14 +56,14 @@ mod tests {
 
     #[test]
     fn test_part1_sample() {
-        // let lines = util::lines_in(&format!("./src/{}/input", DAY));
-        // assert_eq!("19114", part1(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input", DAY));
+        assert_eq!("42", part1(&lines))
     }
 
     #[test]
     fn test_part1_input() {
-        // let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        // assert_eq!("386787", part1(&lines))
+        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        assert_eq!("3585", part1(&lines))
     }
 
     #[test]

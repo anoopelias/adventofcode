@@ -283,16 +283,19 @@ fn buttons(module_name: &str, mut modules: HashMap<&str, Module<'_>>) -> i64 {
 }
 
 fn part2(lines: &Vec<String>) -> String {
-    let count = vec![
-        buttons("js", parse_lines(lines)),
-        buttons("zb", parse_lines(lines)),
-        buttons("bs", parse_lines(lines)),
-        buttons("rr", parse_lines(lines)),
-    ]
-    .iter()
-    .fold(1, |acc, num| acc * num);
+    let modules = parse_lines(lines);
+    let (rx_source, _) = modules
+        .iter()
+        .filter(|(_, module)| module.targets().contains(&"rx"))
+        .next()
+        .unwrap();
 
-    count.to_string()
+    modules
+        .iter()
+        .filter(|(_, module)| module.targets().contains(rx_source))
+        .map(|(source, _)| buttons(*source, parse_lines(lines)))
+        .fold(1, |acc, num| acc * num)
+        .to_string()
 }
 
 #[cfg(test)]

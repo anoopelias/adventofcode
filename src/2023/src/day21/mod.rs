@@ -1,6 +1,9 @@
 const DAY: &str = "day21";
 
-use std::{collections::HashSet, time::Instant};
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    time::Instant,
+};
 
 use crate::{
     day3::grid::{self, Grid},
@@ -26,23 +29,29 @@ pub(crate) fn solve() -> String {
 fn part1(lines: &Vec<String>) -> String {
     let grid = lines.to_grid();
     let start_cell = grid.find('S').unwrap();
-    let mut tiles = HashSet::new();
-    tiles.insert(start_cell);
+    let mut dist_map = HashMap::new();
+    let mut queue = VecDeque::new();
+    queue.push_back((start_cell, 0));
 
-    for _ in 0..64 {
-        tiles = tiles
-            .iter()
-            .flat_map(|tile| {
-                grid.neighbors(tile)
-                    .iter()
-                    .filter(|neighbor| neighbor.cell.val == &'.' || neighbor.cell.val == &'S')
-                    .map(|neighbor| neighbor.cell.coord)
-                    .collect::<Vec<_>>()
-            })
-            .collect::<HashSet<_>>()
+    // bfs
+    while !queue.is_empty() {
+        let (curr, dist) = queue.pop_front().unwrap();
+
+        if !dist_map.contains_key(&curr) {
+            dist_map.insert(curr, dist);
+
+            grid.neighbors(&curr)
+                .iter()
+                .filter(|neighbor| neighbor.cell.val == &'.' || neighbor.cell.val == &'S')
+                .for_each(|neighbor| queue.push_back((neighbor.cell.coord, dist + 1)));
+        }
     }
 
-    tiles.len().to_string()
+    dist_map
+        .into_iter()
+        .filter(|(_, dist)| *dist <= 64 && dist % 2 == 0)
+        .count()
+        .to_string()
 }
 
 fn part2(lines: &Vec<String>) -> String {

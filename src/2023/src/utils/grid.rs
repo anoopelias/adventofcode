@@ -1,14 +1,11 @@
 #![allow(unused)]
 use std::{
-    arch::aarch64::vaba_s16,
     collections::{HashMap, VecDeque},
-    fmt::{write, Debug, Display},
-    io::SeekFrom,
+    fmt::{Debug, Display},
 };
 
-use anyhow::{anyhow, Result};
-use itertools::{Itertools, MapInto};
-use num::{complex::ComplexFloat, Float};
+use anyhow::Result;
+use itertools::Itertools;
 
 use super::util;
 
@@ -76,36 +73,6 @@ pub struct Neighbor<T> {
 impl<T> Neighbor<T> {
     fn new(cell: GridCell<T>, dir: Direction) -> Neighbor<T> {
         Neighbor { cell, dir }
-    }
-}
-
-pub struct BfsResult {
-    pub from: Coord,
-    pub from_map: HashMap<Coord, Option<Coord>>,
-    pub dist_map: HashMap<Coord, usize>,
-}
-
-impl BfsResult {
-    fn new(from: &Coord) -> BfsResult {
-        let mut bfs_result = BfsResult {
-            from: from.clone(),
-            from_map: HashMap::new(),
-            dist_map: HashMap::new(),
-        };
-
-        bfs_result.from_map.insert(from.clone(), None);
-        bfs_result.dist_map.insert(from.clone(), 0);
-        bfs_result
-    }
-
-    fn add_map(&mut self, coord: &Coord, from: &Coord) {
-        let dist = self.dist_map.get(from).unwrap() + 1;
-        self.from_map.insert(coord.clone(), Some(from.clone()));
-        self.dist_map.insert(coord.clone(), dist);
-    }
-
-    fn has(&self, coord: &Coord) -> bool {
-        self.from_map.contains_key(coord)
     }
 }
 

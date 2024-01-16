@@ -28,30 +28,13 @@ pub(crate) fn solve() -> String {
 
 fn part1(lines: &Vec<String>) -> String {
     let grid = lines.to_grid();
-    let start_cell = grid.find('S').unwrap();
-    let mut dist_map = HashMap::new();
-    let mut queue = VecDeque::new();
-    queue.push_back((start_cell, 0));
-
-    // bfs
-    while !queue.is_empty() {
-        let (curr, dist) = queue.pop_front().unwrap();
-
-        if !dist_map.contains_key(&curr) {
-            dist_map.insert(curr, dist);
-
-            grid.neighbors(&curr)
-                .iter()
-                .filter(|neighbor| neighbor.cell.val == &'.' || neighbor.cell.val == &'S')
-                .for_each(|neighbor| queue.push_back((neighbor.cell.coord, dist + 1)));
-        }
-    }
-
-    dist_map
-        .into_iter()
-        .filter(|(_, dist)| *dist <= 64 && dist % 2 == 0)
-        .count()
-        .to_string()
+    grid.bfs(grid.find('S').unwrap(), |neighbor| {
+        neighbor.cell.val == &'.' || neighbor.cell.val == &'S'
+    })
+    .into_iter()
+    .filter(|(_, dist)| *dist <= 64 && dist % 2 == 0)
+    .count()
+    .to_string()
 }
 
 fn part2(lines: &Vec<String>) -> String {

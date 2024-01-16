@@ -1,7 +1,7 @@
 #![allow(unused)]
 use std::{
     arch::aarch64::vaba_s16,
-    collections::HashMap,
+    collections::{HashMap, VecDeque},
     fmt::{write, Debug, Display},
     io::SeekFrom,
 };
@@ -370,26 +370,28 @@ impl<T: Clone + PartialEq> Grid<T> {
         }
     }
 
-    pub fn bfs(&self, from: &Coord) -> BfsResult {
-        let mut bfs_result = BfsResult::new(from);
+    pub fn bfs(
+        &self,
+        from: Coord,
+        filter_func: impl Fn(&Neighbor<&T>) -> bool,
+    ) -> HashMap<Coord, i32> {
+        let mut dist_map = HashMap::new();
+        let mut queue = VecDeque::new();
+        queue.push_back((from, 0));
 
-        let mut nexts = vec![from.clone()];
+        while !queue.is_empty() {
+            let (curr, dist) = queue.pop_front().unwrap();
 
-        while nexts.len() > 0 {
-            let curr = nexts.remove(0);
-            let mut neighbors = self.neighbors(&curr);
+            if !dist_map.contains_key(&curr) {
+                dist_map.insert(curr, dist);
 
-            while neighbors.len() != 0 {
-                let neighbor = neighbors.pop().unwrap();
-                let neighbor_coord = neighbor.cell.coord;
-                if !bfs_result.has(&neighbor_coord) {
-                    bfs_result.add_map(&neighbor_coord, &curr);
-                    nexts.push(neighbor_coord);
-                }
+                self.neighbors(&curr)
+                    .into_iter()
+                    .filter(|neighbor| filter_func(neighbor))
+                    .for_each(|neighbor| queue.push_back((neighbor.cell.coord, dist + 1)));
             }
         }
-
-        bfs_result
+        dist_map
     }
 }
 

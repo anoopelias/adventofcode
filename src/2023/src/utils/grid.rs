@@ -25,6 +25,8 @@ pub struct Grid<T: Clone + PartialEq = ()> {
     grid: Vec<Vec<T>>,
     pub m: usize,
     pub n: usize,
+    mx: usize,
+    nx: usize,
 }
 
 #[derive(Clone, PartialEq, Debug, Hash, Eq, Copy)]
@@ -82,7 +84,13 @@ impl Grid<()> {
             .into_iter()
             .map(|_| (0..n).into_iter().map(|_| ()).collect())
             .collect();
-        Grid { grid, m, n }
+        Grid {
+            grid,
+            m,
+            n,
+            mx: 1,
+            nx: 1,
+        }
     }
 }
 
@@ -93,27 +101,44 @@ impl<T: Clone + PartialEq> Grid<T> {
             .map(|_| (0..n).into_iter().map(|_| fill.clone()).collect())
             .collect();
 
-        Grid { grid, m, n }
+        Grid {
+            grid,
+            m,
+            n,
+            mx: 1,
+            nx: 1,
+        }
     }
 
     pub fn with(grid: Vec<Vec<T>>) -> Grid<T> {
         let (m, n) = (grid.len(), grid.get(0).unwrap().len());
-        Grid { grid, m, n }
+        Grid {
+            grid,
+            m,
+            n,
+            mx: 1,
+            nx: 1,
+        }
+    }
+
+    pub fn expand(&mut self, mx: usize, nx: usize) {
+        self.mx = mx;
+        self.nx = nx;
     }
 
     pub fn get(&self, coord: &Coord) -> Result<&T> {
         self.check_bounds(coord)?;
-        Ok(&self.grid[coord.p][coord.q])
+        Ok(&self.grid[coord.p % self.m][coord.q % self.n])
     }
 
     pub fn get_mut(&mut self, coord: &Coord) -> Result<&mut T> {
         self.check_bounds(coord)?;
-        Ok(&mut self.grid[coord.p][coord.q])
+        Ok(&mut self.grid[coord.p % self.m][coord.q % self.n])
     }
 
     pub fn set(&mut self, coord: &Coord, val: T) -> Result<()> {
         self.check_bounds(coord)?;
-        self.grid[coord.p][coord.q] = val;
+        self.grid[coord.p % self.m][coord.q % self.n] = val;
         Ok(())
     }
 
@@ -219,22 +244,32 @@ impl<T: Clone + PartialEq> Grid<T> {
         None
     }
 
+    pub fn m(&self) -> usize {
+        self.m * self.mx
+    }
+
+    pub fn n(&self) -> usize {
+        self.n * self.nx
+    }
+
     pub fn top(&self, coord: &Coord) -> Result<GridCell<&T>> {
         self.check_bounds(coord)?;
         if coord.p == 0 {
             return Err(anyhow::anyhow!("No top element"));
         }
-        let top = &self.grid[coord.p - 1][coord.q];
-        Ok(GridCell::new(Coord::new(coord.p - 1, coord.q), top))
+        let coord = Coord::new(coord.p - 1, coord.q);
+        let top = &self.get(&coord).unwrap();
+        Ok(GridCell::new(coord, top))
     }
 
     pub fn bottom(&self, coord: &Coord) -> Result<GridCell<&T>> {
         self.check_bounds(coord)?;
-        if coord.p == self.m - 1 {
+        if coord.p == self.m() - 1 {
             return Err(anyhow::anyhow!("No bottom element"));
         }
-        let bottom = &self.grid[coord.p + 1][coord.q];
-        Ok(GridCell::new(Coord::new(coord.p + 1, coord.q), bottom))
+        let coord = Coord::new(coord.p + 1, coord.q);
+        let bottom = &self.get(&coord).unwrap();
+        Ok(GridCell::new(coord, bottom))
     }
 
     pub fn left(&self, coord: &Coord) -> Result<GridCell<&T>> {
@@ -242,35 +277,37 @@ impl<T: Clone + PartialEq> Grid<T> {
         if coord.q == 0 {
             return Err(anyhow::anyhow!("No left element"));
         }
-        let left = &self.grid[coord.p][coord.q - 1];
-        Ok(GridCell::new(Coord::new(coord.p, coord.q - 1), left))
+        let coord = Coord::new(coord.p, coord.q - 1);
+        let left = &self.get(&coord).unwrap();
+        Ok(GridCell::new(coord, left))
     }
 
     pub fn right(&self, coord: &Coord) -> Result<GridCell<&T>> {
         self.check_bounds(coord)?;
-        if coord.q == self.n - 1 {
+        if coord.q == self.n() - 1 {
             return Err(anyhow::anyhow!("No right element"));
         }
-        let right = &self.grid[coord.p][coord.q + 1];
-        Ok(GridCell::new(Coord::new(coord.p, coord.q + 1), right))
+        let coord = Coord::new(coord.p, coord.q + 1);
+        let right = &self.get(&coord).unwrap();
+        Ok(GridCell::new(coord, right))
     }
 
     fn check_bounds(&self, coord: &Coord) -> Result<()> {
-        if coord.p >= self.m || coord.q >= self.n {
+        if coord.p >= self.m() || coord.q >= self.n() {
             return Err(anyhow::anyhow!("Index out of bounds"));
         }
         Ok(())
     }
 
     fn check_row_bounds(&self, p: usize) -> Result<()> {
-        if p >= self.m {
+        if p >= self.m() {
             return Err(anyhow::anyhow!("Index out of bounds"));
         }
         Ok(())
     }
 
     fn check_col_bounds(&self, q: usize) -> Result<()> {
-        if q >= self.n {
+        if q >= self.n() {
             return Err(anyhow::anyhow!("Index out of bounds"));
         }
         Ok(())

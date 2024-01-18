@@ -2,7 +2,7 @@ use std::fs;
 
 use super::grid::Grid;
 
-pub(crate) fn lines_in(path: &str) -> Vec<String> {
+pub fn lines_in(path: &str) -> Vec<String> {
     let contents = fs::read_to_string(path).expect("Should have been able to read the file");
 
     let mut lines = vec![];

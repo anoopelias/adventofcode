@@ -116,13 +116,16 @@ fn part2(lines: &Vec<String>, steps: usize) -> String {
     let mut even_cuts = dist_map
         .values()
         .filter(|&&value| value % 2 == 0 && value as usize > half_width)
-        .count();
+        .count()
+        // Reducing it by 1 since there is one node inside the box
+        - 1;
 
     let mut odds = dist_map.values().filter(|&&value| value % 2 == 1).count();
     let mut odd_cuts = dist_map
         .values()
         .filter(|&&value| value % 2 == 1 && value as usize > half_width)
-        .count();
+        .count()
+        - 1;
 
     if steps % 2 == 1 {
         (odds, evens) = (evens, odds);
@@ -173,7 +176,8 @@ mod tests {
         let lines = util::lines_in(&format!("./src/{}/input1", DAY));
         assert_eq!("597102911216785", part2(&lines, 26501365));
 
-        // too low: 597102911216785
-        // too hi : 597102954104491
+        // too low:     597102911216785
+        // not correct: 597102911419086
+        // too hi :     597102954104491
     }
 }

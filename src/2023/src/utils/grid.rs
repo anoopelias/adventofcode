@@ -16,7 +16,7 @@ pub struct GridCell<T> {
 }
 
 impl<T> GridCell<T> {
-    fn new(coord: Coord, val: T) -> GridCell<T> {
+    pub fn new(coord: Coord, val: T) -> GridCell<T> {
         GridCell { val, coord }
     }
 }

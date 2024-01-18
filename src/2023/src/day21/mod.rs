@@ -2,6 +2,8 @@ const DAY: &str = "day21";
 
 use std::time::Instant;
 
+use crate::utils::grid::Coord;
+
 use crate::utils::util::{self, ToGrid};
 
 #[allow(unused)]
@@ -139,36 +141,77 @@ fn part2(lines: &Vec<String>, steps: usize) -> String {
     result.to_string()
 }
 
+fn part1_expanded(lines: &Vec<String>, steps: i32, exp: usize) -> String {
+    let mut grid = lines.to_grid();
+    let parity = steps % 2;
+    grid.expand(exp, exp);
+
+    let center = Coord::new(196, 196);
+    grid.bfs(center, |neighbor| {
+        neighbor.cell.val == &'.' || neighbor.cell.val == &'S'
+    })
+    .into_iter()
+    .filter(|(_, dist)| *dist <= steps && dist % 2 == parity)
+    .count()
+    .to_string()
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{part1, part2, DAY};
+    use super::{part1, part1_expanded, part2, DAY};
     use crate::utils::util;
 
     #[test]
     fn test_part1_sample() {
         let lines = util::lines_in(&format!("./src/{}/input", DAY));
-        assert_eq!("13", part1(&lines, 5))
+        assert_eq!("13", part1(&lines, 5));
     }
 
     #[test]
     fn test_part1_input() {
         let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        assert_eq!("3585", part1(&lines, 64))
+        assert_eq!("3585", part1(&lines, 64));
     }
 
     #[test]
     fn test_part2_sample() {
         let lines = util::lines_in(&format!("./src/{}/input", DAY));
-        //assert_eq!("179", part2(&lines, 16));
+        assert_eq!("178", part2(&lines, 16));
+    }
+
+    #[test]
+    fn test_part1_expanded_n1() {
+        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        let exp = 3usize;
+        let steps = ((131 * exp - 1) / 2) as i32;
+        assert_eq!("32975", part1_expanded(&lines, steps, exp));
+    }
+
+    #[test]
+    fn test_part1_expanded_n2() {
+        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        let exp = 5usize;
+        let steps = (((131 * exp) - 1) / 2) as i32;
+        assert_eq!("76707", part1_expanded(&lines, steps, exp));
+    }
+
+    #[test]
+    fn test_part1_expanded_n3() {
+        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        let exp = 404601usize;
+        let steps = (((131 * exp) - 1) / 2) as i32;
+        assert_eq!("121388", part1_expanded(&lines, steps, exp));
     }
 
     #[test]
     fn test_part2_input() {
         let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        assert_eq!("179086", part2(&lines, 458));
         //assert_eq!("597102911216785", part2(&lines, 26501365));
 
         // too low:     597102911216785
         // not correct: 597102911419086
+        //              597102953699891
         // too hi :     597102954104491
     }
 }

@@ -360,6 +360,19 @@ impl<T: Clone + PartialEq> Grid<T> {
         }
         dist_map
     }
+
+    pub fn to_string_by(&self, cell_string: impl Fn(GridCell<&T>) -> String) -> String {
+        self.grid
+            .iter()
+            .enumerate()
+            .map(|(p, row)| {
+                row.iter()
+                    .enumerate()
+                    .map(|(q, value)| cell_string(GridCell::new(Coord::new(p, q), value)))
+                    .join("")
+            })
+            .join("\n")
+    }
 }
 
 impl<T: Clone + PartialEq + Display> Display for Grid<T> {

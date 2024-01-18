@@ -2,8 +2,7 @@ const DAY: &str = "day21";
 
 use std::time::Instant;
 
-use crate::utils::grid::Coord;
-
+use crate::utils::grid::{Coord, Grid};
 use crate::utils::util::{self, ToGrid};
 
 #[allow(unused)]
@@ -22,149 +21,69 @@ pub(crate) fn solve() -> String {
     );
 }
 
-fn part1(lines: &Vec<String>, steps: i32) -> String {
+fn part1(lines: &Vec<String>, steps: usize) -> String {
     let grid = lines.to_grid();
+    let count = count_reachable_plots(&grid, steps);
+    count.to_string()
+}
+
+fn count_reachable_plots(grid: &Grid<char>, steps: usize) -> usize {
     let parity = steps % 2;
-
-    let dist_map = grid.bfs(grid.find('S').unwrap(), |neighbor| {
-        neighbor.cell.val == &'.' || neighbor.cell.val == &'S'
-    });
-
-    //////
-    ////// Debugging starts
-
-    let center_sq = dist_map
-        .iter()
-        .filter(|(c, _)| c.p >= 11 && c.p <= 21 && c.q >= 11 && c.q <= 21)
-        .filter(|(_, dist)| **dist % 2 == 0)
-        .map(|(c, _)| c)
-        .collect::<Vec<_>>();
-
-    println!("center_sq {}", center_sq.len());
-
-    let even_cuts = dist_map
-        .iter()
-        .filter(|(c, _)| {
-            (c.p < 11 && c.q < 11)
-                || (c.p > 21 && c.q < 11)
-                || (c.p < 11 && c.q > 21)
-                || (c.p > 21 && c.q > 21)
-        })
-        .filter(|(_, dist)| **dist <= steps && **dist % 2 == 0)
-        .map(|(c, _)| c)
-        .collect::<Vec<_>>();
-    println!("even_cuts {}", even_cuts.len());
-    let odds_outside = dist_map
-        .iter()
-        .filter(|(c, _)| {
-            (c.p < 11 && c.q >= 11 && c.q <= 21)
-                || (c.p > 21 && c.q >= 11 && c.q <= 21)
-                || (c.p >= 11 && c.p <= 21 && c.q < 11)
-                || (c.p >= 11 && c.p <= 21 && c.q > 21)
-        })
-        .filter(|(_, dist)| **dist <= steps && **dist % 2 == 0)
-        .count();
-    println!("odds_outside {}", odds_outside);
-
-    let center_sq_odds = dist_map
-        .iter()
-        .filter(|(c, _)| c.p >= 11 && c.p <= 21 && c.q >= 11 && c.q <= 21)
-        .filter(|(_, dist)| **dist % 2 == 1)
-        .count();
-    println!("center_sq_odds {}", center_sq_odds);
-
-    let center_sq_odds = dist_map
-        .iter()
-        .filter(|(c, _)| c.p >= 11 && c.p <= 21 && c.q >= 11 && c.q <= 21)
-        .filter(|(_, dist)| **dist % 2 == 1)
-        .count();
-    println!("center_sq_odds {}", center_sq_odds);
-
-    /////// Debugging ends
-    ///////
-
-    let all = grid
-        .bfs(grid.find('S').unwrap(), |neighbor| {
-            neighbor.cell.val == &'.' || neighbor.cell.val == &'S'
-        })
+    let center = Coord::new((grid.m() - 1) / 2, (grid.n() - 1) / 2);
+    grid.bfs(center, |neighbor| neighbor.cell.val != &'#')
         .into_iter()
         .filter(|(_, dist)| *dist <= steps && dist % 2 == parity)
-        .map(|(c, _)| c)
-        .collect::<Vec<_>>();
-
-    println!(
-        "{}",
-        grid.to_string_by(|cell| match all.contains(&&cell.coord) {
-            true => "O".to_string(),
-            false => cell.val.to_string(),
-        })
-    );
-
-    all.len().to_string()
+        .count()
 }
 
 fn part2(lines: &Vec<String>, steps: usize) -> String {
-    let grid = lines.to_grid();
-    let dist_map = grid.bfs(grid.find('S').unwrap(), |neighbor| {
-        neighbor.cell.val == &'.' || neighbor.cell.val == &'S'
-    });
-
+    let mut grid = lines.to_grid();
+    grid.expand(5, 5);
     let width = grid.m;
     let half_width = width / 2;
     let n = (steps - half_width) / width;
-
     assert_eq!(steps, (n * width) + half_width);
-    let mut evens = dist_map.values().filter(|&&value| value % 2 == 0).count();
-    let mut even_cuts = dist_map
-        .values()
-        .filter(|&&value| value % 2 == 0 && value as usize > half_width)
-        .count()
-        // Reducing it by 1 since there is one node inside the box
-        - 1;
 
-    let mut odds = dist_map.values().filter(|&&value| value % 2 == 1).count();
-    let mut odd_cuts = dist_map
-        .values()
-        .filter(|&&value| value % 2 == 1 && value as usize > half_width)
+    let center = Coord::new((grid.m() - 1) / 2, (grid.n() - 1) / 2);
+    let dist_map = grid.bfs(center, |neighbor| neighbor.cell.val != &'#');
+
+    // n = 1
+    let r1 = dist_map
+        .iter()
+        .filter(|(_, dist)| **dist <= half_width && **dist % 2 == 1)
         .count();
 
-    if steps % 2 == 1 {
-        (odds, evens) = (evens, odds);
-        (odd_cuts, even_cuts) = (even_cuts, odd_cuts);
-    }
+    // n = 1
+    let r2 = dist_map
+        .iter()
+        .filter(|(_, dist)| **dist <= (half_width + width) && **dist % 2 == 0)
+        .count();
 
-    let n_sq = n * n;
-    let np1 = n + 1;
-    let np1_sq = np1 * np1;
+    // n = 2
+    let r3 = dist_map
+        .iter()
+        .filter(|(_, dist)| **dist <= (half_width + (2 * width)) && **dist % 2 == 1)
+        .count();
 
-    let result = (evens * n_sq) + (odds * np1_sq) - (np1 * odd_cuts) + (n * even_cuts);
+    let c = r1;
+    let a = (r3 + r1 - (2 * r2)) / 2;
+    let b = ((4 * r2) - (3 * r1) - r3) / 2;
+
+    // a n^2 + b n + c
+    let result = (a * n * n) + (b * n) + c;
+
     result.to_string()
-}
-
-fn part1_expanded(lines: &Vec<String>, steps: i32, exp: usize) -> String {
-    let mut grid = lines.to_grid();
-    let parity = steps % 2;
-    grid.expand(exp, exp);
-
-    let center = Coord::new(196, 196);
-    grid.bfs(center, |neighbor| {
-        neighbor.cell.val == &'.' || neighbor.cell.val == &'S'
-    })
-    .into_iter()
-    .filter(|(_, dist)| *dist <= steps && dist % 2 == parity)
-    .count()
-    .to_string()
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{part1, part1_expanded, part2, DAY};
+    use super::{part1, part2, DAY};
     use crate::utils::util;
 
     #[test]
     fn test_part1_sample() {
         let lines = util::lines_in(&format!("./src/{}/input", DAY));
-        assert_eq!("13", part1(&lines, 5));
+        assert_eq!("16", part1(&lines, 6));
     }
 
     #[test]
@@ -180,34 +99,9 @@ mod tests {
     }
 
     #[test]
-    fn test_part1_expanded_n1() {
-        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        let exp = 3usize;
-        let steps = ((131 * exp - 1) / 2) as i32;
-        assert_eq!("32975", part1_expanded(&lines, steps, exp));
-    }
-
-    #[test]
-    fn test_part1_expanded_n2() {
-        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        let exp = 5usize;
-        let steps = (((131 * exp) - 1) / 2) as i32;
-        assert_eq!("76707", part1_expanded(&lines, steps, exp));
-    }
-
-    #[test]
-    fn test_part1_expanded_n3() {
-        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        let exp = 404601usize;
-        let steps = (((131 * exp) - 1) / 2) as i32;
-        assert_eq!("121388", part1_expanded(&lines, steps, exp));
-    }
-
-    #[test]
     fn test_part2_input() {
         let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        assert_eq!("179086", part2(&lines, 458));
-        //assert_eq!("597102911216785", part2(&lines, 26501365));
+        assert_eq!("597102953699891", part2(&lines, 26501365));
 
         // too low:     597102911216785
         // not correct: 597102911419086

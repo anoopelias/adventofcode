@@ -378,10 +378,10 @@ impl<T: Clone + PartialEq> Grid<T> {
         &self,
         from: Coord,
         filter_func: impl Fn(&Neighbor<&T>) -> bool,
-    ) -> HashMap<Coord, i32> {
+    ) -> HashMap<Coord, usize> {
         let mut dist_map = HashMap::new();
         let mut queue = VecDeque::new();
-        queue.push_back((from, 0));
+        queue.push_back((from, 0 as usize));
 
         while !queue.is_empty() {
             let (curr, dist) = queue.pop_front().unwrap();

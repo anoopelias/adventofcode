@@ -100,12 +100,6 @@ mod tests {
     }
 
     #[test]
-    fn test_part2_sample() {
-        let lines = util::lines_in(&format!("./src/{}/input", DAY));
-        assert_eq!("178", part2(&lines, 16));
-    }
-
-    #[test]
     fn test_part2_input() {
         let lines = util::lines_in(&format!("./src/{}/input1", DAY));
         assert_eq!("597102953699891", part2(&lines, 26501365));

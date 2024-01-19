@@ -66,8 +66,15 @@ fn part2(lines: &Vec<String>, steps: usize) -> String {
         .count();
 
     let c = r1;
-    let a = (r3 + r1 - (2 * r2)) / 2;
-    let b = ((4 * r2) - (3 * r1) - r3) / 2;
+
+    let ap_bp_c = r2;
+    let ap_b = ap_bp_c - c;
+    let a4p_b2p_c = r3;
+    let a4p_b2p = a4p_b2p_c - c;
+    let a2 = a4p_b2p - (2 * ap_b);
+
+    let a = a2 / 2;
+    let b = ap_b - a;
 
     // a n^2 + b n + c
     let result = (a * n * n) + (b * n) + c;

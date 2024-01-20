@@ -90,10 +90,7 @@ impl Brick {
 }
 
 fn part1(lines: &Vec<String>) -> String {
-    let mut bricks = lines
-        .iter()
-        .map(|line| Brick::from_str(line.as_str()).unwrap())
-        .collect::<Vec<_>>();
+    let mut bricks = parse_lines(lines);
 
     let mut coords: HashMap<Coord3d, usize> = bricks
         .iter()
@@ -133,6 +130,13 @@ fn part1(lines: &Vec<String>) -> String {
         .collect::<HashSet<usize>>();
 
     (bricks.len() - supporting_bricks.len()).to_string()
+}
+
+fn parse_lines(lines: &Vec<String>) -> Vec<Brick> {
+    lines
+        .iter()
+        .map(|line| Brick::from_str(line.as_str()).unwrap())
+        .collect::<Vec<_>>()
 }
 
 fn part2(_lines: &Vec<String>) -> String {

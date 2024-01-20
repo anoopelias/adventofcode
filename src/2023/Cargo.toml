@@ -7,9 +7,17 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.75"
+clearcheck = "0.0.2"
 itertools = "0.12.0"
 num = "0.4.1"
 rand = "0.8.5"
+
+[dev-dependencies]
+clearcheck = { version = "0.0.2", features = ["num", "date", "regex", "file"] }
+chrono = { version = "0.4.31" }
+num = { version = "0.4.1" }
+regex = { version = "1.10.2" }
+walkdir = { version = "2.4.0", features = [] }
 
 [lib]
 crate-type = ["lib"]

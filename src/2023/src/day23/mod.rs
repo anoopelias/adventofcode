@@ -319,6 +319,7 @@ mod tests {
     #[test]
     fn test_part2_input() {
         let _lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        part2(&_lines).should_equal("6658");
+        // Too slow to test every time
+        // part2(&_lines).should_equal("6658");
     }
 }

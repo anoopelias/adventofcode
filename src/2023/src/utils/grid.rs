@@ -66,7 +66,7 @@ impl Direction {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Neighbor<T> {
     pub dir: Direction,
     pub cell: GridCell<T>,

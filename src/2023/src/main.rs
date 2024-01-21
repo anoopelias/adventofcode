@@ -24,6 +24,6 @@ mod day9;
 mod utils;
 
 fn main() {
-    let ans = day18::solve();
+    let ans = day23::solve();
     println!("{}", ans);
 }

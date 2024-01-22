@@ -43,10 +43,9 @@ impl Hail {
         (p, q)
     }
 
-    fn is_n_future(&self, v: f64, n: usize) -> bool {
-        let diff = (self.pos.get(n) - v).abs();
-        let diff_new = (self.pos.get(n) + self.vel.get(n) - v).abs();
-        diff_new < diff
+    fn is_n_future(&self, a: f64, n: usize) -> bool {
+        // Check if the 'velocity' and 'distance to a' has same sign
+        (a - self.pos.get(n)) * self.vel.get(n) > 0.0
     }
 
     fn is_future(&self, p: f64, q: f64) -> bool {

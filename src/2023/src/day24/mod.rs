@@ -120,11 +120,11 @@ fn part2(lines: &Vec<String>) -> String {
         });
     }
 
-    let eqs_xy = vec![
-        coeffs_xy(&hails[0], &hails[1]),
-        coeffs_xy(&hails[0], &hails[2]),
-        coeffs_xy(&hails[0], &hails[3]),
-        coeffs_xy(&hails[0], &hails[4]),
+    let mut eqs_xy = vec![
+        coeffs(&hails[0], &hails[1], 0, 1),
+        coeffs(&hails[0], &hails[2], 0, 1),
+        coeffs(&hails[0], &hails[3], 0, 1),
+        coeffs(&hails[0], &hails[4], 0, 1),
     ];
 
     println!(
@@ -134,15 +134,15 @@ fn part2(lines: &Vec<String>) -> String {
         to_eq(&eqs_xy[2]),
         to_eq(&eqs_xy[3]),
     );
-
-    let eqs_xz = vec![
-        coeffs_xz(&hails[0], &hails[1]),
-        coeffs_xz(&hails[0], &hails[2]),
-        coeffs_xz(&hails[0], &hails[3]),
-        coeffs_xz(&hails[0], &hails[4]),
-    ];
-
     println!();
+    let result_xy = gaussian_elimination(&mut eqs_xy);
+
+    let mut eqs_xz = vec![
+        coeffs(&hails[0], &hails[1], 0, 2),
+        coeffs(&hails[0], &hails[2], 0, 2),
+        coeffs(&hails[0], &hails[3], 0, 2),
+        coeffs(&hails[0], &hails[4], 0, 2),
+    ];
 
     println!(
         "{}\n{}\n{}\n{}",
@@ -151,48 +151,84 @@ fn part2(lines: &Vec<String>) -> String {
         to_eq(&eqs_xz[2]),
         to_eq(&eqs_xz[3]),
     );
+    let result_xz = gaussian_elimination(&mut eqs_xz);
 
-    "".to_string()
+    (result_xy[0] + result_xy[1] + result_xz[2]).to_string()
 }
 
-// fn solve(eqs: Vec<Vec<f64>>) -> (f64, f64) {
+pub fn gaussian_elimination(matrix: &mut [Vec<f64>]) -> Vec<f64> {
+    let size = matrix.len();
+    assert_eq!(size, matrix[0].len() - 1);
 
-// }
+    for i in 0..size - 1 {
+        for j in i..size - 1 {
+            echelon(matrix, i, j);
+        }
+    }
+
+    for i in (1..size).rev() {
+        eliminate(matrix, i);
+    }
+
+    for i in 0..size {
+        if matrix[i][i] == 0f64 {
+            println!("Infinitely many solutions");
+        }
+    }
+
+    let mut result: Vec<f64> = vec![0f64; size];
+    for i in 0..size {
+        result[i] = matrix[i][size] / matrix[i][i];
+    }
+    result
+}
+
+fn echelon(matrix: &mut [Vec<f64>], i: usize, j: usize) {
+    let size = matrix.len();
+    if matrix[i][i] == 0f64 {
+    } else {
+        let factor = matrix[j + 1][i] / matrix[i][i];
+        (i..size + 1).for_each(|k| {
+            matrix[j + 1][k] -= factor * matrix[i][k];
+        });
+    }
+}
+
+fn eliminate(matrix: &mut [Vec<f64>], i: usize) {
+    let size = matrix.len();
+    if matrix[i][i] == 0f64 {
+    } else {
+        for j in (1..i + 1).rev() {
+            let factor = matrix[j - 1][i] / matrix[i][i];
+            for k in (0..size + 1).rev() {
+                matrix[j - 1][k] -= factor * matrix[i][k];
+            }
+        }
+    }
+}
 
 fn to_eq(coeffs: &Vec<f64>) -> String {
     format!(
-        "{}x + {}y + {}u + {}v + {} = 0",
+        "{}x + {}y + {}u + {}v = {}",
         coeffs[0], coeffs[1], coeffs[2], coeffs[3], coeffs[4]
     )
 }
 
-fn coeffs_xy(hail_a: &Hail, hail_b: &Hail) -> Vec<f64> {
+fn coeffs(hail_a: &Hail, hail_b: &Hail, c0: usize, c1: usize) -> Vec<f64> {
     // (rx vy) - (ry vx) - (y1 vrx) + (x1 vry) + (y1 vx) - (x1 vy) = (rx vry) - (ry vrx)
     vec![
         // (rx vy)
-        hail_a.vel.q - hail_b.vel.q,
+        hail_a.vel.get(c1) - hail_b.vel.get(c1),
         // - (ry vx)
-        -(hail_a.vel.p - hail_b.vel.p),
+        -(hail_a.vel.get(c0) - hail_b.vel.get(c0)),
         // - (y1 vrx)
-        hail_a.pos.q - hail_b.pos.q,
+        hail_a.pos.get(c1) - hail_b.pos.get(c1),
         // (x1 vry)
-        hail_a.pos.p - hail_b.pos.p,
+        hail_a.pos.get(c0) - hail_b.pos.get(c0),
         // (y1 vx)
-        (hail_a.pos.q * hail_a.vel.p) - (hail_b.pos.q * hail_b.vel.p)
+        -((hail_a.pos.get(c1) * hail_a.vel.get(c0)) - (hail_b.pos.get(c1) * hail_b.vel.get(c0))
         // - (x1 vy)
-        - ((hail_a.pos.p * hail_a.vel.q) - (hail_b.pos.p * hail_b.vel.q)),
-    ]
-}
-
-fn coeffs_xz(hail_a: &Hail, hail_b: &Hail) -> Vec<f64> {
-    vec![
-        hail_a.vel.r - hail_b.vel.r,
-        -(hail_a.vel.p - hail_b.vel.p),
-        hail_a.pos.r - hail_b.pos.r,
-        hail_a.pos.p - hail_b.pos.p,
-        (hail_a.pos.r * hail_a.vel.p)
-            - (hail_b.pos.r * hail_b.vel.p)
-            - ((hail_a.pos.p * hail_a.vel.r) - (hail_b.pos.p * hail_b.vel.r)),
+        - ((hail_a.pos.get(c0) * hail_a.vel.get(c1)) - (hail_b.pos.get(c0) * hail_b.vel.get(c1)))),
     ]
 }
 

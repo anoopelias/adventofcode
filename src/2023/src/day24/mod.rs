@@ -127,6 +127,18 @@ fn part2(lines: &Vec<String>) -> String {
         coeffs(&hails[0], &hails[4], 0, 1),
     ];
 
+    /*
+    2x + 1y + -6u + 1v + -44 = 0
+    3x + -0y + -12u + -1v + -35 = 0
+    3x + 1y + -18u + 7v + -38 = 0
+    6x + 3y + -6u + -1v + -164 = 0
+
+    0x + 1y + 8u + 1v + -36 = 0
+    2x + -0y + -4u + -1v + -34 = 0
+    -1x + 1y + 2u + 7v + -6 = 0
+    1x + 3y + 15u + -1v + -97 = 0
+     */
+
     println!(
         "{}\n{}\n{}\n{}",
         to_eq(&eqs_xy[0]),
@@ -138,10 +150,10 @@ fn part2(lines: &Vec<String>) -> String {
     let result_xy = gaussian_elimination(&mut eqs_xy);
 
     let mut eqs_xz = vec![
-        coeffs(&hails[0], &hails[1], 0, 2),
-        coeffs(&hails[0], &hails[2], 0, 2),
-        coeffs(&hails[0], &hails[3], 0, 2),
-        coeffs(&hails[0], &hails[4], 0, 2),
+        coeffs(&hails[0], &hails[2], 1, 2),
+        coeffs(&hails[0], &hails[1], 1, 2),
+        coeffs(&hails[0], &hails[3], 1, 2),
+        coeffs(&hails[0], &hails[4], 1, 2),
     ];
 
     println!(
@@ -153,7 +165,9 @@ fn part2(lines: &Vec<String>) -> String {
     );
     let result_xz = gaussian_elimination(&mut eqs_xz);
 
-    (result_xy[0] + result_xy[1] + result_xz[2]).to_string()
+    (result_xy[0] + result_xy[1] + result_xz[1])
+        .round()
+        .to_string()
 }
 
 pub fn gaussian_elimination(matrix: &mut [Vec<f64>]) -> Vec<f64> {
@@ -232,34 +246,6 @@ fn coeffs(hail_a: &Hail, hail_b: &Hail, c0: usize, c1: usize) -> Vec<f64> {
     ]
 }
 
-pub struct Fraction {
-    numerator: f64,
-    denominator: f64,
-}
-
-impl Fraction {
-    fn new(numerator: f64, denominator: f64) -> Fraction {
-        Fraction {
-            numerator,
-            denominator,
-        }
-    }
-
-    fn value(&self) -> f64 {
-        self.numerator / self.denominator
-    }
-
-    fn multiply(&mut self, number: &Fraction) {
-        self.numerator *= number.numerator;
-        self.denominator *= number.denominator;
-    }
-
-    fn divide(&mut self, number: &Fraction) {
-        self.numerator *= number.denominator;
-        self.denominator *= number.numerator;
-    }
-}
-
 #[derive(Clone, PartialEq, Debug, Copy)]
 pub struct Vec3d {
     pub p: f64,
@@ -318,12 +304,12 @@ mod tests {
     #[test]
     fn test_part2_sample() {
         let lines = util::lines_in(&format!("./src/{}/input", DAY));
-        part2(&lines).should_equal("154");
+        part2(&lines).should_equal("47");
     }
 
     #[test]
     fn test_part2_input() {
         let lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        part2(&lines).should_equal("6658");
+        part2(&lines).should_equal("669042940632377");
     }
 }

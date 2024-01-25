@@ -64,11 +64,8 @@ fn part1(lines: &Vec<String>) -> String {
 
     let nodes = edges
         .iter()
-        .flat_map(|edge| vec![edge.node1, edge.node2])
-        .collect::<HashSet<&str>>()
-        .iter()
-        .map(|node| (*node, 1))
-        .collect::<HashMap<_, _>>();
+        .flat_map(|edge| vec![(edge.node1, 1), (edge.node2, 1)])
+        .collect::<HashMap<&str, i32>>();
 
     // Karger's algorithm
     loop {

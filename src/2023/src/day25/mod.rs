@@ -37,12 +37,7 @@ impl<'a> Edge<'a> {
     }
 
     fn replace(self, other_edge: &Edge<'a>, new_node: &'a str) -> Edge<'a> {
-        if self.has(other_edge.node1) && self.has(other_edge.node2) {
-            Edge {
-                node1: new_node,
-                node2: new_node,
-            }
-        } else if self.has(other_edge.node1) {
+        if self.has(other_edge.node1) {
             Edge {
                 node1: new_node,
                 node2: self.other(other_edge.node1),
@@ -84,8 +79,8 @@ fn part1(lines: &Vec<String>) -> String {
             let new_node = random_edge.node1;
             edges = edges
                 .into_iter()
+                .filter(|edge| !(edge.has(random_edge.node1) && edge.has(random_edge.node2)))
                 .map(|edge| edge.replace(&random_edge, new_node))
-                .filter(|edge| edge.node1 != edge.node2)
                 .collect();
 
             let count = nodes.remove(random_edge.node1).unwrap()

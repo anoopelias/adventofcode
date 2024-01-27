@@ -1,10 +1,13 @@
 use std::{
     cmp,
     collections::{HashMap, HashSet},
-    hash::Hash,
+    fmt::Debug,
+    hash::{BuildHasherDefault, Hash},
 };
 
 use anyhow::{Context, Result};
+use twox_hash::XxHash64;
+use union_find_rs::prelude::*;
 
 pub struct Edge<V> {
     v1: V,
@@ -46,21 +49,25 @@ impl<V: PartialEq> Edge<V> {
 
 pub struct Graph<V> {
     pub vertices: HashSet<V>,
+    // pub vertices: HashSet<V, BuildHasherDefault<XxHash64>>,
     adj: HashMap<V, HashMap<V, Edge<V>>>,
+    // adj: HashMap<V, HashMap<V, Edge<V>>, BuildHasherDefault<XxHash64>>,
 }
 
 impl<V> Graph<V> {
     pub fn new() -> Graph<V> {
         Graph {
-            vertices: HashSet::new(),
-            adj: HashMap::new(),
+            vertices: Default::default(),
+            adj: Default::default(),
+            // vertices: Default::default(),
+            // adj: Default::default(),
         }
     }
 }
 
-impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
+impl<V: PartialEq + Ord + Hash + Copy + Debug + Clone> Graph<V> {
     pub fn add_vertex(&mut self, v: V) {
-        self.adj.insert(v, HashMap::new());
+        self.adj.entry(v).or_insert_with(|| Default::default());
         self.vertices.insert(v);
     }
 
@@ -100,11 +107,13 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
     pub fn merge(&mut self, v1: &V, v2: &V) -> Option<Edge<V>> {
         let pivots = self
             .adj
-            .get(v2)?
+            .get(v2)
+            .unwrap()
             .iter()
             .map(|(pivot, _)| *pivot)
             .filter(|pivot| pivot != v1)
             .collect::<HashSet<V>>();
+        // .collect::<HashSet<V, BuildHasherDefault<XxHash64>>>();
 
         pivots.iter().for_each(|pivot| {
             self.move_edge(pivot, v2, v1).unwrap();
@@ -112,15 +121,14 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
 
         self.vertices.remove(v2);
         self.adj.remove(v2);
-        self.adj.get_mut(v1)?.remove(v2)
+        self.adj.get_mut(v1).unwrap().remove(v2)
     }
 
-    fn cut_phase(&self) -> (V, V, i32) {
-        let start = self.vertices.iter().next().unwrap();
-        let mut group = vec![*start];
+    fn cut_phase(&self, start: V) -> (V, V, i32) {
+        let mut group = vec![start];
         let mut others = self.vertices.clone();
-        let mut max_weight = 0;
         others.remove(&start);
+        let mut cut_weight = 0;
 
         while !others.is_empty() {
             let (v, w) = others
@@ -137,23 +145,46 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
                 })
                 .reduce(|(v1, w1), (v2, w2)| if w1 > w2 { (v1, w1) } else { (v2, w2) })
                 .unwrap();
-            max_weight = cmp::max(max_weight, w);
+            cut_weight = w;
             group.push(others.take(&v).unwrap());
         }
 
-        (group.pop().unwrap(), group.pop().unwrap(), max_weight)
+        let t = group.pop().unwrap();
+        let s = group.pop().unwrap();
+
+        (s, t, cut_weight)
     }
 
-    pub fn mincut(&mut self) -> i32 {
+    pub fn mincut(&mut self) -> (Vec<V>, i32) {
+        // Stoer–Wagner algorithm
         let mut mincut = i32::MAX;
+        let mut start = *self.vertices.iter().next().unwrap();
+        let mut cut = HashMap::new();
+
+        let mut uf: DisjointSets<V> = DisjointSets::new();
+        self.vertices.iter().for_each(|v| {
+            uf.make_set(*v).unwrap();
+        });
+
+        let vertices = self.vertices.iter().map(|v| *v).collect::<Vec<V>>();
+
         while self.vertices.len() > 1 {
-            let (s, t, w) = self.cut_phase();
+            let (s, t, w) = self.cut_phase(start);
             if w < mincut {
                 mincut = w;
+                vertices.iter().for_each(|v| {
+                    cut.insert(*v, uf.find_set(&v).unwrap() == uf.find_set(&t).unwrap());
+                });
             }
             self.merge(&s, &t);
+            uf.union(&s, &t).unwrap();
+            start = s;
         }
-        mincut
+        let partition = vertices
+            .into_iter()
+            .filter(|v| *cut.get(v).unwrap())
+            .collect::<Vec<V>>();
+        (partition, mincut)
     }
 }
 
@@ -195,6 +226,23 @@ mod tests {
         g.add_edge("6", "7", 1).unwrap();
         g.add_edge("7", "8", 3).unwrap();
 
-        assert_eq!(4, g.mincut());
+        let (partition, cuts) = g.mincut();
+        assert_eq!(4, cuts);
+        assert!(partition.len() == 4 || partition.len() == 5);
+    }
+
+    #[test]
+    fn test_sample_graph() {
+        let mut g = Graph::new();
+        g.add_vertex("lhk");
+        g.add_vertex("rzs");
+        g.add_vertex("jqt");
+
+        g.add_edge("lhk", "rzs", 8).unwrap();
+        g.add_edge("lhk", "jqt", 1).unwrap();
+        g.add_edge("rzs", "jqt", 1).unwrap();
+
+        let (s, v, w) = g.cut_phase("jqt");
+        println!("s: {}, v: {}, w: {}", s, v, w);
     }
 }

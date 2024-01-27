@@ -1,10 +1,13 @@
+use std::cmp::Ordering;
 use std::{
-    cmp,
     collections::{HashMap, HashSet},
     hash::Hash,
 };
 
+use crate::utils::pq::Pq;
+use crate::utils::pq::PqType;
 use anyhow::{Context, Result};
+use union_find_rs::prelude::*;
 
 pub struct Edge<V> {
     v1: V,
@@ -38,12 +41,6 @@ impl<V: Ord + Hash> Hash for Edge<V> {
     }
 }
 
-impl<V: PartialEq> Edge<V> {
-    fn has(&self, v: &V) -> bool {
-        self.v1 == *v || self.v2 == *v
-    }
-}
-
 pub struct Graph<V> {
     pub vertices: HashSet<V>,
     adj: HashMap<V, HashMap<V, Edge<V>>>,
@@ -52,15 +49,15 @@ pub struct Graph<V> {
 impl<V> Graph<V> {
     pub fn new() -> Graph<V> {
         Graph {
-            vertices: HashSet::new(),
-            adj: HashMap::new(),
+            vertices: Default::default(),
+            adj: Default::default(),
         }
     }
 }
 
 impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
     pub fn add_vertex(&mut self, v: V) {
-        self.adj.insert(v, HashMap::new());
+        self.adj.entry(v).or_insert_with(|| Default::default());
         self.vertices.insert(v);
     }
 
@@ -68,16 +65,12 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
         self.adj
             .get_mut(&v1)
             .context("no v1")?
-            .insert(v2, Edge { v1, v2, weight });
+            .insert(v2, Edge::new(v1, v2, weight));
         self.adj
             .get_mut(&v2)
             .context("no v2")?
-            .insert(v1, Edge { v1, v2, weight });
+            .insert(v1, Edge::new(v1, v2, weight));
         Ok(())
-    }
-
-    pub fn edge(&self, v1: &V, v2: &V) -> Option<&Edge<V>> {
-        self.adj.get(v1)?.get(v2)
     }
 
     fn add_weight(&mut self, v1: &V, v2: &V, weight: i32) -> Option<()> {
@@ -90,9 +83,8 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
         self.adj.get_mut(pivot)?.remove(from).unwrap();
         let weight = self.adj.get_mut(from)?.remove(pivot).unwrap().weight;
 
-        match self.add_weight(pivot, to, weight) {
-            Some(_) => {}
-            None => self.add_edge(*pivot, *to, weight).unwrap(),
+        if self.add_weight(pivot, to, weight).is_none() {
+            self.add_edge(*pivot, *to, weight).unwrap();
         }
         Some(())
     }
@@ -100,7 +92,8 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
     pub fn merge(&mut self, v1: &V, v2: &V) -> Option<Edge<V>> {
         let pivots = self
             .adj
-            .get(v2)?
+            .get(v2)
+            .unwrap()
             .iter()
             .map(|(pivot, _)| *pivot)
             .filter(|pivot| pivot != v1)
@@ -112,48 +105,103 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
 
         self.vertices.remove(v2);
         self.adj.remove(v2);
-        self.adj.get_mut(v1)?.remove(v2)
+        self.adj.get_mut(v1).unwrap().remove(v2)
     }
 
-    fn cut_phase(&self) -> (V, V, i32) {
-        let start = self.vertices.iter().next().unwrap();
-        let mut group = vec![*start];
-        let mut others = self.vertices.clone();
-        let mut max_weight = 0;
-        others.remove(&start);
+    fn cut_phase(&self, start: V) -> (V, V, i32) {
+        let mut queue = Pq::new(PqType::Max);
+        self.vertices.iter().for_each(|v| {
+            queue.push(PqNode::new(v, 0));
+        });
 
-        while !others.is_empty() {
-            let (v, w) = others
-                .iter()
-                .map(|v_other| {
-                    let weight_sum = group
-                        .iter()
-                        .map(|v_group| match self.edge(&v_group, &v_other) {
-                            Some(edge) => edge.weight,
-                            None => 0,
-                        })
-                        .sum::<i32>();
-                    (*v_other, weight_sum)
-                })
-                .reduce(|(v1, w1), (v2, w2)| if w1 > w2 { (v1, w1) } else { (v2, w2) })
-                .unwrap();
-            max_weight = cmp::max(max_weight, w);
-            group.push(others.take(&v).unwrap());
+        let (mut s, mut t) = (start, start);
+        while !queue.is_empty() {
+            let node = *queue.pop().unwrap().node;
+            (s, t) = (t, node);
+            for (other, edge) in self.adj.get(&node).unwrap() {
+                match queue.remove_one_if(|wn| *wn.node == *other) {
+                    Some(mut wn) => {
+                        wn.weight += edge.weight;
+                        queue.push(wn);
+                    }
+                    None => {}
+                }
+            }
         }
 
-        (group.pop().unwrap(), group.pop().unwrap(), max_weight)
+        let cut_weight = self
+            .adj
+            .get(&t)
+            .unwrap()
+            .iter()
+            .map(|(_, edge)| edge.weight)
+            .sum();
+
+        (s, t, cut_weight)
     }
 
-    pub fn mincut(&mut self) -> i32 {
+    pub fn mincut(&mut self) -> (Vec<V>, i32) {
+        // Stoer–Wagner algorithm
         let mut mincut = i32::MAX;
+        let mut start = *self.vertices.iter().next().unwrap();
+        let mut cut = HashMap::new();
+
+        let mut uf: DisjointSets<V> = DisjointSets::new();
+        self.vertices.iter().for_each(|v| {
+            uf.make_set(*v).unwrap();
+        });
+
+        let vertices = self.vertices.iter().map(|v| *v).collect::<Vec<V>>();
+
         while self.vertices.len() > 1 {
-            let (s, t, w) = self.cut_phase();
+            let (s, t, w) = self.cut_phase(start);
             if w < mincut {
                 mincut = w;
+                vertices.iter().for_each(|v| {
+                    cut.insert(*v, uf.find_set(&v).unwrap() == uf.find_set(&t).unwrap());
+                });
             }
             self.merge(&s, &t);
+            uf.union(&s, &t).unwrap();
+            start = s;
         }
-        mincut
+
+        let partition = vertices
+            .into_iter()
+            .filter(|v| *cut.get(v).unwrap())
+            .collect::<Vec<V>>();
+        (partition, mincut)
+    }
+}
+
+struct PqNode<T> {
+    node: T,
+    weight: i32,
+}
+
+impl<T> PqNode<T> {
+    fn new(t: T, weight: i32) -> PqNode<T> {
+        PqNode { node: t, weight }
+    }
+}
+
+impl<T> PartialEq for PqNode<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.weight == other.weight
+    }
+}
+
+impl<T> Eq for PqNode<T> {}
+
+impl<T> PartialOrd for PqNode<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<T> Ord for PqNode<T> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.weight.cmp(&other.weight)
     }
 }
 
@@ -195,6 +243,8 @@ mod tests {
         g.add_edge("6", "7", 1).unwrap();
         g.add_edge("7", "8", 3).unwrap();
 
-        assert_eq!(4, g.mincut());
+        let (partition, cuts) = g.mincut();
+        assert_eq!(4, cuts);
+        assert!(partition.len() == 4 || partition.len() == 5);
     }
 }

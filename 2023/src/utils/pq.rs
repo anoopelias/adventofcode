@@ -39,7 +39,7 @@ impl<T: Ord> Pq<T> {
     }
 
     #[allow(unused)]
-    pub fn remove_first(&mut self, f: impl Fn(&T) -> bool) -> Option<T> {
+    pub fn remove_one_if(&mut self, f: impl Fn(&T) -> bool) -> Option<T> {
         let value = self
             .values
             .iter()
@@ -188,6 +188,14 @@ mod tests {
     }
 
     #[test]
+    fn increase_key() {
+        let mut pq = Pq::new(PqType::Max);
+        pq.push(12);
+        pq.push(10);
+        assert_eq!(Some(12), pq.pop());
+    }
+
+    #[test]
     fn ten_thousand_random_numbers() {
         let mut rng = rand::thread_rng();
         let mut nums: Vec<usize> = vec![];
@@ -205,7 +213,7 @@ mod tests {
         nums.shuffle(&mut rng);
         for _ in 0..500 {
             let n = nums.pop().unwrap();
-            pq.remove_first(|&num| num == n);
+            pq.remove_one_if(|&num| num == n);
         }
 
         nums.sort();
@@ -222,6 +230,6 @@ mod tests {
         pq.push(2);
         pq.push(3);
 
-        assert_eq!(Some(3), pq.remove_first(|&n| n == 3));
+        assert_eq!(Some(3), pq.remove_one_if(|&n| n == 3));
     }
 }

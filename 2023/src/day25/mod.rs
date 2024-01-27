@@ -1,13 +1,9 @@
 const DAY: &str = "day25";
 
-use aoc2023::utils::graph::Graph;
-use rand::Rng;
+use crate::utils::graph::Graph;
 
 use crate::utils::util;
-use std::{
-    collections::{HashMap, HashSet},
-    time::Instant,
-};
+use std::time::Instant;
 
 #[allow(unused)]
 pub(crate) fn solve() -> String {
@@ -20,45 +16,19 @@ pub(crate) fn solve() -> String {
 
 fn part1(lines: &Vec<String>) -> String {
     let mut graph = Graph::new();
-
     lines.iter().for_each(|line| {
         let (node1, nodes_str) = line.split_once(": ").unwrap();
+        graph.add_vertex(node1);
         nodes_str.split(" ").for_each(|node2| {
-            graph.add_vertex(node1);
             graph.add_vertex(node2);
             graph.add_edge(node1, node2, 1).unwrap();
         })
     });
 
-    // let nodes = edges
-    //     .iter()
-    //     .flat_map(|edge| vec![(edge.node1, 1), (edge.node2, 1)])
-    //     .collect::<HashMap<&str, i32>>();
-
-    // // Karger's algorithm
-    // loop {
-    //     let mut edges = edges.clone();
-    //     let mut nodes = nodes.clone();
-    //     while nodes.len() > 2 {
-    //         let random_edge = edges.remove(rand::thread_rng().gen_range(0..edges.len()));
-    //         let new_node = random_edge.node1;
-    //         edges = edges
-    //             .into_iter()
-    //             .filter(|edge| !(edge.has(random_edge.node1) && edge.has(random_edge.node2)))
-    //             .map(|edge| edge.replace(&random_edge, new_node))
-    //             .collect();
-
-    //         let count = nodes.remove(random_edge.node1).unwrap()
-    //             + nodes.remove(random_edge.other(random_edge.node1)).unwrap();
-    //         nodes.insert(new_node, count);
-    //     }
-
-    //     if edges.len() == 3 {
-    //         break nodes.values().fold(1, |acc, n| acc * n).to_string();
-    //     }
-    // }
-
-    "".to_string()
+    let len = graph.vertices.len();
+    let (partition, mincut) = graph.mincut();
+    assert_eq!(3, mincut);
+    (partition.len() * (len - partition.len())).to_string()
 }
 
 #[cfg(test)]
@@ -77,7 +47,7 @@ mod tests {
     #[test]
     fn test_part1_input() {
         let _lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        // Too slow to test always
+        // Too slow to test
         // part1(&_lines).should_equal("558376");
     }
 }

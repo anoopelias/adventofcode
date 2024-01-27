@@ -2,7 +2,6 @@ use std::{
     cmp,
     collections::{HashMap, HashSet},
     hash::Hash,
-    mem::replace,
 };
 
 use anyhow::{Context, Result};
@@ -46,61 +45,62 @@ impl<V: PartialEq> Edge<V> {
 }
 
 pub struct Graph<V> {
-    adj: HashMap<V, HashMap<V, i32>>,
+    pub vertices: HashSet<V>,
+    adj: HashMap<V, HashMap<V, Edge<V>>>,
 }
 
 impl<V> Graph<V> {
     pub fn new() -> Graph<V> {
         Graph {
+            vertices: HashSet::new(),
             adj: HashMap::new(),
         }
     }
 }
 
 impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
-    pub fn vertices(&self) -> HashSet<&V> {
-        self.adj.keys().collect()
+    pub fn add_vertex(&mut self, v: V) {
+        self.adj.insert(v, HashMap::new());
+        self.vertices.insert(v);
     }
 
-    pub fn add_edge(&mut self, v1: V, v2: V, weight: i32) {
+    pub fn add_edge(&mut self, v1: V, v2: V, weight: i32) -> Result<()> {
         self.adj
-            .entry(v1)
-            .or_insert_with(|| HashMap::new())
-            .insert(v2, weight);
+            .get_mut(&v1)
+            .context("no v1")?
+            .insert(v2, Edge { v1, v2, weight });
         self.adj
-            .entry(v2)
-            .or_insert_with(|| HashMap::new())
-            .insert(v1, weight);
+            .get_mut(&v2)
+            .context("no v2")?
+            .insert(v1, Edge { v1, v2, weight });
+        Ok(())
     }
 
-    pub fn edge(&self, v1: &V, v2: &V) -> Option<i32> {
-        Some(*self.adj.get(v1)?.get(v2)?)
+    pub fn edge(&self, v1: &V, v2: &V) -> Option<&Edge<V>> {
+        self.adj.get(v1)?.get(v2)
     }
 
-    fn add_weight(&mut self, v1: &V, v2: &V, weight: i32) -> Option<i32> {
-        let edge_weight = self.adj.get(v1)?.get(v2)?;
-        let sum_weight = edge_weight + weight;
-        let _ = replace(self.adj.get_mut(v1).unwrap().get_mut(v2)?, sum_weight);
-        let _ = replace(self.adj.get_mut(v2).unwrap().get_mut(v1)?, sum_weight);
-        Some(sum_weight)
+    fn add_weight(&mut self, v1: &V, v2: &V, weight: i32) -> Option<()> {
+        self.adj.get_mut(v1)?.get_mut(v2)?.weight += weight;
+        self.adj.get_mut(v2)?.get_mut(v1)?.weight += weight;
+        Some(())
     }
 
     fn move_edge(&mut self, pivot: &V, from: &V, to: &V) -> Option<()> {
         self.adj.get_mut(pivot)?.remove(from).unwrap();
-        let weight = self.adj.get_mut(from)?.remove(pivot).unwrap();
+        let weight = self.adj.get_mut(from)?.remove(pivot).unwrap().weight;
 
         match self.add_weight(pivot, to, weight) {
             Some(_) => {}
-            None => self.add_edge(*pivot, *to, weight),
+            None => self.add_edge(*pivot, *to, weight).unwrap(),
         }
         Some(())
     }
 
-    pub fn merge(&mut self, v1: &V, v2: &V) -> i32 {
+    pub fn merge(&mut self, v1: &V, v2: &V) -> Option<Edge<V>> {
         let pivots = self
             .adj
-            .get(v2)
-            .unwrap()
+            .get(v2)?
             .iter()
             .map(|(pivot, _)| *pivot)
             .filter(|pivot| pivot != v1)
@@ -110,16 +110,17 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
             self.move_edge(pivot, v2, v1).unwrap();
         });
 
+        self.vertices.remove(v2);
         self.adj.remove(v2);
-        self.adj.get_mut(v1).unwrap().remove(v2).unwrap()
+        self.adj.get_mut(v1)?.remove(v2)
     }
 
     fn cut_phase(&self) -> (V, V, i32) {
-        let start = *self.vertices().iter().next().unwrap();
+        let start = self.vertices.iter().next().unwrap();
         let mut group = vec![*start];
-        let mut others = self.vertices().clone();
+        let mut others = self.vertices.clone();
         let mut max_weight = 0;
-        others.remove(start);
+        others.remove(&start);
 
         while !others.is_empty() {
             let (v, w) = others
@@ -127,14 +128,17 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
                 .map(|v_other| {
                     let weight_sum = group
                         .iter()
-                        .map(|v_group| self.edge(&v_group, &v_other).unwrap_or(0))
+                        .map(|v_group| match self.edge(&v_group, &v_other) {
+                            Some(edge) => edge.weight,
+                            None => 0,
+                        })
                         .sum::<i32>();
                     (*v_other, weight_sum)
                 })
                 .reduce(|(v1, w1), (v2, w2)| if w1 > w2 { (v1, w1) } else { (v2, w2) })
                 .unwrap();
             max_weight = cmp::max(max_weight, w);
-            group.push(*others.take(&v).unwrap());
+            group.push(others.take(&v).unwrap());
         }
 
         (group.pop().unwrap(), group.pop().unwrap(), max_weight)
@@ -142,7 +146,7 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
 
     pub fn mincut(&mut self) -> i32 {
         let mut mincut = i32::MAX;
-        while self.vertices().len() > 1 {
+        while self.vertices.len() > 1 {
             let (s, t, w) = self.cut_phase();
             if w < mincut {
                 mincut = w;
@@ -158,22 +162,38 @@ mod tests {
     use super::Graph;
 
     #[test]
+    fn create_graph() {
+        let mut g = Graph::new();
+        g.add_vertex("kevin");
+        g.add_vertex("tom");
+        g.add_edge("kevin", "tom", 1).unwrap();
+    }
+
+    #[test]
     fn calculate_mincut() {
         let mut g = Graph::new();
+        g.add_vertex("1");
+        g.add_vertex("2");
+        g.add_vertex("3");
+        g.add_vertex("4");
+        g.add_vertex("5");
+        g.add_vertex("6");
+        g.add_vertex("7");
+        g.add_vertex("8");
 
         // See sample data from https://blog.thomasjungblut.com/graph/mincut/mincut/
-        g.add_edge("1", "5", 3);
-        g.add_edge("1", "2", 2);
-        g.add_edge("2", "5", 2);
-        g.add_edge("2", "6", 2);
-        g.add_edge("2", "3", 3);
-        g.add_edge("3", "7", 2);
-        g.add_edge("3", "4", 4);
-        g.add_edge("4", "7", 2);
-        g.add_edge("4", "8", 2);
-        g.add_edge("5", "6", 3);
-        g.add_edge("6", "7", 1);
-        g.add_edge("7", "8", 3);
+        g.add_edge("1", "5", 3).unwrap();
+        g.add_edge("1", "2", 2).unwrap();
+        g.add_edge("2", "5", 2).unwrap();
+        g.add_edge("2", "6", 2).unwrap();
+        g.add_edge("2", "3", 3).unwrap();
+        g.add_edge("3", "7", 2).unwrap();
+        g.add_edge("3", "4", 4).unwrap();
+        g.add_edge("4", "7", 2).unwrap();
+        g.add_edge("4", "8", 2).unwrap();
+        g.add_edge("5", "6", 3).unwrap();
+        g.add_edge("6", "7", 1).unwrap();
+        g.add_edge("7", "8", 3).unwrap();
 
         assert_eq!(4, g.mincut());
     }

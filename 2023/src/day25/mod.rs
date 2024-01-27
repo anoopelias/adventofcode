@@ -1,5 +1,6 @@
 const DAY: &str = "day25";
 
+use aoc2023::utils::graph::Graph;
 use rand::Rng;
 
 use crate::utils::util;
@@ -17,78 +18,47 @@ pub(crate) fn solve() -> String {
     return format!("result1: {} in {:?}", part1, elapsed1);
 }
 
-#[derive(Clone)]
-struct Edge<'a> {
-    node1: &'a str,
-    node2: &'a str,
-}
-
-impl<'a> Edge<'a> {
-    fn has(&self, node: &str) -> bool {
-        self.node1 == node || self.node2 == node
-    }
-
-    fn other(&self, node: &'a str) -> &'a str {
-        if node == self.node1 {
-            self.node2
-        } else {
-            self.node1
-        }
-    }
-
-    fn replace(self, other_edge: &Edge<'a>, new_node: &'a str) -> Edge<'a> {
-        if self.has(other_edge.node1) {
-            Edge {
-                node1: new_node,
-                node2: self.other(other_edge.node1),
-            }
-        } else if self.has(other_edge.node2) {
-            Edge {
-                node1: new_node,
-                node2: self.other(other_edge.node2),
-            }
-        } else {
-            self
-        }
-    }
-}
-
 fn part1(lines: &Vec<String>) -> String {
-    let edges = lines
-        .iter()
-        .flat_map(|line| {
-            let (node1, nodes_str) = line.split_once(": ").unwrap();
-            nodes_str.split(" ").map(|node2| Edge { node1, node2 })
+    let mut graph = Graph::new();
+
+    lines.iter().for_each(|line| {
+        let (node1, nodes_str) = line.split_once(": ").unwrap();
+        nodes_str.split(" ").for_each(|node2| {
+            graph.add_vertex(node1);
+            graph.add_vertex(node2);
+            graph.add_edge(node1, node2, 1).unwrap();
         })
-        .collect::<Vec<_>>();
+    });
 
-    let nodes = edges
-        .iter()
-        .flat_map(|edge| vec![(edge.node1, 1), (edge.node2, 1)])
-        .collect::<HashMap<&str, i32>>();
+    // let nodes = edges
+    //     .iter()
+    //     .flat_map(|edge| vec![(edge.node1, 1), (edge.node2, 1)])
+    //     .collect::<HashMap<&str, i32>>();
 
-    // Karger's algorithm
-    loop {
-        let mut edges = edges.clone();
-        let mut nodes = nodes.clone();
-        while nodes.len() > 2 {
-            let random_edge = edges.remove(rand::thread_rng().gen_range(0..edges.len()));
-            let new_node = random_edge.node1;
-            edges = edges
-                .into_iter()
-                .filter(|edge| !(edge.has(random_edge.node1) && edge.has(random_edge.node2)))
-                .map(|edge| edge.replace(&random_edge, new_node))
-                .collect();
+    // // Karger's algorithm
+    // loop {
+    //     let mut edges = edges.clone();
+    //     let mut nodes = nodes.clone();
+    //     while nodes.len() > 2 {
+    //         let random_edge = edges.remove(rand::thread_rng().gen_range(0..edges.len()));
+    //         let new_node = random_edge.node1;
+    //         edges = edges
+    //             .into_iter()
+    //             .filter(|edge| !(edge.has(random_edge.node1) && edge.has(random_edge.node2)))
+    //             .map(|edge| edge.replace(&random_edge, new_node))
+    //             .collect();
 
-            let count = nodes.remove(random_edge.node1).unwrap()
-                + nodes.remove(random_edge.other(random_edge.node1)).unwrap();
-            nodes.insert(new_node, count);
-        }
+    //         let count = nodes.remove(random_edge.node1).unwrap()
+    //             + nodes.remove(random_edge.other(random_edge.node1)).unwrap();
+    //         nodes.insert(new_node, count);
+    //     }
 
-        if edges.len() == 3 {
-            break nodes.values().fold(1, |acc, n| acc * n).to_string();
-        }
-    }
+    //     if edges.len() == 3 {
+    //         break nodes.values().fold(1, |acc, n| acc * n).to_string();
+    //     }
+    // }
+
+    "".to_string()
 }
 
 #[cfg(test)]

@@ -1,13 +1,9 @@
 const DAY: &str = "day25";
 
-use aoc2023::utils::graph::Graph;
-use rand::Rng;
+use crate::utils::graph::Graph;
 
 use crate::utils::util;
-use std::{
-    collections::{HashMap, HashSet},
-    time::Instant,
-};
+use std::time::Instant;
 
 #[allow(unused)]
 pub(crate) fn solve() -> String {
@@ -51,7 +47,7 @@ mod tests {
     #[test]
     fn test_part1_input() {
         let _lines = util::lines_in(&format!("./src/{}/input1", DAY));
-        // Too slow to test always
+        // Too slow to test
         // part1(&_lines).should_equal("558376");
     }
 }

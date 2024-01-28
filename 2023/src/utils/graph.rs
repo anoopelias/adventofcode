@@ -12,11 +12,11 @@ use union_find_rs::prelude::*;
 pub struct Edge<V> {
     v1: V,
     v2: V,
-    pub weight: i32,
+    pub weight: u32,
 }
 
 impl<V> Edge<V> {
-    fn new(v1: V, v2: V, weight: i32) -> Edge<V> {
+    fn new(v1: V, v2: V, weight: u32) -> Edge<V> {
         Edge { v1, v2, weight }
     }
 }
@@ -61,7 +61,7 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
         self.vertices.insert(v);
     }
 
-    pub fn add_edge(&mut self, v1: V, v2: V, weight: i32) -> Result<()> {
+    pub fn add_edge(&mut self, v1: V, v2: V, weight: u32) -> Result<()> {
         self.adj
             .get_mut(&v1)
             .context("no v1")?
@@ -73,7 +73,7 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
         Ok(())
     }
 
-    fn add_weight(&mut self, v1: &V, v2: &V, weight: i32) -> Option<()> {
+    fn add_weight(&mut self, v1: &V, v2: &V, weight: u32) -> Option<()> {
         self.adj.get_mut(v1)?.get_mut(v2)?.weight += weight;
         self.adj.get_mut(v2)?.get_mut(v1)?.weight += weight;
         Some(())
@@ -108,7 +108,8 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
         self.adj.get_mut(v1).unwrap().remove(v2)
     }
 
-    fn cut_phase(&self, start: V) -> (V, V, i32) {
+    fn cut_phase(&self) -> (V, V, u32) {
+        let start = *self.vertices.iter().next().unwrap();
         let mut queue = Pq::new(PqType::Max);
         self.vertices.iter().for_each(|v| {
             queue.push(PqNode::new(v, 0));
@@ -119,12 +120,9 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
             let node = *queue.pop().unwrap().node;
             (s, t) = (t, node);
             for (other, edge) in self.adj.get(&node).unwrap() {
-                match queue.remove_one_if(|wn| *wn.node == *other) {
-                    Some(mut wn) => {
-                        wn.weight += edge.weight;
-                        queue.push(wn);
-                    }
-                    None => {}
+                if let Some(mut pq_node) = queue.remove_one_if(|wn| *wn.node == *other) {
+                    pq_node.weight += edge.weight;
+                    queue.push(pq_node);
                 }
             }
         }
@@ -140,21 +138,19 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
         (s, t, cut_weight)
     }
 
-    pub fn mincut(&mut self) -> (Vec<V>, i32) {
+    pub fn mincut(&mut self) -> (Vec<V>, u32) {
         // Stoer–Wagner algorithm
-        let mut mincut = i32::MAX;
-        let mut start = *self.vertices.iter().next().unwrap();
+        let mut mincut = u32::MAX;
         let mut cut = HashMap::new();
+        let vertices = self.vertices.iter().map(|v| *v).collect::<Vec<V>>();
 
         let mut uf: DisjointSets<V> = DisjointSets::new();
-        self.vertices.iter().for_each(|v| {
+        vertices.iter().for_each(|v| {
             uf.make_set(*v).unwrap();
         });
 
-        let vertices = self.vertices.iter().map(|v| *v).collect::<Vec<V>>();
-
         while self.vertices.len() > 1 {
-            let (s, t, w) = self.cut_phase(start);
+            let (s, t, w) = self.cut_phase();
             if w < mincut {
                 mincut = w;
                 vertices.iter().for_each(|v| {
@@ -163,7 +159,6 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
             }
             self.merge(&s, &t);
             uf.union(&s, &t).unwrap();
-            start = s;
         }
 
         let partition = vertices
@@ -176,11 +171,11 @@ impl<V: PartialEq + Ord + Hash + Copy> Graph<V> {
 
 struct PqNode<T> {
     node: T,
-    weight: i32,
+    weight: u32,
 }
 
 impl<T> PqNode<T> {
-    fn new(t: T, weight: i32) -> PqNode<T> {
+    fn new(t: T, weight: u32) -> PqNode<T> {
         PqNode { node: t, weight }
     }
 }

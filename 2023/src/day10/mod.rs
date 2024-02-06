@@ -8,7 +8,7 @@ const DAY: &str = "day10";
 
 #[allow(unused)]
 pub(crate) fn solve() -> String {
-    let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+    let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input1", DAY));
     return format!("result1: {}\nresult2: {}", part1(&lines), part2(&lines));
 }
 
@@ -239,41 +239,41 @@ mod tests {
 
     #[test]
     fn test_part1_sample() {
-        let lines = util::lines_in(&format!("./src/{}/input", DAY));
+        let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input", DAY));
         assert_eq!("4", part1(&lines))
     }
 
     #[test]
     fn test_part1_sample2() {
-        let lines = util::lines_in(&format!("./src/{}/input3", DAY));
+        let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input3", DAY));
         assert_eq!("8", part1(&lines))
     }
 
     #[test]
     fn test_part1_input() {
-        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input1", DAY));
         assert_eq!("6812", part1(&lines))
     }
 
     #[test]
     fn test_part2_sample() {
-        let lines = util::lines_in(&format!("./src/{}/input4", DAY));
+        let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input4", DAY));
         assert_eq!("4", part2(&lines))
     }
     #[test]
     fn test_part2_sample2() {
-        let lines = util::lines_in(&format!("./src/{}/input5", DAY));
+        let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input5", DAY));
         assert_eq!("8", part2(&lines))
     }
     #[test]
     fn test_part2_sample3() {
-        let lines = util::lines_in(&format!("./src/{}/input6", DAY));
+        let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input6", DAY));
         assert_eq!("10", part2(&lines));
     }
 
     #[test]
     fn test_part2_input() {
-        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input1", DAY));
         assert_eq!("527", part2(&lines))
     }
 }

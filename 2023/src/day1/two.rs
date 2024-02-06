@@ -64,13 +64,13 @@ mod tests {
 
     #[test]
     fn test_sample() {
-        let lines = util::lines_in("./src/day1/input");
+        let lines = util::lines_in("../../aoc-files/2023/day1/input");
         assert_eq!("281", solve(lines))
     }
 
     #[test]
     fn test_input() {
-        let lines = util::lines_in("./src/day1/input1");
+        let lines = util::lines_in("../../aoc-files/2023/day1/input1");
         assert_eq!("53866", solve(lines))
     }
 }

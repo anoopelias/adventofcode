@@ -7,7 +7,7 @@ pub(crate) mod two;
 
 #[allow(unused)]
 pub(crate) fn solve() -> String {
-    let lines = util::lines_in("./src/day4/input1");
+    let lines = util::lines_in("../../aoc-files/2023/day4/input1");
 
     let result1 = one::solve(lines.clone());
     let result2 = two::solve(lines);

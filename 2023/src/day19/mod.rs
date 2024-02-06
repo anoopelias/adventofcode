@@ -10,7 +10,7 @@ use crate::utils::{
 
 #[allow(unused)]
 pub(crate) fn solve() -> String {
-    let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+    let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input1", DAY));
     let time = Instant::now();
     let part1 = part1(&lines);
     let elapsed1 = time.elapsed();
@@ -433,25 +433,25 @@ mod tests {
 
     #[test]
     fn test_part1_sample() {
-        let lines = util::lines_in(&format!("./src/{}/input", DAY));
+        let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input", DAY));
         assert_eq!("19114", part1(&lines))
     }
 
     #[test]
     fn test_part1_input() {
-        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input1", DAY));
         assert_eq!("386787", part1(&lines))
     }
 
     #[test]
     fn test_part2_sample() {
-        let lines = util::lines_in(&format!("./src/{}/input", DAY));
+        let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input", DAY));
         assert_eq!("167409079868000", part2(&lines));
     }
 
     #[test]
     fn test_part2_input() {
-        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input1", DAY));
         assert_eq!("131029523269531", part2(&lines));
     }
 }

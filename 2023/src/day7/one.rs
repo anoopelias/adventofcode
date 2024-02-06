@@ -23,14 +23,14 @@ mod tests {
 
     #[test]
     fn test_sample() {
-        let lines = util::lines_in("./src/day7/input");
+        let lines = util::lines_in("../../aoc-files/2023/day7/input");
         let problem = ProblemOne::new(Problem { lines });
         assert_eq!("6440", problem.solve())
     }
 
     #[test]
     fn test_input() {
-        let lines = util::lines_in("./src/day7/input1");
+        let lines = util::lines_in("../../aoc-files/2023/day7/input1");
         let problem = ProblemOne::new(Problem { lines });
         assert_eq!("251058093", problem.solve())
     }

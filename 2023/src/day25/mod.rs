@@ -7,7 +7,7 @@ use std::time::Instant;
 
 #[allow(unused)]
 pub(crate) fn solve() -> String {
-    let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+    let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input1", DAY));
     let time = Instant::now();
     let part1 = part1(&lines);
     let elapsed1 = time.elapsed();
@@ -40,13 +40,13 @@ mod tests {
 
     #[test]
     fn test_part1_sample() {
-        let lines = util::lines_in(&format!("./src/{}/input", DAY));
+        let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input", DAY));
         part1(&lines).should_equal("54");
     }
 
     #[test]
     fn test_part1_input() {
-        let _lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        let _lines = util::lines_in(&format!("../../aoc-files/2023/{}/input1", DAY));
         // Too slow to test
         // part1(&_lines).should_equal("558376");
     }

@@ -7,7 +7,7 @@ use crate::utils::util::{self, ToGrid};
 
 #[allow(unused)]
 pub(crate) fn solve() -> String {
-    let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+    let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input1", DAY));
     let time = Instant::now();
     let part1 = part1(&lines, 64);
     let elapsed1 = time.elapsed();
@@ -89,19 +89,19 @@ mod tests {
 
     #[test]
     fn test_part1_sample() {
-        let lines = util::lines_in(&format!("./src/{}/input", DAY));
+        let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input", DAY));
         assert_eq!("16", part1(&lines, 6));
     }
 
     #[test]
     fn test_part1_input() {
-        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input1", DAY));
         assert_eq!("3585", part1(&lines, 64));
     }
 
     #[test]
     fn test_part2_input() {
-        let lines = util::lines_in(&format!("./src/{}/input1", DAY));
+        let lines = util::lines_in(&format!("../../aoc-files/2023/{}/input1", DAY));
         assert_eq!("597102953699891", part2(&lines, 26501365));
 
         // too low:     597102911216785

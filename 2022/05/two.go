@@ -10,7 +10,7 @@ import (
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input2")
+	ls := linesOf("../../../aoc-files/2022/05/input2")
 
 	fmt.Println("No of lines: " + strconv.Itoa(len(ls)))
 	stacks := make([][]string, 0)

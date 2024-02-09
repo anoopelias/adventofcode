@@ -29,7 +29,7 @@ type solver struct {
 
 func main() {
 
-	inp := "input2"
+	inp := "../../../aoc-files/2022/16/input2"
 	mins := 26
 
 	fmt.Println("Starting...")

@@ -292,6 +292,6 @@ func addBottom(m [][]string) [][]string {
 
 func main() {
 	fmt.Println("Starting...")
-	ls := goutils.LinesOf("input2")
+	ls := goutils.LinesOf("../../../aoc-files/2022/23/input2")
 	fmt.Println(solve(ls))
 }

@@ -455,12 +455,12 @@ func createOtherCube() cube {
 func main() {
 	fmt.Println("Starting...")
 
-	name := "input"
+	name := "../../../aoc-files/2022/22/input"
 	typ := 1
 	ls := goutils.LinesOf(name)
 	fmt.Println(solve(ls, typ))
 
-	name = "input2"
+	name = "../../../aoc-files/2022/22/input2"
 	typ = 2
 	ls = goutils.LinesOf(name)
 	fmt.Println(solve(ls, typ))

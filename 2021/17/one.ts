@@ -2,7 +2,7 @@ import { X25519KeyPairKeyObjectOptions } from 'crypto';
 import { promises as fs } from 'fs';
 
 async function solve() {
-  const input = await fs.readFile("src/2021/17/input");
+  const input = await fs.readFile("../../../aoc-files/2021/17/input");
   let splits = input.toString().split("\n");
   splits.pop();
 

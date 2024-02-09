@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 
 async function solve() {
-    const input = await fs.readFile("input.txt");
+    const input = await fs.readFile("../../../aoc-files/2020/02/input.txt");
     const splits = input.toString().split("\n");
 
     let valid = 0;

@@ -14,7 +14,7 @@ type cord struct {
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input2")
+	ls := linesOf("../../../aoc-files/2022/09/input2")
 	ac := make([]string, 0)
 	tss := make([]int, 0)
 	for _, line := range ls {

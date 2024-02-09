@@ -73,7 +73,7 @@ type result struct {
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input2")
+	ls := linesOf("../../../aoc-files/2022/19/input2")
 	time := 24
 
 	bps := make([]blueprint, 0)

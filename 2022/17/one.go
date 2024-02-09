@@ -13,7 +13,7 @@ const NO_OF_SHAPES = 5
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input2")
+	ls := linesOf("../../../aoc-files/2022/17/input2")
 	pt := ls[0]
 	pti := 0
 

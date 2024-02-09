@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 
 async function solve() {
-    const input = await fs.readFile("src/2022/03/input");
+    const input = await fs.readFile("../../../aoc-files/2022/03/input");
     const splits = input.toString().split("\n");
     console.log("number of lines:", splits.length);
 

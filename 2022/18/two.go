@@ -13,7 +13,7 @@ type pos struct {
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input2")
+	ls := linesOf("../../../aoc-files/2022/18/input2")
 
 	ps := make([]pos, 0)
 	m := make(map[pos]bool)

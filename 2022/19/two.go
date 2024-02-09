@@ -66,7 +66,7 @@ type result struct {
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input2")
+	ls := linesOf("../../../aoc-files/2022/19/input2")
 
 	// https://github.com/bhosale-ajay/adventofcode/blob/62e20bb6addbd31d8993b41e2910a6c6736c1c56/2022/ts/D19.test.ts#L121
 	//time := 24

@@ -18,7 +18,7 @@ type monkey struct {
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input2")
+	ls := linesOf("../../../aoc-files/2022/11/input2")
 	fmt.Println("No of lines: " + strconv.Itoa(len(ls)))
 
 	ms := []*monkey{}

@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 
 async function solve() {
-    const input = await fs.readFile("src/2020/05/input");
+    const input = await fs.readFile("../../../aoc-files/2020/05/input");
     const splits = input.toString().split("\n");
     let max = 0;
     let seats: number[] = [];

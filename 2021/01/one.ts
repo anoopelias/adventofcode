@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 
 async function solve() {
-    const input = await fs.readFile("input");
+    const input = await fs.readFile("../../../aoc-files/2021/01/input");
     const splits = input.toString().split("\n").map(str => parseInt(str));
 
     let count = 0;

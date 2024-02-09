@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 
 async function solve() {
     const splitLen = 200;
-    const input = await fs.readFile("src/2021/14/input");
+    const input = await fs.readFile("../../../aoc-files/2021/14/input");
     const splits = input.toString().split("\n");
     splits.pop();
 

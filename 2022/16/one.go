@@ -22,7 +22,7 @@ type node struct {
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input")
+	ls := linesOf("../../../aoc-files/2022/16/input")
 	fmt.Println("No of lines: " + strconv.Itoa(len(ls)))
 
 	m := make(map[string]*valve)

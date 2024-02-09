@@ -16,7 +16,7 @@ type Dir struct {
 
 func main() {
 	//fmt.Println("Starting...")
-	ls := linesOf("input2")
+	ls := linesOf("../../../aoc-files/2022/08/input2")
 	grid := make([][]int, 0)
 	for _, line := range ls {
 		rs := strings.Split(line, "")

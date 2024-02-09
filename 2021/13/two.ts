@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import { addEmitHelper } from 'typescript';
 
 async function solve() {
-    const input = await fs.readFile("src/2021/13/input");
+    const input = await fs.readFile("../../../aoc-files/2021/13/input");
     const splits = input.toString().split("\n");
     splits.pop();
     const dots: [number, number][] = [];

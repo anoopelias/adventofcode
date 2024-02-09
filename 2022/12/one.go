@@ -29,7 +29,7 @@ type ndist struct {
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input2")
+	ls := linesOf("../../../aoc-files/2022/12/input2")
 	fmt.Println("No of lines: " + strconv.Itoa(len(ls)))
 
 	grid := [][]*node{}

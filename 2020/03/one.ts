@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 
 async function solve() {
-    const input = await fs.readFile("input");
+    const input = await fs.readFile("../../../aoc-files/2020/03/input");
     const board = input.toString().split("\n").map(line => line.split(""));
     const [m, n] = [board.length, board[0].length];
     let i = 0;

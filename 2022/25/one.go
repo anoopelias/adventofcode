@@ -81,6 +81,6 @@ func solve(ls []string) string {
 
 func main() {
 	fmt.Println("Starting...")
-	ls := goutils.LinesOf("input2")
+	ls := goutils.LinesOf("../../../aoc-files/2022/25/input2")
 	fmt.Println(solve(ls))
 }

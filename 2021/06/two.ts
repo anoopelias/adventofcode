@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 
 async function solve() {
-    const input = await fs.readFile("src/2020/06/input");
+    const input = await fs.readFile("../../../aoc-files/2020/06/input");
     const splits = input.toString().split("\n");
     const daysArr = splits[0].split(",").map(d => parseInt(d));
     const target = 256;

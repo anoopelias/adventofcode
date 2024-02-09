@@ -72,7 +72,7 @@ func (n *node) back(num int) *node {
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input2")
+	ls := linesOf("../../../aoc-files/2022/20/input2")
 	ns := make([]*node, len(ls))
 	mp := 811589153
 	//mp := 1

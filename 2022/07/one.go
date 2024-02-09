@@ -16,7 +16,7 @@ type Dir struct {
 
 func main() {
 	//fmt.Println("Starting...")
-	ls := linesOf("input2")[1:]
+	ls := linesOf("../../../aoc-files/2022/07/input2")[1:]
 	root := Dir{
 		dirs: make([]*Dir, 0),
 		file: make([]int, 0),

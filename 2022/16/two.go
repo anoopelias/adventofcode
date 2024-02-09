@@ -48,7 +48,7 @@ const (
 
 func main() {
 
-	inp := "input1"
+	inp := "../../../aoc-files/2022/16/input1"
 	mins := 26
 	nrs := 1
 

@@ -26,7 +26,7 @@ const (
 
 func main() {
 	fmt.Println("Starting...")
-	lns := linesOf("input2")
+	lns := linesOf("../../../aoc-files/2022/13/input2")
 	fmt.Println("No of lines: " + strconv.Itoa(len(lns)))
 
 	pairs := make([]pair, 0)

@@ -8,7 +8,7 @@ import (
 
 func main() {
 	fmt.Println("Starting...")
-	ls := linesOf("input2")
+	ls := linesOf("../../../aoc-files/2022/06/input2")
 
 	for _, l := range ls {
 		//fmt.Println(l)
